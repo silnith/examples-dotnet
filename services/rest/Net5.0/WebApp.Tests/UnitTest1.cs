@@ -1,6 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace WebAppTests
+namespace WebApp.Tests
 {
     [TestClass]
     public class UnitTest1
