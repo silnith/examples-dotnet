@@ -321,13 +321,6 @@ namespace Silnith.FloatUtils.Tests
         [TestMethod]
         public void TestAssembleBits_Zero()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             uint actual = InexactFloatComparer.AssembleBits(0u, 0u, 0u);
             uint expected = 0u;
             Assert.AreEqual(expected, actual);
@@ -336,13 +329,6 @@ namespace Silnith.FloatUtils.Tests
         [TestMethod]
         public void TestAssembleBits_ZeroNegative()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             uint actual = InexactFloatComparer.AssembleBits(1u, 0u, 0u);
             uint expected = 0x8000_0000u;
             Assert.AreEqual(expected, actual);
