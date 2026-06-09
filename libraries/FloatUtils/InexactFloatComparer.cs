@@ -367,6 +367,25 @@ namespace Silnith.FloatUtils
             return bits & 0x7f_ffffu;
         }
 
+        /// <summary>
+        /// Combine the fields of a floating-point value into a 32-bit value.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Obviously no validation is done to ensure that the encode value is
+        /// actually a valid IEEE 754 single-precision floating-point value.
+        /// This only shifts the fields to the appropriate bit locations.
+        /// </para>
+        /// </remarks>
+        /// <param name="signBit">The sign bit.  <c>0</c> for positive or <c>1</c> for negative.</param>
+        /// <param name="exponentBits">The exponent bits.  This is a value in
+        /// the range <c>[0, 255]</c>, where the true exponent is this value minus <c>127</c>.
+        /// Therefore <c>0</c> represents <c>-127</c>, <c>127</c> represents <c>0</c>,
+        /// <c>128</c> represents <c>1</c>, and <c>255</c> represents <c>128</c>.</param>
+        /// <param name="mantissaBits">The mantissa bits.  This is a value in
+        /// the range <c>[0, 0x7fffff]</c>.</param>
+        /// <returns>The 32-bit value containing the fields shifted into the appropriate position.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">If any field exceeds the allocated number of bits.</exception>
         internal static uint AssembleBits(uint signBit, uint exponentBits, uint mantissaBits)
         {
             if (signBit > 1u)
