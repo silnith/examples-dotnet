@@ -367,7 +367,7 @@ namespace Silnith.FloatUtils
             return bits & 0x7f_ffffu;
         }
 
-        public uint AssembleBits(uint signBit, uint exponentBits, uint mantissaBits)
+        public static uint AssembleBits(uint signBit, uint exponentBits, uint mantissaBits)
         {
             if (signBit > 1u)
             {

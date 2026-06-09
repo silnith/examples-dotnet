@@ -328,7 +328,7 @@ namespace Silnith.FloatUtils.Tests
             });
             InexactFloatComparer floatComparer = new(options);
 
-            uint actual = floatComparer.AssembleBits(0u, 0u, 0u);
+            uint actual = InexactFloatComparer.AssembleBits(0u, 0u, 0u);
             uint expected = 0u;
             Assert.AreEqual(expected, actual);
         }
@@ -343,7 +343,7 @@ namespace Silnith.FloatUtils.Tests
             });
             InexactFloatComparer floatComparer = new(options);
 
-            uint actual = floatComparer.AssembleBits(1u, 0u, 0u);
+            uint actual = InexactFloatComparer.AssembleBits(1u, 0u, 0u);
             uint expected = 0x8000_0000u;
             Assert.AreEqual(expected, actual);
         }
