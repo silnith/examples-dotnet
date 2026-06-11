@@ -27,7 +27,7 @@ namespace Silnith.FloatUtils.Tests
             });
             InexactFloatComparer floatComparer = new(options);
 
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => floatComparer.HasOneInBitPosition(0u, 32));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => InexactFloatComparer.HasOneInBitPosition(0u, 32));
         }
 
         [TestMethod]
@@ -40,7 +40,7 @@ namespace Silnith.FloatUtils.Tests
             });
             InexactFloatComparer floatComparer = new(options);
 
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => floatComparer.HasOneInBitPosition(0u, -1));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => InexactFloatComparer.HasOneInBitPosition(0u, -1));
         }
 
         [TestMethod]
@@ -53,7 +53,7 @@ namespace Silnith.FloatUtils.Tests
             });
             InexactFloatComparer floatComparer = new(options);
 
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => floatComparer.HasOneInBitPosition(0u, int.MinValue));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => InexactFloatComparer.HasOneInBitPosition(0u, int.MinValue));
         }
 
         [TestMethod]
@@ -66,7 +66,7 @@ namespace Silnith.FloatUtils.Tests
             });
             InexactFloatComparer floatComparer = new(options);
 
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => floatComparer.HasOneInBitPosition(0u, int.MaxValue));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => InexactFloatComparer.HasOneInBitPosition(0u, int.MaxValue));
         }
 
         [TestMethod]
@@ -79,7 +79,7 @@ namespace Silnith.FloatUtils.Tests
             });
             InexactFloatComparer floatComparer = new(options);
 
-            Assert.IsFalse(floatComparer.HasOneInBitPosition(0u, 0));
+            Assert.IsFalse(InexactFloatComparer.HasOneInBitPosition(0u, 0));
         }
 
         [TestMethod]
@@ -92,7 +92,7 @@ namespace Silnith.FloatUtils.Tests
             });
             InexactFloatComparer floatComparer = new(options);
 
-            Assert.IsFalse(floatComparer.HasOneInBitPosition(0u, 1));
+            Assert.IsFalse(InexactFloatComparer.HasOneInBitPosition(0u, 1));
         }
 
         [TestMethod]
@@ -105,7 +105,7 @@ namespace Silnith.FloatUtils.Tests
             });
             InexactFloatComparer floatComparer = new(options);
 
-            Assert.IsTrue(floatComparer.HasOneInBitPosition(1u, 0));
+            Assert.IsTrue(InexactFloatComparer.HasOneInBitPosition(1u, 0));
         }
 
         [TestMethod]
@@ -118,7 +118,7 @@ namespace Silnith.FloatUtils.Tests
             });
             InexactFloatComparer floatComparer = new(options);
 
-            Assert.IsFalse(floatComparer.HasOneInBitPosition(1u, 1));
+            Assert.IsFalse(InexactFloatComparer.HasOneInBitPosition(1u, 1));
         }
 
         [TestMethod]
@@ -131,7 +131,7 @@ namespace Silnith.FloatUtils.Tests
             });
             InexactFloatComparer floatComparer = new(options);
 
-            Assert.IsFalse(floatComparer.HasOneInBitPosition(1u, 2));
+            Assert.IsFalse(InexactFloatComparer.HasOneInBitPosition(1u, 2));
         }
 
         [TestMethod]
@@ -144,7 +144,7 @@ namespace Silnith.FloatUtils.Tests
             });
             InexactFloatComparer floatComparer = new(options);
 
-            Assert.IsFalse(floatComparer.HasOneInBitPosition(2u, 0));
+            Assert.IsFalse(InexactFloatComparer.HasOneInBitPosition(2u, 0));
         }
 
         [TestMethod]
@@ -157,7 +157,7 @@ namespace Silnith.FloatUtils.Tests
             });
             InexactFloatComparer floatComparer = new(options);
 
-            Assert.IsTrue(floatComparer.HasOneInBitPosition(2u, 1));
+            Assert.IsTrue(InexactFloatComparer.HasOneInBitPosition(2u, 1));
         }
 
         [TestMethod]
@@ -170,7 +170,7 @@ namespace Silnith.FloatUtils.Tests
             });
             InexactFloatComparer floatComparer = new(options);
 
-            Assert.IsFalse(floatComparer.HasOneInBitPosition(2u, 2));
+            Assert.IsFalse(InexactFloatComparer.HasOneInBitPosition(2u, 2));
         }
 
         [TestMethod]
@@ -183,7 +183,7 @@ namespace Silnith.FloatUtils.Tests
             });
             InexactFloatComparer floatComparer = new(options);
 
-            Assert.IsTrue(floatComparer.HasOneInBitPosition(uint.MaxValue, 31));
+            Assert.IsTrue(InexactFloatComparer.HasOneInBitPosition(uint.MaxValue, 31));
         }
 
         #endregion

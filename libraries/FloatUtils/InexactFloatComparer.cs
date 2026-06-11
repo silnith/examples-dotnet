@@ -288,7 +288,7 @@ namespace Silnith.FloatUtils
         /// <param name="bits">The bits to check.</param>
         /// <param name="bitPosition">The position of the bit to check.  A value of <c>0</c> means check the least significant bit.</param>
         /// <returns><see langword="true"/> if the specified bit is <c>1</c>.</returns>
-        public bool HasOneInBitPosition(uint bits, int bitPosition)
+        internal static bool HasOneInBitPosition(uint bits, int bitPosition)
         {
             if ((bitPosition & ~0x1f) != 0)
             {
