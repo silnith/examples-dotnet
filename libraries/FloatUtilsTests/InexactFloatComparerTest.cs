@@ -319,7 +319,7 @@ namespace Silnith.FloatUtils.Tests
         #region AssembleBits
 
         [TestMethod]
-        public void TestAssembleBits_Zero()
+        public void TestAssembleBits_Positive_Zero()
         {
             uint actual = InexactFloatComparer.AssembleBits(0u, 0u, 0u);
             uint expected = 0u;
@@ -327,11 +327,175 @@ namespace Silnith.FloatUtils.Tests
         }
 
         [TestMethod]
-        public void TestAssembleBits_ZeroNegative()
+        public void TestAssembleBits_Negative_Zero()
         {
             uint actual = InexactFloatComparer.AssembleBits(1u, 0u, 0u);
             uint expected = 0x8000_0000u;
             Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_Positive_SmallExponent()
+        {
+            uint actual = InexactFloatComparer.AssembleBits(0u, 1u, 0u);
+            uint expected = 0x0080_0000u;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_Negative_SmallExponent()
+        {
+            uint actual = InexactFloatComparer.AssembleBits(1u, 1u, 0u);
+            uint expected = 0x8080_0000u;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_Positive_LargeExponent()
+        {
+            uint actual = InexactFloatComparer.AssembleBits(0u, 0xffu, 0u);
+            uint expected = 0x7f80_0000u;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_Negative_LargeExponent()
+        {
+            uint actual = InexactFloatComparer.AssembleBits(1u, 0xffu, 0u);
+            uint expected = 0xff80_0000u;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_Positive_SmallMantissa()
+        {
+            uint actual = InexactFloatComparer.AssembleBits(0u, 0u, 1u);
+            uint expected = 0x0000_0001u;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_Negative_SmallMantissa()
+        {
+            uint actual = InexactFloatComparer.AssembleBits(1u, 0u, 1u);
+            uint expected = 0x8000_0001u;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_Positive_SmallExponent_SmallMantissa()
+        {
+            uint actual = InexactFloatComparer.AssembleBits(0u, 1u, 1u);
+            uint expected = 0x0080_0001u;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_Negative_SmallExponent_SmallMantissa()
+        {
+            uint actual = InexactFloatComparer.AssembleBits(1u, 1u, 1u);
+            uint expected = 0x8080_0001u;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_Positive_LargeExponent_SmallMantissa()
+        {
+            uint actual = InexactFloatComparer.AssembleBits(0u, 0xffu, 1u);
+            uint expected = 0x7f80_0001u;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_Negative_LargeExponent_SmallMantissa()
+        {
+            uint actual = InexactFloatComparer.AssembleBits(1u, 0xffu, 1u);
+            uint expected = 0xff80_0001u;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_Positive_LargeMantissa()
+        {
+            uint actual = InexactFloatComparer.AssembleBits(0u, 0u, 0x7f_ffffu);
+            uint expected = 0x007f_ffffu;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_Negative_LargeMantissa()
+        {
+            uint actual = InexactFloatComparer.AssembleBits(1u, 0u, 0x7f_ffffu);
+            uint expected = 0x807f_ffffu;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_Positive_SmallExponent_LargeMantissa()
+        {
+            uint actual = InexactFloatComparer.AssembleBits(0u, 1u, 0x7f_ffffu);
+            uint expected = 0x00ff_ffffu;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_Negative_SmallExponent_LargeMantissa()
+        {
+            uint actual = InexactFloatComparer.AssembleBits(1u, 1u, 0x7f_ffffu);
+            uint expected = 0x80ff_ffffu;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_Positive_LargeExponent_LargeMantissa()
+        {
+            uint actual = InexactFloatComparer.AssembleBits(0u, 0xffu, 0x7f_ffffu);
+            uint expected = 0x7fff_ffffu;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_Negative_LargeExponent_LargeMantissa()
+        {
+            uint actual = InexactFloatComparer.AssembleBits(1u, 0xffu, 0x7f_ffffu);
+            uint expected = 0xffff_ffffu;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_SignOutOfRange_Small()
+        {
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => InexactFloatComparer.AssembleBits(2u, 0u, 0u));
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_SignOutOfRange_Large()
+        {
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => InexactFloatComparer.AssembleBits(0xffff_ffffu, 0u, 0u));
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_ExponentOutOfRange_Small()
+        {
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => InexactFloatComparer.AssembleBits(0u, 0x100u, 0u));
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_ExponentOutOfRange_Large()
+        {
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => InexactFloatComparer.AssembleBits(0u, 0xffff_ffffu, 0u));
+        }
+
+        [TestMethod]
+        public void TestAssembleBits_MantissaOutOfRange_Small()
+        {
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => InexactFloatComparer.AssembleBits(0u, 0u, 0x80_0000u));
+        }
+
+        [TestMethod]
+        public void TestAssembleBitsp_MantissaOutOfRange_Large()
+        {
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => InexactFloatComparer.AssembleBits(0u, 0u, 0xffff_ffffu));
         }
 
         #endregion
