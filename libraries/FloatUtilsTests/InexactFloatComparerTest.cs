@@ -203,7 +203,7 @@ namespace Silnith.FloatUtils.Tests
             InexactFloatComparer floatComparer = new(options);
 
             uint bits = (uint)BitConverter.SingleToInt32Bits(0.0f);
-            Assert.AreEqual(0u, floatComparer.GetSignBit(bits));
+            Assert.AreEqual(0u, InexactFloatComparer.GetSignBit(bits));
         }
 
         [TestMethod]
@@ -217,7 +217,7 @@ namespace Silnith.FloatUtils.Tests
             InexactFloatComparer floatComparer = new(options);
 
             uint bits = (uint)BitConverter.SingleToInt32Bits(-0.0f);
-            Assert.AreEqual(1u, floatComparer.GetSignBit(bits));
+            Assert.AreEqual(1u, InexactFloatComparer.GetSignBit(bits));
         }
 
         #endregion
@@ -235,7 +235,7 @@ namespace Silnith.FloatUtils.Tests
             InexactFloatComparer floatComparer = new(options);
 
             uint bits = (uint)BitConverter.SingleToInt32Bits(0.0f);
-            Assert.AreEqual(0u, floatComparer.GetExponentBits(bits));
+            Assert.AreEqual(0u, InexactFloatComparer.GetExponentBits(bits));
         }
 
         [TestMethod]
@@ -249,7 +249,7 @@ namespace Silnith.FloatUtils.Tests
             InexactFloatComparer floatComparer = new(options);
 
             uint bits = (uint)BitConverter.SingleToInt32Bits(float.PositiveInfinity);
-            Assert.AreEqual(255u, floatComparer.GetExponentBits(bits));
+            Assert.AreEqual(255u, InexactFloatComparer.GetExponentBits(bits));
         }
 
         [TestMethod]
@@ -263,7 +263,7 @@ namespace Silnith.FloatUtils.Tests
             InexactFloatComparer floatComparer = new(options);
 
             uint bits = (uint)BitConverter.SingleToInt32Bits(float.NaN);
-            Assert.AreEqual(255u, floatComparer.GetExponentBits(bits));
+            Assert.AreEqual(255u, InexactFloatComparer.GetExponentBits(bits));
         }
 
         #endregion
@@ -281,7 +281,7 @@ namespace Silnith.FloatUtils.Tests
             InexactFloatComparer floatComparer = new(options);
 
             uint bits = (uint)BitConverter.SingleToInt32Bits(0.0f);
-            Assert.AreEqual(0u, floatComparer.GetMantissaBits(bits));
+            Assert.AreEqual(0u, InexactFloatComparer.GetMantissaBits(bits));
         }
 
         [TestMethod]
@@ -295,7 +295,7 @@ namespace Silnith.FloatUtils.Tests
             InexactFloatComparer floatComparer = new(options);
 
             uint bits = (uint)BitConverter.SingleToInt32Bits(float.PositiveInfinity);
-            Assert.AreEqual(0u, floatComparer.GetMantissaBits(bits));
+            Assert.AreEqual(0u, InexactFloatComparer.GetMantissaBits(bits));
         }
 
         [TestMethod]
@@ -309,7 +309,7 @@ namespace Silnith.FloatUtils.Tests
             InexactFloatComparer floatComparer = new(options);
 
             uint bits = (uint)BitConverter.SingleToInt32Bits(float.NaN);
-            Assert.AreNotEqual(0u, floatComparer.GetMantissaBits(bits));
+            Assert.AreNotEqual(0u, InexactFloatComparer.GetMantissaBits(bits));
         }
 
         #endregion

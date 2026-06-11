@@ -340,7 +340,7 @@ namespace Silnith.FloatUtils
         /// </summary>
         /// <param name="bits">The float bits to parse.</param>
         /// <returns>A value in the range <c>[0, 1]</c>.  <c>0</c> represents positive, <c>1</c> represents negative.</returns>
-        internal uint GetSignBit(uint bits)
+        internal static uint GetSignBit(uint bits)
         {
             return (bits >> 31) & 1u;
         }
@@ -351,7 +351,7 @@ namespace Silnith.FloatUtils
         /// </summary>
         /// <param name="bits">The float bits to parse.</param>
         /// <returns>A value in the range <c>[0, 255]</c>.</returns>
-        internal uint GetExponentBits(uint bits)
+        internal static uint GetExponentBits(uint bits)
         {
             return (bits >> 23) & 0xffu;
         }
@@ -362,7 +362,7 @@ namespace Silnith.FloatUtils
         /// </summary>
         /// <param name="bits">The float bits to parse.</param>
         /// <returns>A 23-bit number in the range <c>[0, 0x7fffff]</c>.</returns>
-        internal uint GetMantissaBits(uint bits)
+        internal static uint GetMantissaBits(uint bits)
         {
             return bits & 0x7f_ffffu;
         }
