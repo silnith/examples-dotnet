@@ -224,14 +224,12 @@ namespace Silnith.FloatUtils.Tests
         [TestMethod]
         public void TestGetExponentBits_Positive_SmallValue()
         {
-            uint bits = (uint) BitConverter.SingleToInt32Bits(0.5f);
             Assert.AreEqual(1u, InexactFloatComparer.GetExponentBits(0x0080_0000u));
         }
 
         [TestMethod]
         public void TestGetExponentBits_Negative_SmallValue()
         {
-            uint bits = (uint) BitConverter.SingleToInt32Bits(-0.5f);
             Assert.AreEqual(1u, InexactFloatComparer.GetExponentBits(0x8080_0000u));
         }
 
@@ -280,14 +278,12 @@ namespace Silnith.FloatUtils.Tests
         [TestMethod]
         public void TestGetExponentBits_Positive_LargeValue()
         {
-            uint bits = (uint) BitConverter.SingleToInt32Bits(2.0f);
             Assert.AreEqual(254u, InexactFloatComparer.GetExponentBits(0x7f00_0000u));
         }
 
         [TestMethod]
         public void TestGetExponentBits_Negative_LargeValue()
         {
-            uint bits = (uint) BitConverter.SingleToInt32Bits(-2.0f);
             Assert.AreEqual(254u, InexactFloatComparer.GetExponentBits(0xff00_0000u));
         }
 
