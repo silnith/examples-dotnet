@@ -226,6 +226,7 @@ namespace Silnith.FloatUtils
                                 // exponentBits will be in the range [1, 254]
                                 // 0 and 255 were handled by other switch cases
                                 realExponent = (int) exponentBits - 127;
+                                // realExponent will be in the range [1 - 127, 254 - 127]
                                 break;
                         }
                         /*

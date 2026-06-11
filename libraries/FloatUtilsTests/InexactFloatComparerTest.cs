@@ -15,6 +15,24 @@ namespace Silnith.FloatUtils.Tests
             Assert.AreEqual(0xffffffffu, (uint)bits);
         }
 
+        #region GetNormalizedBits
+
+        [TestMethod]
+        public void TestGetNormalizedBits_Foo()
+        {
+            FloatComparerSettings settings = new()
+            {
+                MantissaBitsDropped = 1,
+                MinimumExponent = -126,
+            };
+            InexactFloatComparer comparer = new(Options.Create(settings));
+
+            uint actual = comparer.GetNormalizedBits(0.0f);
+            Assert.AreEqual(0x0080_0000u, actual);
+        }
+
+        #endregion
+
         #region HasOneInBitPosition
 
         [TestMethod]
