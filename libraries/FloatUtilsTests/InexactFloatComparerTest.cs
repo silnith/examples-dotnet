@@ -237,15 +237,13 @@ namespace Silnith.FloatUtils.Tests
         [TestMethod]
         public void TestGetSignBit_Positive_NaN()
         {
-            uint bits = (uint) BitConverter.SingleToInt32Bits(float.NaN);
-            Assert.AreEqual(0u, InexactFloatComparer.GetSignBit(bits));
+            Assert.AreEqual(0u, InexactFloatComparer.GetSignBit(0x7f80_0001u));
         }
 
         [TestMethod]
         public void TestGetSignBit_Negative_NaN()
         {
-            uint bits = (uint) BitConverter.SingleToInt32Bits(-float.NaN);
-            Assert.AreEqual(1u, InexactFloatComparer.GetSignBit(bits));
+            Assert.AreEqual(1u, InexactFloatComparer.GetSignBit(0xffff_ffff));
         }
 
         #endregion
@@ -253,16 +251,100 @@ namespace Silnith.FloatUtils.Tests
         #region GetExponentBits
 
         [TestMethod]
-        public void TestGetExponentBits_Zero()
+        public void TestGetExponentBits_Positive_Zero()
         {
             uint bits = (uint)BitConverter.SingleToInt32Bits(0.0f);
             Assert.AreEqual(0u, InexactFloatComparer.GetExponentBits(bits));
         }
 
         [TestMethod]
-        public void TestGetExponentBits_Infinity()
+        public void TestGetExponentBits_Negative_Zero()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(-0.0f);
+            Assert.AreEqual(0u, InexactFloatComparer.GetExponentBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetExponentBits_Positive_SmallValue()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(0.5f);
+            Assert.AreEqual(1u, InexactFloatComparer.GetExponentBits(0x0080_0000u));
+        }
+
+        [TestMethod]
+        public void TestGetExponentBits_Negative_SmallValue()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(-0.5f);
+            Assert.AreEqual(1u, InexactFloatComparer.GetExponentBits(0x8080_0000u));
+        }
+
+        [TestMethod]
+        public void TestGetExponentBits_Positive_OneHalf()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(0.5f);
+            Assert.AreEqual(126u, InexactFloatComparer.GetExponentBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetExponentBits_Negative_OneHalf()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(-0.5f);
+            Assert.AreEqual(126u, InexactFloatComparer.GetExponentBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetExponentBits_Positive_One()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(1.0f);
+            Assert.AreEqual(127u, InexactFloatComparer.GetExponentBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetExponentBits_Negative_One()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(-1.0f);
+            Assert.AreEqual(127u, InexactFloatComparer.GetExponentBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetExponentBits_Positive_Two()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(2.0f);
+            Assert.AreEqual(128u, InexactFloatComparer.GetExponentBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetExponentBits_Negative_Two()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(-2.0f);
+            Assert.AreEqual(128u, InexactFloatComparer.GetExponentBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetExponentBits_Positive_LargeValue()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(2.0f);
+            Assert.AreEqual(254u, InexactFloatComparer.GetExponentBits(0x7f00_0000u));
+        }
+
+        [TestMethod]
+        public void TestGetExponentBits_Negative_LargeValue()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(-2.0f);
+            Assert.AreEqual(254u, InexactFloatComparer.GetExponentBits(0xff00_0000u));
+        }
+
+        [TestMethod]
+        public void TestGetExponentBits_Positive_Infinity()
         {
             uint bits = (uint)BitConverter.SingleToInt32Bits(float.PositiveInfinity);
+            Assert.AreEqual(255u, InexactFloatComparer.GetExponentBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetExponentBits_Negative_Infinity()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(float.NegativeInfinity);
             Assert.AreEqual(255u, InexactFloatComparer.GetExponentBits(bits));
         }
 
