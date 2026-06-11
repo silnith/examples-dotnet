@@ -360,16 +360,128 @@ namespace Silnith.FloatUtils.Tests
         #region GetMantissaBits
 
         [TestMethod]
-        public void TestGetMantissaBits_Zero()
+        public void TestGetMantissaBits_Positive_Zero()
         {
             uint bits = (uint)BitConverter.SingleToInt32Bits(0.0f);
             Assert.AreEqual(0u, InexactFloatComparer.GetMantissaBits(bits));
         }
 
         [TestMethod]
-        public void TestGetMantissaBits_Infinity()
+        public void TestGetMantissaBits_Negative_Zero()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(-0.0f);
+            Assert.AreEqual(0u, InexactFloatComparer.GetMantissaBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetMantissaBits_Positive_SmallValue()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(float.Epsilon);
+            Assert.AreEqual(1u, InexactFloatComparer.GetMantissaBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetMantissaBits_Negative_SmallValue()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(-float.Epsilon);
+            Assert.AreEqual(1u, InexactFloatComparer.GetMantissaBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetMantissaBits_Positive_OneHalf()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(0.5f);
+            Assert.AreEqual(0u, InexactFloatComparer.GetMantissaBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetMantissaBits_Negative_OneHalf()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(-0.5f);
+            Assert.AreEqual(0u, InexactFloatComparer.GetMantissaBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetMantissaBits_Positive_One()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(1.0f);
+            Assert.AreEqual(0u, InexactFloatComparer.GetMantissaBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetMantissaBits_Negative_One()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(-1.0f);
+            Assert.AreEqual(0u, InexactFloatComparer.GetMantissaBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetMantissaBits_Positive_OneAndOneHalf()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(1.5f);
+            Assert.AreEqual(0x40_0000u, InexactFloatComparer.GetMantissaBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetMantissaBits_Negative_OneAndOneHalf()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(-1.5f);
+            Assert.AreEqual(0x40_0000u, InexactFloatComparer.GetMantissaBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetMantissaBits_Positive_Two()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(2.0f);
+            Assert.AreEqual(0u, InexactFloatComparer.GetMantissaBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetMantissaBits_Negative_Two()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(-2.0f);
+            Assert.AreEqual(0u, InexactFloatComparer.GetMantissaBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetMantissaBits_Positive_TwoAndOneHalf()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(2.5f);
+            Assert.AreEqual(0x20_0000u, InexactFloatComparer.GetMantissaBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetMantissaBits_Negative_TwoAndOneHalf()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(-2.5f);
+            Assert.AreEqual(0x20_0000u, InexactFloatComparer.GetMantissaBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetMantissaBits_Positive_LargeValue()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(float.MaxValue);
+            Assert.AreEqual(0x7f_ffffu, InexactFloatComparer.GetMantissaBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetMantissaBits_Negative_LargeValue()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(float.MinValue);
+            Assert.AreEqual(0x7f_ffffu, InexactFloatComparer.GetMantissaBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetMantissaBits_Positive_Infinity()
         {
             uint bits = (uint)BitConverter.SingleToInt32Bits(float.PositiveInfinity);
+            Assert.AreEqual(0u, InexactFloatComparer.GetMantissaBits(bits));
+        }
+
+        [TestMethod]
+        public void TestGetMantissaBits_Negative_Infinity()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(float.NegativeInfinity);
             Assert.AreEqual(0u, InexactFloatComparer.GetMantissaBits(bits));
         }
 
