@@ -118,6 +118,34 @@ namespace Silnith.FloatUtils
             return (int) GetNormalizedBits(f);
         }
 
+        /// <summary>
+        /// Converts a single-precision floating-point value into a consistent
+        /// binary representation according to configurable rounding behavior.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The purpose of this method is to provide consistent normalization
+        /// behavior for floating-point values such that any two values that
+        /// compare as "equal" will also produce the same hash code.  In order
+        /// to meet this requirement, the traditional approach of taking the
+        /// difference of two floating-point values and comparing it to a
+        /// tolerance will not work.  Instead, this rounds the mantissa to a
+        /// configurable number of bits, and does a little futzing to make sure
+        /// values near the boundary of where exponents change still compare
+        /// reliably.
+        /// </para>
+        /// <para>
+        /// Rounding the mantissa provides a tolerance that scales with the
+        /// magnitude of the number.  Numbers very close to zero exhibit their
+        /// own difficulties, so this also provides a configurable cut-off that
+        /// treats values below a certain magnitude as indistinguishable from
+        /// zero.
+        /// </para>
+        /// </remarks>
+        /// <param name="f">The floating-point value to round and convert into a binary representation.</param>
+        /// <returns>A binary value suitable for comparing and using as a hash value.</returns>
+        /// <seealso cref="FloatComparerSettings.MantissaBitsDropped"/>
+        /// <seealso cref="FloatComparerSettings.MinimumExponent"/>
         public uint GetNormalizedBits(float f)
         {
             uint signBit;
@@ -146,13 +174,6 @@ namespace Silnith.FloatUtils
                              * only ever available for extracting the component
                              * fields.
                              */
-                            uint foo = BitConverter.ToUInt32(BitConverter.GetBytes(f));
-                            if (BitConverter.IsLittleEndian)
-                            {
-                            }
-                            else
-                            {
-                            }
                             uint bits = (uint) BitConverter.SingleToInt32Bits(f);
                             signBit = GetSignBit(bits);
                             exponentBits = GetExponentBits(bits);

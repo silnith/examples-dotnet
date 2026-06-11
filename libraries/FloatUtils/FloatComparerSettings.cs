@@ -21,6 +21,9 @@ namespace Silnith.FloatUtils
         /// The <see cref="InexactFloatComparer"/> always drops at least one bit
         /// of precision
         /// </para>
+        /// <para>
+        /// The current implementation rounds instead of truncating.
+        /// </para>
         /// </remarks>
         [Range(1, 24)]
         public int MantissaBitsDropped
@@ -28,6 +31,7 @@ namespace Silnith.FloatUtils
             get;
             set;
         } = 1;
+        // TODO: Provide configurable rounding behavior.
 
         /// <summary>
         /// The exponent below which numbers will be regarded as <c>0</c>.
