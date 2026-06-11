@@ -282,6 +282,23 @@ namespace Silnith.FloatUtils
         }
 
         /// <summary>
+        /// Checks whether the bit in a specific position is set to <c>1</c>.
+        /// The <paramref name="bitPosition"/> is zero-based.
+        /// </summary>
+        /// <param name="bits">The bits to check.</param>
+        /// <param name="bitPosition">The position of the bit to check.  A value of <c>0</c> means check the least significant bit.</param>
+        /// <returns><see langword="true"/> if the specified bit is <c>1</c>.</returns>
+        public bool HasOneInBitPosition(uint bits, int bitPosition)
+        {
+            if ((bitPosition & ~0x1f) != 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(bitPosition), bitPosition, "Must be in the range [0-31]");
+            }
+            uint shifted = bits >> bitPosition;
+            return (shifted & 1u) == 1u;
+        }
+
+        /// <summary>
         /// Returns a consistent representation for <c>0</c>.
         /// </summary>
         /// <param name="signBit">The sign bit.</param>
@@ -314,23 +331,6 @@ namespace Silnith.FloatUtils
             // Any non-zero mantissa would be valid here.
             // Just pick one so we are consistent.
             return AssembleBits(signBit, 255u, 1u);
-        }
-
-        /// <summary>
-        /// Checks whether the bit in a specific position is set to <c>1</c>.
-        /// The <paramref name="bitPosition"/> is zero-based.
-        /// </summary>
-        /// <param name="bits">The bits to check.</param>
-        /// <param name="bitPosition">The position of the bit to check.  A value of <c>0</c> means check the least significant bit.</param>
-        /// <returns><see langword="true"/> if the specified bit is <c>1</c>.</returns>
-        public bool HasOneInBitPosition(uint bits, int bitPosition)
-        {
-            if ((bitPosition & ~0x1f) != 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(bitPosition), bitPosition, "Must be in the range [0-31]");
-            }
-            uint shifted = bits >> bitPosition;
-            return (shifted & 1u) == 1u;
         }
 
         /// <summary>
