@@ -303,7 +303,7 @@ namespace Silnith.FloatUtils
         /// </summary>
         /// <param name="signBit">The sign bit.</param>
         /// <returns>A representation for either positive or negative zero.</returns>
-        public uint GetZero(uint signBit)
+        internal static uint GetZero(uint signBit)
         {
             // Return a consistent representation for zero.
             // This (rather arbitrarily) uses the exponent -126.
@@ -316,7 +316,7 @@ namespace Silnith.FloatUtils
         /// </summary>
         /// <param name="signBit">The sign bit.</param>
         /// <returns>A representation for either positive or negative infinity.</returns>
-        public uint GetInfinity(uint signBit)
+        internal static uint GetInfinity(uint signBit)
         {
             return AssembleBits(signBit, 255u, 0u);
         }
@@ -326,7 +326,7 @@ namespace Silnith.FloatUtils
         /// </summary>
         /// <param name="signBit">The sign bit.</param>
         /// <returns>A representation for either positive or negative NaN.</returns>
-        public uint GetNotANumber(uint signBit)
+        internal static uint GetNotANumber(uint signBit)
         {
             // Any non-zero mantissa would be valid here.
             // Just pick one so we are consistent.

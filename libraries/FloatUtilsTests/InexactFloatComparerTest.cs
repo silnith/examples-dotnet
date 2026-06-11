@@ -188,6 +188,54 @@ namespace Silnith.FloatUtils.Tests
 
         #endregion
 
+        #region GetConstants
+
+        /// <summary>
+        /// Notice that this comparer does not use the "correct" representation for zero.
+        /// This is intentional.
+        /// </summary>
+        [TestMethod]
+        public void TestGetZero_Positive()
+        {
+            Assert.AreEqual(0x0080_0000u, InexactFloatComparer.GetZero(0u));
+        }
+
+        /// <summary>
+        /// Notice that this comparer does not use the "correct" representation for zero.
+        /// This is intentional.
+        /// </summary>
+        [TestMethod]
+        public void TestGetZero_Negative()
+        {
+            Assert.AreEqual(0x8080_0000u, InexactFloatComparer.GetZero(1u));
+        }
+
+        [TestMethod]
+        public void TestGetInfinity_Positive()
+        {
+            Assert.AreEqual(0x7f80_0000u, InexactFloatComparer.GetInfinity(0u));
+        }
+
+        [TestMethod]
+        public void TestGetInfinity_Negative()
+        {
+            Assert.AreEqual(0xff80_0000u, InexactFloatComparer.GetInfinity(1u));
+        }
+
+        [TestMethod]
+        public void TestGetNotANumber_Positive()
+        {
+            Assert.AreEqual(0x7f80_0001u, InexactFloatComparer.GetNotANumber(0u));
+        }
+
+        [TestMethod]
+        public void TestGetNotANumber_Negative()
+        {
+            Assert.AreEqual(0xff80_0001u, InexactFloatComparer.GetNotANumber(1u));
+        }
+
+        #endregion
+
         #region GetBits
 
         #region GetSignBit
