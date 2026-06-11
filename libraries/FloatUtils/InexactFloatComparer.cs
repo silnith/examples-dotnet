@@ -188,12 +188,26 @@ namespace Silnith.FloatUtils
                         switch (exponentBits)
                         {
                             case 0u:
-                                // subnormal number
-                                realExponent = -126;
+                                /*
+                                 * A subnormal number is one where the mantissa
+                                 * does not begin with a 1.
+                                 */
                                 fullMantissa = mantissaBits;
+                                /*
+                                 * The real exponent is set to -126 to match the
+                                 * magnitude of the smallest normal numbers.
+                                 * The smallest normal numbers have an exponent
+                                 * of (1 - 127) = -126, and are prefixed with a 1.
+                                 * Subnormal numbers have an exponent of -126,
+                                 * and are prefixed with a 0.  Therefore subnormal
+                                 * numbers are contiguous with normal numbers.
+                                 */
+                                realExponent = -126;
                                 break;
                             case 255u:
-                                // infinity or NaN
+                                /*
+                                 * Either infinity or NaN.
+                                 */
                                 if (mantissaBits == 0)
                                 {
                                     return GetInfinity(signBit);
@@ -203,11 +217,15 @@ namespace Silnith.FloatUtils
                                     return GetNotANumber(signBit);
                                 }
                             default:
-                                // normal number
-                                realExponent = (int) exponentBits - 127;
+                                /*
+                                 * Normal floating-point numbers assume that the
+                                 * mantissa begins with a 1, and do not actually
+                                 * store that initial 1.
+                                 */
+                                fullMantissa = 0x80_0000 | mantissaBits;
                                 // exponentBits will be in the range [1, 254]
                                 // 0 and 255 were handled by other switch cases
-                                fullMantissa = 0x80_0000 | mantissaBits;
+                                realExponent = (int) exponentBits - 127;
                                 break;
                         }
                         /*
