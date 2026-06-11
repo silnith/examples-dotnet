@@ -193,16 +193,58 @@ namespace Silnith.FloatUtils.Tests
         #region GetSignBit
 
         [TestMethod]
-        public void TestGetSignBit_Zero()
+        public void TestGetSignBit_Positive_Zero()
         {
             uint bits = (uint)BitConverter.SingleToInt32Bits(0.0f);
             Assert.AreEqual(0u, InexactFloatComparer.GetSignBit(bits));
         }
 
         [TestMethod]
-        public void TestGetSignBit_One()
+        public void TestGetSignBit_Negative_Zero()
         {
             uint bits = (uint)BitConverter.SingleToInt32Bits(-0.0f);
+            Assert.AreEqual(1u, InexactFloatComparer.GetSignBit(bits));
+        }
+
+        [TestMethod]
+        public void TestGetSignBit_Positive_One()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(1.0f);
+            Assert.AreEqual(0u, InexactFloatComparer.GetSignBit(bits));
+        }
+
+        [TestMethod]
+        public void TestGetSignBit_Negative_One()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(-1.0f);
+            Assert.AreEqual(1u, InexactFloatComparer.GetSignBit(bits));
+        }
+
+        [TestMethod]
+        public void TestGetSignBit_Positive_Infinity()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(float.PositiveInfinity);
+            Assert.AreEqual(0u, InexactFloatComparer.GetSignBit(bits));
+        }
+
+        [TestMethod]
+        public void TestGetSignBit_Negative_Infinity()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(float.NegativeInfinity);
+            Assert.AreEqual(1u, InexactFloatComparer.GetSignBit(bits));
+        }
+
+        [TestMethod]
+        public void TestGetSignBit_Positive_NaN()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(float.NaN);
+            Assert.AreEqual(0u, InexactFloatComparer.GetSignBit(bits));
+        }
+
+        [TestMethod]
+        public void TestGetSignBit_Negative_NaN()
+        {
+            uint bits = (uint) BitConverter.SingleToInt32Bits(-float.NaN);
             Assert.AreEqual(1u, InexactFloatComparer.GetSignBit(bits));
         }
 
