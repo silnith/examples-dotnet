@@ -195,13 +195,6 @@ namespace Silnith.FloatUtils.Tests
         [TestMethod]
         public void TestGetSignBit_Zero()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             uint bits = (uint)BitConverter.SingleToInt32Bits(0.0f);
             Assert.AreEqual(0u, InexactFloatComparer.GetSignBit(bits));
         }
@@ -209,13 +202,6 @@ namespace Silnith.FloatUtils.Tests
         [TestMethod]
         public void TestGetSignBit_One()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             uint bits = (uint)BitConverter.SingleToInt32Bits(-0.0f);
             Assert.AreEqual(1u, InexactFloatComparer.GetSignBit(bits));
         }
@@ -227,13 +213,6 @@ namespace Silnith.FloatUtils.Tests
         [TestMethod]
         public void TestGetExponentBits_Zero()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             uint bits = (uint)BitConverter.SingleToInt32Bits(0.0f);
             Assert.AreEqual(0u, InexactFloatComparer.GetExponentBits(bits));
         }
@@ -241,13 +220,6 @@ namespace Silnith.FloatUtils.Tests
         [TestMethod]
         public void TestGetExponentBits_Infinity()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             uint bits = (uint)BitConverter.SingleToInt32Bits(float.PositiveInfinity);
             Assert.AreEqual(255u, InexactFloatComparer.GetExponentBits(bits));
         }
@@ -255,13 +227,6 @@ namespace Silnith.FloatUtils.Tests
         [TestMethod]
         public void TestGetExponentBits_NaN()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             uint bits = (uint)BitConverter.SingleToInt32Bits(float.NaN);
             Assert.AreEqual(255u, InexactFloatComparer.GetExponentBits(bits));
         }
@@ -273,13 +238,6 @@ namespace Silnith.FloatUtils.Tests
         [TestMethod]
         public void TestGetMantissaBits_Zero()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             uint bits = (uint)BitConverter.SingleToInt32Bits(0.0f);
             Assert.AreEqual(0u, InexactFloatComparer.GetMantissaBits(bits));
         }
@@ -287,13 +245,6 @@ namespace Silnith.FloatUtils.Tests
         [TestMethod]
         public void TestGetMantissaBits_Infinity()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             uint bits = (uint)BitConverter.SingleToInt32Bits(float.PositiveInfinity);
             Assert.AreEqual(0u, InexactFloatComparer.GetMantissaBits(bits));
         }
@@ -301,13 +252,6 @@ namespace Silnith.FloatUtils.Tests
         [TestMethod]
         public void TestGetMantissaBits_NaN()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             uint bits = (uint)BitConverter.SingleToInt32Bits(float.NaN);
             Assert.AreNotEqual(0u, InexactFloatComparer.GetMantissaBits(bits));
         }
