@@ -20,169 +20,78 @@ namespace Silnith.FloatUtils.Tests
         [TestMethod]
         public void TestHasOneInBitPosition_ByThirtyTwo()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => InexactFloatComparer.HasOneInBitPosition(0u, 32));
         }
 
         [TestMethod]
         public void TestHasOneInBitPosition_ByNegativeOne()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => InexactFloatComparer.HasOneInBitPosition(0u, -1));
         }
 
         [TestMethod]
         public void TestHasOneInBitPosition_ByMin()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => InexactFloatComparer.HasOneInBitPosition(0u, int.MinValue));
         }
 
         [TestMethod]
         public void TestHasOneInBitPosition_ByMax()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => InexactFloatComparer.HasOneInBitPosition(0u, int.MaxValue));
         }
 
         [TestMethod]
         public void TestHasOneInBitPosition_Zero_Zero()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             Assert.IsFalse(InexactFloatComparer.HasOneInBitPosition(0u, 0));
         }
 
         [TestMethod]
         public void TestHasOneInBitPosition_Zero_One()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             Assert.IsFalse(InexactFloatComparer.HasOneInBitPosition(0u, 1));
         }
 
         [TestMethod]
         public void TestHasOneInBitPosition_One_Zero()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             Assert.IsTrue(InexactFloatComparer.HasOneInBitPosition(1u, 0));
         }
 
         [TestMethod]
         public void TestHasOneInBitPosition_One_One()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             Assert.IsFalse(InexactFloatComparer.HasOneInBitPosition(1u, 1));
         }
 
         [TestMethod]
         public void TestHasOneInBitPosition_One_Two()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             Assert.IsFalse(InexactFloatComparer.HasOneInBitPosition(1u, 2));
         }
 
         [TestMethod]
         public void TestHasOneInBitPosition_Two_Zero()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             Assert.IsFalse(InexactFloatComparer.HasOneInBitPosition(2u, 0));
         }
 
         [TestMethod]
         public void TestHasOneInBitPosition_Two_One()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             Assert.IsTrue(InexactFloatComparer.HasOneInBitPosition(2u, 1));
         }
 
         [TestMethod]
         public void TestHasOneInBitPosition_Two_Two()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             Assert.IsFalse(InexactFloatComparer.HasOneInBitPosition(2u, 2));
         }
 
         [TestMethod]
         public void TestHasOneInBitPosition_Max_ThirtyOne()
         {
-            IOptions<FloatComparerSettings> options = Options.Create(new FloatComparerSettings()
-            {
-                MantissaBitsDropped = 1,
-                MinimumExponent = -126,
-            });
-            InexactFloatComparer floatComparer = new(options);
-
             Assert.IsTrue(InexactFloatComparer.HasOneInBitPosition(uint.MaxValue, 31));
         }
 
