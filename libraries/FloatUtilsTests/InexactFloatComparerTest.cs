@@ -8,17 +8,11 @@ namespace Silnith.FloatUtils.Tests
     [TestClass]
     public class InexactFloatComparerTest
     {
-        [TestMethod]
-        public void TestBehavior()
-        {
-            int bits = -1;
-            Assert.AreEqual(0xffffffffu, (uint)bits);
-        }
 
         #region GetNormalizedBits
 
         [TestMethod]
-        public void TestGetNormalizedBits_Foo()
+        public void TestGetNormalizedBits_PositiveInfinity()
         {
             FloatComparerSettings settings = new()
             {
@@ -27,8 +21,50 @@ namespace Silnith.FloatUtils.Tests
             };
             InexactFloatComparer comparer = new(Options.Create(settings));
 
-            uint actual = comparer.GetNormalizedBits(0.0f);
-            Assert.AreEqual(0x0080_0000u, actual);
+            uint actual = comparer.GetNormalizedBits(float.PositiveInfinity);
+            Assert.AreEqual(0x7f80_0000u, actual);
+        }
+
+        [TestMethod]
+        public void TestGetNormalizedBits_NegativeInfinity()
+        {
+            FloatComparerSettings settings = new()
+            {
+                MantissaBitsDropped = 1,
+                MinimumExponent = -126,
+            };
+            InexactFloatComparer comparer = new(Options.Create(settings));
+
+            uint actual = comparer.GetNormalizedBits(float.NegativeInfinity);
+            Assert.AreEqual(0xff80_0000u, actual);
+        }
+
+        [TestMethod]
+        public void TestGetNormalizedBits_PositiveNaN()
+        {
+            FloatComparerSettings settings = new()
+            {
+                MantissaBitsDropped = 1,
+                MinimumExponent = -126,
+            };
+            InexactFloatComparer comparer = new(Options.Create(settings));
+
+            uint actual = comparer.GetNormalizedBits(BitConverter.Int32BitsToSingle(int.MaxValue));
+            Assert.AreEqual(0x7f80_0001u, actual);
+        }
+
+        [TestMethod]
+        public void TestGetNormalizedBits_NegativeNaN()
+        {
+            FloatComparerSettings settings = new()
+            {
+                MantissaBitsDropped = 1,
+                MinimumExponent = -126,
+            };
+            InexactFloatComparer comparer = new(Options.Create(settings));
+
+            uint actual = comparer.GetNormalizedBits(BitConverter.Int32BitsToSingle(-1));
+            Assert.AreEqual(0xff80_0001u, actual);
         }
 
         #endregion
