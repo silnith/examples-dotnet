@@ -14,6 +14,34 @@ namespace Silnith.FloatUtils.Tests
         {
 
             [TestMethod]
+            public void TestGetNormalizedBits_PositiveZero()
+            {
+                FloatComparerSettings settings = new()
+                {
+                    MantissaBitsDropped = 1,
+                    MinimumExponent = -126,
+                };
+                InexactFloatComparer comparer = new(Options.Create(settings));
+
+                uint actual = comparer.GetNormalizedBits(0.0f);
+                Assert.AreEqual(0x0080_0000u, actual);
+            }
+
+            [TestMethod]
+            public void TestGetNormalizedBits_NegativeZero()
+            {
+                FloatComparerSettings settings = new()
+                {
+                    MantissaBitsDropped = 1,
+                    MinimumExponent = -126,
+                };
+                InexactFloatComparer comparer = new(Options.Create(settings));
+
+                uint actual = comparer.GetNormalizedBits(-0.0f);
+                Assert.AreEqual(0x8080_0000u, actual);
+            }
+
+            [TestMethod]
             public void TestGetNormalizedBits_PositiveInfinity()
             {
                 FloatComparerSettings settings = new()
@@ -68,6 +96,8 @@ namespace Silnith.FloatUtils.Tests
                 uint actual = comparer.GetNormalizedBits(BitConverter.Int32BitsToSingle(-1));
                 Assert.AreEqual(0xff80_0001u, actual);
             }
+
+            #region Subnormal
 
             [TestMethod]
             public void TestGetNormalizedBits_PositiveSubnormalLow_MinimalRoundDown()
@@ -141,6 +171,10 @@ namespace Silnith.FloatUtils.Tests
                 Assert.AreEqual(expected, actual);
             }
 
+            #endregion
+
+            #region Normal
+
             [TestMethod]
             public void TestGetNormalizedBits_PositiveNormalLow_MinimalRoundDown()
             {
@@ -174,6 +208,84 @@ namespace Silnith.FloatUtils.Tests
                     | 0x40_0080u;
                 Assert.AreEqual(expected, actual);
             }
+
+            [TestMethod]
+            public void TestGetNormalizedBits_PositiveNormalMostlyLow_MinimalRoundDown()
+            {
+                FloatComparerSettings settings = new()
+                {
+                    MantissaBitsDropped = 1,
+                    MinimumExponent = -126,
+                };
+                InexactFloatComparer comparer = new(Options.Create(settings));
+
+                uint actual = comparer.GetNormalizedBits(BitConverter.Int32BitsToSingle(0x00ff_fffe));
+                uint expected = (0u << 31)
+                    | (1u << 23)
+                    | 0x7f_ffffu;
+                Assert.AreEqual(expected, actual);
+            }
+
+            [TestMethod]
+            public void TestGetNormalizedBits_PositiveNormalMostlyLow_MinimalRoundUp()
+            {
+                FloatComparerSettings settings = new()
+                {
+                    MantissaBitsDropped = 1,
+                    MinimumExponent = -126,
+                };
+                InexactFloatComparer comparer = new(Options.Create(settings));
+
+                uint actual = comparer.GetNormalizedBits(BitConverter.Int32BitsToSingle(0x00ff_ffff));
+                uint expected = (0u << 31)
+                    | (2u << 23)
+                    | 0x40_0000u;
+                Assert.AreEqual(expected, actual);
+            }
+
+            /// <summary>
+            /// Checks that the non-zero value gets rounded, but then the minimum
+            /// exponent clamps it to zero.
+            /// </summary>
+            [TestMethod]
+            public void TestGetNormalizedBits_PositiveNormalMostlyLow_NotQuiteMinimalRoundDown()
+            {
+                FloatComparerSettings settings = new()
+                {
+                    MantissaBitsDropped = 1,
+                    MinimumExponent = -125,
+                };
+                InexactFloatComparer comparer = new(Options.Create(settings));
+
+                uint actual = comparer.GetNormalizedBits(BitConverter.Int32BitsToSingle(0x00ff_fffe));
+                uint expected = (0u << 31)
+                    | (1u << 23)
+                    | 0x00_0000u;
+                Assert.AreEqual(expected, actual);
+            }
+
+            /// <summary>
+            /// Checks that the non-zero value gets rounded up, and that rounding
+            /// bumps it high enough that it passes the minimum exponent threshold.
+            /// </summary>
+            [TestMethod]
+            public void TestGetNormalizedBits_PositiveNormalMostlyLow_NotQuiteMinimalRoundUp()
+            {
+                FloatComparerSettings settings = new()
+                {
+                    MantissaBitsDropped = 1,
+                    MinimumExponent = -125,
+                };
+                InexactFloatComparer comparer = new(Options.Create(settings));
+
+                uint actual = comparer.GetNormalizedBits(BitConverter.Int32BitsToSingle(0x00ff_ffff));
+                uint expected = (0u << 31)
+                    | (2u << 23)
+                    | 0x40_0000u;
+                Assert.AreEqual(expected, actual);
+            }
+
+            #endregion
 
         }
 
