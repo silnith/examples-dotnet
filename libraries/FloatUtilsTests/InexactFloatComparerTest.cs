@@ -450,6 +450,27 @@ namespace Silnith.FloatUtils.Tests
                 Assert.AreEqual(expected, actual);
             }
 
+            /// <summary>
+            /// Check that when all mantissa bits are dropped, the value can
+            /// still overflow to infinity, even if the exponent is truncated.
+            /// </summary>
+            [TestMethod]
+            public void TestGetNormalizedBits_PositiveNormalMax_BrokenRoundUp_TruncatedExponent()
+            {
+                FloatComparerSettings settings = new()
+                {
+                    MantissaBitsDropped = 24,
+                    MinimumExponent = 128,
+                };
+                InexactFloatComparer comparer = new(Options.Create(settings));
+
+                uint actual = comparer.GetNormalizedBits(BitConverter.Int32BitsToSingle(0x7f00_0000));
+                uint expected = (0u << 31)
+                    | (255u << 23)
+                    | 0x00_0000u;
+                Assert.AreEqual(expected, actual);
+            }
+
             #endregion
 
         }
