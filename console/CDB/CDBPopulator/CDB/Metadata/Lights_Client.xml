@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<Lights_Tuning 
+  xmlns="http://www.opengis.net/cdb/1.2/Lights_Tuning"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.opengis.net/cdb/1.2/Lights_Tuning http://schemas.opengis.net/cdb/1.2/Lights_Tuning.xsd"
+  version="1.2">
+  <Light type="\Light\Platform\Air\Aircraft_Helos\Anti-collision">
+    <Description>Tuned for MH-47 CMS</Description>
+    <Intensity>0.75</Intensity>
+    <Color>1.0 0.0 0.0</Color>
+    <Directionality>Omnidirectional</Directionality>
+    <Frequency>0.5</Frequency>
+    <Duty_Cycle>0.2</Duty_Cycle>
+  </Light>
+  <Light type="\Light\Platform\Air\Aircraft_Helos\Landing">
+    <Description>...</Description>
+    <Intensity>1.07</Intensity>
+    <Color>1.0 0.9 0.9</Color>
+    <Directionality>Directional</Directionality>
+    <Residual_Intensity>0.05</Residual_Intensity>
+    <Lobe_Width>
+      <Horizontal>1.1</Horizontal>
+      <Vertical>1.5</Vertical>
+    </Lobe_Width>
+  </Light>
+</Lights_Tuning>

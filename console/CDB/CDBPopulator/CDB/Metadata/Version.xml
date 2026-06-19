@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Version
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://www.opengis.net/cdb/1.2/Version"
+  xsi:schemaLocation="http://www.opengis.net/cdb/1.2/Version http://schemas.opengis.net/cdb/1.2/Version.xsd">
+
+  <PreviousIncrementalRootDirectory name="/CDB/Root"/>
+
+  <Comment>A meaningful comment describing this version</Comment>
+
+  <Specification version="1.2" update="1"/>
+  
+  <Metadata-standard metadata-standard-name="NoMetadata"/>
+
+  <Extension name="Acme:Product_A" version="1.2"/>
+
+</Version>

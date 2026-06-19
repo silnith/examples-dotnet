@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<xs:schema
+  targetNamespace="http://www.opengis.net/cdb/1.2/Datasets"
+  xmlns:cdb="http://www.opengis.net/cdb/1.2/Datasets"
+  xmlns="http://www.opengis.net/cdb/1.2/Datasets"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  elementFormDefault="qualified"
+  attributeFormDefault="unqualified"
+  version="1.2.0">
+
+  <xs:annotation>
+    <xs:documentation xml:lang="en">
+      CDB is an OGC Standard.
+      Copyright (c) 2021 Open Geospatial Consortium.
+      To obtain additional rights of use, visit
+      http://www.opengeospatial.org/legal/.
+    </xs:documentation>
+  </xs:annotation>
+
+  <xs:element name="Datasets">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Dataset" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Encoding" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Format">
+                      <xs:complexType>
+                        <xs:attribute name="name" use="required">
+                          <xs:simpleType>
+                            <xs:restriction base="xs:string">
+                              <xs:enumeration value="GeoPackage"/>
+                              <xs:enumeration value="JPEG 2000"/>
+                              <xs:enumeration value="GeoTIFF"/>
+                              <xs:enumeration value="TIFF"/>
+                              <xs:enumeration value="Shapefile"/>
+                              <xs:enumeration value="OpenFlight"/>
+                              <xs:enumeration value="XML"/>
+                              <xs:enumeration value="SGI"/>
+                            </xs:restriction>
+                          </xs:simpleType>
+                        </xs:attribute>
+                        <xs:attribute name="version" type="xs:token"/>
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element name="File" minOccurs="0">
+                      <xs:complexType>
+                        <xs:attribute name="extension" type="xs:token" use="required"/>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="Component" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="code" type="xs:positiveInteger" use="required"/>
+                  <xs:attribute name="name" type="xs:string" use="required"/>
+                  <xs:attribute name="deprecated" type="xs:boolean"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute name="code" type="xs:positiveInteger" use="required"/>
+            <xs:attribute name="name" type="xs:token" use="required"/>
+            <xs:attribute name="deprecated" type="xs:boolean"/>
+          </xs:complexType>
+          <xs:unique name="Unique_Component_Code">
+            <xs:selector xpath="cdb:Component"/>
+            <xs:field xpath="@code"/>
+          </xs:unique>
+          <xs:unique name="Unique_Component_Name">
+            <xs:selector xpath="cdb:Component"/>
+            <xs:field xpath="@name"/>
+          </xs:unique>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+    <xs:unique name="Unique_Dataset_Code">
+      <xs:selector xpath="cdb:Dataset"/>
+      <xs:field xpath="@code"/>
+    </xs:unique>
+  </xs:element>
+
+</xs:schema>

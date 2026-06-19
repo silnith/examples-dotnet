@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="Stylesheet/Datasets.xsl"?>
+<Datasets
+  xmlns="http://www.opengis.net/cdb/1.2/Datasets"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.opengis.net/cdb/1.2/Datasets http://schemas.opengis.net/cdb/1.2/Datasets.xsd">
+  <Dataset code="1" name="Elevation">
+    <Encoding>
+      <Format name="GeoTIFF" version="1.1"/>
+      <File extension="tif"/>
+    </Encoding>
+    <Component code="1"   name="Terrain"/>
+    <Component code="100" name="Bathymetry"/>
+    <Component code="101" name="Tide"/>
+  </Dataset>
+  <Dataset code="2" name="MinMaxElevation">
+    <Encoding>
+      <Format name="GeoTIFF" version="1.1"/>
+      <File extension="tif"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="3" name="MaxCulture">
+    <Encoding>
+      <Format name="GeoTIFF" version="1.1"/>
+      <File extension="tif"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="4" name="Imagery">
+    <Encoding>
+      <Format name="JPEG 2000"/>
+      <File extension="jp2"/>
+    </Encoding>
+    <Component code="1" name="Yearly Imagery"/>
+    <Component code="2" name="Seasonal Imagery" deprecated="true"/>
+    <Component code="3" name="Monthly Imagery"/>
+    <Component code="4" name="Quarterly Imagery"/>
+    <Component code="5" name="Terrain Light Map"/>
+  </Dataset>
+  <Dataset code="5" name="RMTexture">
+    <Encoding>
+      <Format name="GeoTIFF" version="1.1"/>
+      <File extension="tif"/>
+    </Encoding>
+    <Component code="1" name="Composite Material Index"/>
+    <Component code="2" name="Composite Material Mixture"/>
+  </Dataset>
+  <Dataset code="6" name="RMDescriptor">
+    <Encoding>
+      <Format name="XML" version="1.0"/>
+      <File extension="xml"/>
+    </Encoding>
+    <Component code="1" name="TCMT"/>
+  </Dataset>
+  <Dataset code="100" name="GSFeature">
+    <Encoding>
+      <Format name="GeoPackage" version="1.1"/>
+      <File extension="gpkg"/>
+    </Encoding>
+    <Component code="1" name="Man-Made Features"/>
+    <Component code="2" name="Natural Features"/>
+    <Component code="3" name="Trees"/>
+    <Component code="4" name="Airport Features"/>
+    <Component code="5" name="Environmental Lights"/>
+  </Dataset>
+  <Dataset code="101" name="GTFeature">
+    <Encoding>
+      <Format name="Shapefile"/>
+      <File extension="shp"/>
+    </Encoding>
+    <Component code="1" name="Man-Made Features"/>
+    <Component code="2" name="Trees"/>
+    <Component code="3" name="Moving Model Clutter"/>
+  </Dataset>
+  <Dataset code="102" name="GeoPolitical">
+    <Encoding>
+      <Format name="Shapefile"/>
+      <File extension="shp"/>
+    </Encoding>
+    <Component code="1" name="Boundaries"/>
+    <Component code="2" name="Locations"/>
+    <Component code="3" name="Constraints"/>
+  </Dataset>
+  <Dataset code="200" name="VectorMaterial">
+    <Encoding>
+      <Format name="XML" version="1.0"/>
+      <File extension="xml"/>
+    </Encoding>
+    <Component code="1" name="VCMT"/>
+  </Dataset>
+  <Dataset code="201" name="RoadNetwork">
+    <Encoding>
+      <Format name="Shapefile"/>
+      <File extension="shp"/>
+    </Encoding>
+    <Component code="1" name="Connections"/>
+    <Component code="2" name="Topology"/>
+    <Component code="3" name="Airport"/>
+  </Dataset>
+  <Dataset code="202" name="RailRoadNetwork">
+    <Encoding>
+      <Format name="Shapefile"/>
+      <File extension="shp"/>
+    </Encoding>
+    <Component code="1" name="Connections"/>
+    <Component code="2" name="Topology"/>
+  </Dataset>
+  <Dataset code="203" name="PowerLineNetwork">
+    <Encoding>
+      <Format name="Shapefile"/>
+      <File extension="shp"/>
+    </Encoding>
+    <Component code="1" name="Connections"/>
+    <Component code="2" name="Topology"/>
+  </Dataset>
+  <Dataset code="204" name="HydrographyNetwork">
+    <Encoding>
+      <Format name="Shapefile"/>
+      <File extension="shp"/>
+    </Encoding>
+    <Component code="1" name="Connections"/>
+    <Component code="2" name="Topology"/>
+  </Dataset>
+  <Dataset code="300" name="GSModelGeometry">
+    <Encoding>
+      <Format name="OpenFlight" version="16.0"/>
+      <File extension="flt"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="301" name="GSModelTexture">
+    <Encoding>
+      <Format name="SGI" version="1.0"/>
+      <File extension="rgb"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="302" name="GSModelSignature">
+    <Encoding>
+      <Format name="Shapefile"/>
+      <File extension="shp"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="303" name="GSModelDescriptor">
+    <Encoding>
+      <Format name="XML"/>
+      <File extension="xml"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="304" name="GSModelMaterial">
+    <Encoding>
+      <Format name="TIFF"/>
+      <File extension="tif"/>
+    </Encoding>
+    <Component code="1" name="Composite Material Index"/>
+    <Component code="2" name="Composite Material Mixture"/>
+  </Dataset>
+  <Dataset code="305" name="GSModelInteriorGeometry">
+    <Encoding>
+      <Format name="OpenFlight" version="16.0"/>
+      <File extension="flt"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="306" name="GSModelInteriorTexture">
+    <Encoding>
+      <Format name="SGI" version="1.0"/>
+      <File extension="rgb"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="307" name="GSModelInteriorDescriptor">
+    <Encoding>
+      <Format name="XML"/>
+      <File extension="xml"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="308" name="GSModelInteriorMaterial">
+    <Encoding>
+      <Format name="TIFF"/>
+      <File extension="tif"/>
+    </Encoding>
+    <Component code="1" name="Composite Material Index"/>
+    <Component code="2" name="Composite Material Mixture"/>
+  </Dataset>
+  <Dataset code="309" name="GSModelCMT">
+    <Encoding>
+      <Format name="XML"/>
+      <File extension="xml"/>
+    </Encoding>
+    <Component code="1" name="Composite Material Table"/>
+  </Dataset>
+  <Dataset code="310" name="T2DModelGeometry">
+    <Encoding>
+      <Format name="OpenFlight" version="16.0"/>
+      <File extension="flt"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="311" name="GSModelInteriorCMT">
+    <Encoding>
+      <Format name="XML"/>
+      <File extension="xml"/>
+    </Encoding>
+    <Component code="1" name="Composite Material Table"/>
+  </Dataset>
+  <Dataset code="312" name="T2DModelCMT">
+    <Encoding>
+      <Format name="XML"/>
+      <File extension="xml"/>
+    </Encoding>
+    <Component code="1" name="Composite Material Table"/>
+  </Dataset>
+  <Dataset code="400" name="NavData">
+    <Encoding>
+      <Format name="Shapefile"/>
+      <File extension="shp"/>
+    </Encoding>
+    <Component code="1"  name="Airport"/>
+    <Component code="2"  name="Air Refueling"/>
+    <Component code="3"  name="Air Refueling Control"/>
+    <Component code="4"  name="Air Refueling Footnote"/>
+    <Component code="5"  name="Air Refueling Point"/>
+    <Component code="6"  name="Air Refueling Segment"/>
+    <Component code="7"  name="Airspace Boundary"/>
+    <Component code="8"  name="Airway Restriction"/>
+    <Component code="9"  name="Approach"/>
+    <Component code="10" name="Arresting Gear"/>
+    <Component code="11" name="COMMS"/>
+    <Component code="12" name="Control Airspace"/>
+    <Component code="13" name="Enroute Airway"/>
+    <Component code="14" name="FIR-UIR"/>
+    <Component code="15" name="Gate"/>
+    <Component code="16" name="GLS"/>
+    <Component code="17" name="Helipad"/>
+    <Component code="18" name="Heliport"/>
+    <Component code="19" name="Holding Pattern"/>
+    <Component code="20" name="ILS"/>
+    <Component code="21" name="Marker"/>
+    <Component code="22" name="Military Training Route"/>
+    <Component code="23" name="Military Training Route Airspace"/>
+    <Component code="24" name="Military Training Route Description"/>
+    <Component code="25" name="Military Training Route Overlay"/>
+    <Component code="26" name="MLS"/>
+    <Component code="27" name="MSA"/>
+    <Component code="28" name="Navaid"/>
+    <Component code="29" name="Off-Route Terrain Clearance Altitude"/>
+    <Component code="30" name="Parachute Jump Area"/>
+    <Component code="31" name="Parachute Jump Area Boundary"/>
+    <Component code="32" name="Path Point"/>
+    <Component code="33" name="Preferred Route"/>
+    <Component code="34" name="Preset Site"/>
+    <Component code="35" name="Restrictive Airspace"/>
+    <Component code="36" name="Runway"/>
+    <Component code="37" name="SID"/>
+    <Component code="38" name="Special Use Airspace"/>
+    <Component code="39" name="STAR"/>
+    <Component code="40" name="Supplemental Terminal Data"/>
+    <Component code="41" name="Terminal Procedure Climb"/>
+    <Component code="42" name="Terminal Procedure Feeder Route"/>
+    <Component code="43" name="Terminal Procedure Minima"/>
+    <Component code="44" name="VFR Route"/>
+    <Component code="45" name="VFR Route Segment"/>
+    <Component code="46" name="Waypoint"/>
+  </Dataset>
+  <Dataset code="401" name="Navigation">
+    <Encoding>
+      <Format name="Shapefile"/>
+      <File extension="shp"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="500" name="GTModelGeometry">
+    <Encoding>
+      <Format name="OpenFlight" version="16.0"/>
+      <File extension="flt"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="501" name="GTModelTexture">
+    <Encoding>
+      <Format name="SGI" version="1.0"/>
+      <File extension="rgb"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="502" name="GTModelSignature" deprecated="true">
+    <Encoding>
+      <Format name="Shapefile"/>
+      <File extension="shp"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="503" name="GTModelDescriptor">
+    <Encoding>
+      <Format name="XML"/>
+      <File extension="xml"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="504" name="GTModelMaterial">
+    <Encoding>
+      <Format name="TIFF"/>
+      <File extension="tif"/>
+    </Encoding>
+    <Component code="1" name="Composite Material Index"/>
+    <Component code="2" name="Composite Material Mixture"/>
+  </Dataset>
+  <Dataset code="505" name="GTModelCMT">
+    <Encoding>
+      <Format name="XML"/>
+      <File extension="xml"/>
+    </Encoding>
+    <Component code="1" name="Composite Material Table"/>
+  </Dataset>
+  <Dataset code="506" name="GTModelInteriorGeometry">
+    <Encoding>
+      <Format name="OpenFlight" version="16.0"/>
+      <File extension="flt"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="507" name="GTModelInteriorTexture">
+    <Encoding>
+      <Format name="SGI" version="1.0"/>
+      <File extension="rgb"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="508" name="GTModelInteriorDescriptor">
+    <Encoding>
+      <Format name="XML"/>
+      <File extension="xml"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="509" name="GTModelInteriorMaterial">
+    <Encoding>
+      <Format name="TIFF"/>
+      <File extension="tif"/>
+    </Encoding>
+    <Component code="1" name="Composite Material Index"/>
+    <Component code="2" name="Composite Material Mixture"/>
+  </Dataset>
+  <Dataset code="510" name="GTModelGeometry">
+    <Encoding>
+      <Format name="OpenFlight" version="16.0"/>
+      <File extension="flt"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="511" name="GTModelTexture">
+    <Encoding>
+      <Format name="SGI" version="1.0"/>
+      <File extension="rgb"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="512" name="GTModelSignature">
+    <Encoding>
+      <Format name="Shapefile"/>
+      <File extension="shp"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="513" name="GTModelInteriorCMT">
+    <Encoding>
+      <Format name="XML"/>
+      <File extension="xml"/>
+    </Encoding>
+    <Component code="1" name="Composite Material Table"/>
+  </Dataset>
+  <Dataset code="600" name="MModelGeometry">
+    <Encoding>
+      <Format name="OpenFlight" version="16.0"/>
+      <File extension="flt"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="601" name="MModelTexture">
+    <Encoding>
+      <Format name="SGI" version="1.0"/>
+      <File extension="rgb"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="602" name="MModelSignature" deprecated="true">
+    <Encoding>
+      <Format name="Shapefile"/>
+      <File extension="shp"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="603" name="MModelDescriptor">
+    <Encoding>
+      <Format name="XML"/>
+      <File extension="xml"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="604" name="MModelMaterial">
+    <Encoding>
+      <Format name="TIFF"/>
+      <File extension="tif"/>
+    </Encoding>
+    <Component code="1" name="Composite Material Index"/>
+    <Component code="2" name="Composite Material Mixture"/>
+  </Dataset>
+  <Dataset code="605" name="MModelCMT">
+    <Encoding>
+      <Format name="XML"/>
+      <File extension="xml"/>
+    </Encoding>
+    <Component code="1" name="Composite Material Table"/>
+  </Dataset>
+  <Dataset code="606" name="MModelSignature">
+    <Encoding>
+      <Format name="Shapefile"/>
+      <File extension="shp"/>
+    </Encoding>
+  </Dataset>
+  <Dataset code="700" name="Metadata">
+    <Encoding>
+      <Format name="XML"/>
+      <File extension="xml"/>
+    </Encoding>
+    <Component code="1" name="Lights"/>
+    <Component code="2" name="Model_Components"/>
+    <Component code="3" name="Materials"/>
+    <Component code="4" name="Defaults"/>
+    <Component code="5" name="Specification_Version" deprecated="true"/>
+    <Component code="6" name="Version"/>
+    <Component code="7" name="CDB_Attributes"/>
+    <Component code="8" name="Geomatics_Attributes"/>
+    <Component code="9" name="Vendor_Attributes"/>
+    <Component code="10" name="Configuration"/>
+  </Dataset>
+  <Dataset code="701" name="Client-Specific Metadata">
+    <Encoding>
+      <Format name="XML"/>
+      <File extension="xml"/>
+    </Encoding>
+  </Dataset>
+</Datasets>
