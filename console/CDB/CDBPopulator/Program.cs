@@ -180,16 +180,26 @@ namespace CDBPopulator
                 dbCommand.Parameters[nameParameterName].Value = cdbName;
                 int rowsAffected = await dbCommand.ExecuteNonQueryAsync(cancellationToken);
             }
+
+            const string cdbParamName = "$cdb";
+            const string datasetParamName = "$dataset";
+            const string cs1ParamName = "$cs1";
+            const string cs2ParamName = "$cs2";
+            const string lodParamName = "$lod";
+            const string featureCategoryParamName = "$feature_category";
+            const string featureSubcategoryParamName = "$feature_subcategory";
+            const string featureTypeParamName = "$feature_type";
+            const string featureSubcodeParamName = "$feature_subcode";
+            const string fileTypeParamName = "$file_type";
+            const string contentParamName = "$content";
+
             DirectoryInfo cdbRoot = new(cdbName);
             // Metadata
             {
                 DirectoryInfo metadataDir = new(Path.Combine(cdbRoot.FullName, "Metadata"));
                 MetadataVisitor metadataVisitor = host.Services.GetRequiredService<MetadataVisitor>();
 
-                const string cdbParameterName = "$cdb";
-                const string nameParameterName = "$name";
-                const string fileTypeParameterName = "$file_type";
-                const string contentParameterName = "$content";
+                const string nameParamName = "$name";
                 const string insertIntoMetadataStatement = $"""
                         insert into Metadata (
                             cdb,
@@ -197,27 +207,27 @@ namespace CDBPopulator
                             file_type,
                             content
                         ) values (
-                            {cdbParameterName},
-                            {nameParameterName},
-                            {fileTypeParameterName},
-                            {contentParameterName}
+                            {cdbParamName},
+                            {nameParamName},
+                            {fileTypeParamName},
+                            {contentParamName}
                         )
                         """;
 
                 await using DbCommand insertIntoMetadataCommand = dbConnection.CreateCommand();
                 insertIntoMetadataCommand.CommandText = insertIntoMetadataStatement;
-                CreateAndAttachParameter(insertIntoMetadataCommand, cdbParameterName, DbType.String);
-                CreateAndAttachParameter(insertIntoMetadataCommand, nameParameterName, DbType.String);
-                CreateAndAttachParameter(insertIntoMetadataCommand, fileTypeParameterName, DbType.String);
-                CreateAndAttachParameter(insertIntoMetadataCommand, contentParameterName, DbType.Binary);
+                CreateAndAttachParameter(insertIntoMetadataCommand, cdbParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoMetadataCommand, nameParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoMetadataCommand, fileTypeParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoMetadataCommand, contentParamName, DbType.Binary);
                 await insertIntoMetadataCommand.PrepareAsync(cancellationToken);
-                insertIntoMetadataCommand.Parameters[cdbParameterName].Value = cdbName;
+                insertIntoMetadataCommand.Parameters[cdbParamName].Value = cdbName;
 
                 metadataVisitor.WalkMetadata(metadataDir, async (name, ext, file) =>
                 {
-                    insertIntoMetadataCommand.Parameters[nameParameterName].Value = name;
-                    insertIntoMetadataCommand.Parameters[fileTypeParameterName].Value = ext;
-                    insertIntoMetadataCommand.Parameters[contentParameterName].Value = await File.ReadAllBytesAsync(file.FullName, cancellationToken);
+                    insertIntoMetadataCommand.Parameters[nameParamName].Value = name;
+                    insertIntoMetadataCommand.Parameters[fileTypeParamName].Value = ext;
+                    insertIntoMetadataCommand.Parameters[contentParamName].Value = await File.ReadAllBytesAsync(file.FullName, cancellationToken);
 
                     int rowsAffected = await insertIntoMetadataCommand.ExecuteNonQueryAsync(cancellationToken);
                 });
@@ -226,78 +236,223 @@ namespace CDBPopulator
             {
                 DirectoryInfo gtModelDir = new(Path.Combine(cdbRoot.FullName, "GTModel"));
                 GTModelVisitor gtModelVisitor = host.Services.GetRequiredService<GTModelVisitor>();
+
+                const string modelNameParamName = "$model_name";
+                const string textureNameParamName = "$texture_name";
+                const string insertIntoGeometryStatement = $"""
+                    insert into Geometry (
+                        cdb,
+                        dataset,
+                        component_selector_1,
+                        component_selector_2,
+                        feature_category,
+                        feature_subcategory,
+                        feature_type,
+                        feature_subcode,
+                        model_name,
+                        file_type,
+                        content
+                    ) values (
+                        {cdbParamName},
+                        {datasetParamName},
+                        {cs1ParamName},
+                        {cs2ParamName},
+                        {featureCategoryParamName},
+                        {featureSubcategoryParamName},
+                        {featureTypeParamName},
+                        {featureSubcodeParamName},
+                        {modelNameParamName},
+                        {fileTypeParamName},
+                        {contentParamName}
+                    )
+                    """;
+                const string insertIntoGeometryLodStatement = $"""
+                    insert into GeometryLod (
+                        cdb,
+                        dataset,
+                        component_selector_1,
+                        component_selector_2,
+                        lod,
+                        feature_category,
+                        feature_subcategory,
+                        feature_type,
+                        feature_subcode,
+                        model_name,
+                        file_type,
+                        content
+                    ) values (
+                        {cdbParamName},
+                        {datasetParamName},
+                        {cs1ParamName},
+                        {cs2ParamName},
+                        {lodParamName},
+                        {featureCategoryParamName},
+                        {featureSubcategoryParamName},
+                        {featureTypeParamName},
+                        {featureSubcodeParamName},
+                        {modelNameParamName},
+                        {fileTypeParamName},
+                        {contentParamName}
+                    )
+                    """;
+                const string insertIntoTextureStatement = $"""
+                    insert into Texture (
+                        cdb,
+                        dataset,
+                        component_selector_1,
+                        component_selector_2,
+                        texture_name,
+                        file_type,
+                        content
+                    ) values (
+                        {cdbParamName},
+                        {datasetParamName},
+                        {cs1ParamName},
+                        {cs2ParamName},
+                        {textureNameParamName},
+                        {fileTypeParamName},
+                        {contentParamName}
+                    )
+                    """;
+                const string insertIntoTextureLodStatement = $"""
+                    insert into TextureLod (
+                        cdb,
+                        dataset,
+                        component_selector_1,
+                        component_selector_2,
+                        lod,
+                        texture_name,
+                        file_type,
+                        content
+                    ) values (
+                        {cdbParamName},
+                        {datasetParamName},
+                        {cs1ParamName},
+                        {cs2ParamName},
+                        {lodParamName},
+                        {textureNameParamName},
+                        {fileTypeParamName},
+                        {contentParamName}
+                    )
+                    """;
+
+                await using DbCommand insertIntoGeometryCommand = dbConnection.CreateCommand();
+                {
+                    insertIntoGeometryCommand.CommandText = insertIntoGeometryStatement;
+                    CreateAndAttachParameter(insertIntoGeometryCommand, cdbParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoGeometryCommand, datasetParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoGeometryCommand, cs1ParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoGeometryCommand, cs2ParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoGeometryCommand, featureCategoryParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoGeometryCommand, featureSubcategoryParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoGeometryCommand, featureTypeParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoGeometryCommand, featureSubcodeParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoGeometryCommand, modelNameParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoGeometryCommand, fileTypeParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoGeometryCommand, contentParamName, DbType.Binary);
+                    await insertIntoGeometryCommand.PrepareAsync(cancellationToken);
+                    insertIntoGeometryCommand.Parameters[cdbParamName].Value = cdbName;
+                }
+                await using DbCommand insertIntoGeometryLodCommand = dbConnection.CreateCommand();
+                {
+                    insertIntoGeometryLodCommand.CommandText = insertIntoGeometryLodStatement;
+                    CreateAndAttachParameter(insertIntoGeometryLodCommand, cdbParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoGeometryLodCommand, datasetParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoGeometryLodCommand, cs1ParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoGeometryLodCommand, cs2ParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoGeometryLodCommand, lodParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoGeometryLodCommand, featureCategoryParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoGeometryLodCommand, featureSubcategoryParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoGeometryLodCommand, featureTypeParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoGeometryLodCommand, featureSubcodeParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoGeometryLodCommand, modelNameParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoGeometryLodCommand, fileTypeParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoGeometryLodCommand, contentParamName, DbType.Binary);
+                    await insertIntoGeometryLodCommand.PrepareAsync(cancellationToken);
+                    insertIntoGeometryLodCommand.Parameters[cdbParamName].Value = cdbName;
+                }
+                await using DbCommand insertIntoTextureCommand = dbConnection.CreateCommand();
+                {
+                    insertIntoTextureCommand.CommandText = insertIntoTextureStatement;
+                    CreateAndAttachParameter(insertIntoTextureCommand, cdbParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoTextureCommand, datasetParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoTextureCommand, cs1ParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoTextureCommand, cs2ParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoTextureCommand, textureNameParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoTextureCommand, fileTypeParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoTextureCommand, contentParamName, DbType.Binary);
+                    await insertIntoTextureCommand.PrepareAsync(cancellationToken);
+                    insertIntoTextureCommand.Parameters[cdbParamName].Value = cdbName;
+                }
+                await using DbCommand insertIntoTextureLodCommand = dbConnection.CreateCommand();
+                {
+                    insertIntoTextureLodCommand.CommandText = insertIntoTextureLodStatement;
+                    CreateAndAttachParameter(insertIntoTextureLodCommand, cdbParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoTextureLodCommand, datasetParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoTextureLodCommand, cs1ParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoTextureLodCommand, cs2ParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoTextureLodCommand, lodParamName, DbType.Int32);
+                    CreateAndAttachParameter(insertIntoTextureLodCommand, textureNameParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoTextureLodCommand, fileTypeParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoTextureLodCommand, contentParamName, DbType.Binary);
+                    await insertIntoTextureLodCommand.PrepareAsync(cancellationToken);
+                    insertIntoTextureLodCommand.Parameters[cdbParamName].Value = cdbName;
+                }
+
                 gtModelVisitor.WalkGeotypicalModels(gtModelDir,
-                    (geometry, file) =>
+                    async (geometry, file) =>
                     {
-                        // Insert into database.
-                        const string insert1 = """
-                                insert into Geometry
-                                (
-                                    cdb,
-                                    dataset,
-                                    component_selector_1,
-                                    component_selector_2,
-                                    feature_category,
-                                    feature_subcategory,
-                                    feature_type,
-                                    feature_subcode,
-                                    model_name,
-                                    file_type,
-                                    content
-                                ) values ()
-                                """;
+                        insertIntoGeometryCommand.Parameters[datasetParamName].Value = geometry.Dataset.Value;
+                        insertIntoGeometryCommand.Parameters[cs1ParamName].Value = geometry.ComponentSelector1;
+                        insertIntoGeometryCommand.Parameters[cs2ParamName].Value = geometry.ComponentSelector2;
+                        insertIntoGeometryCommand.Parameters[featureCategoryParamName].Value = geometry.FeatureCode.Category;
+                        insertIntoGeometryCommand.Parameters[featureSubcategoryParamName].Value = geometry.FeatureCode.Subcategory;
+                        insertIntoGeometryCommand.Parameters[featureTypeParamName].Value = geometry.FeatureCode.Type;
+                        insertIntoGeometryCommand.Parameters[featureSubcodeParamName].Value = geometry.FeatureSubcode;
+                        insertIntoGeometryCommand.Parameters[modelNameParamName].Value = geometry.ModelName;
+                        insertIntoGeometryCommand.Parameters[fileTypeParamName].Value = geometry.FileType;
+                        insertIntoGeometryCommand.Parameters[contentParamName].Value = await File.ReadAllBytesAsync(file.FullName, cancellationToken);
+
+                        int rowsAffected = await insertIntoGeometryCommand.ExecuteNonQueryAsync(cancellationToken);
                     },
-                    (geometryLod, file) =>
+                    async (geometryLod, file) =>
                     {
-                        // Insert into database.
-                        const string insert2 = """
-                                insert into GeometryLOD
-                                (
-                                    cdb,
-                                    dataset,
-                                    component_selector_1,
-                                    component_selector_2,
-                                    lod,
-                                    feature_category,
-                                    feature_subcategory,
-                                    feature_type,
-                                    feature_subcode,
-                                    model_name,
-                                    file_type,
-                                    content
-                                ) values ()
-                                """;
+                        insertIntoGeometryLodCommand.Parameters[datasetParamName].Value = geometryLod.Dataset.Value;
+                        insertIntoGeometryLodCommand.Parameters[cs1ParamName].Value = geometryLod.ComponentSelector1;
+                        insertIntoGeometryLodCommand.Parameters[cs2ParamName].Value = geometryLod.ComponentSelector2;
+                        insertIntoGeometryLodCommand.Parameters[lodParamName].Value = geometryLod.LevelOfDetail.Level;
+                        insertIntoGeometryLodCommand.Parameters[featureCategoryParamName].Value = geometryLod.FeatureCode.Category;
+                        insertIntoGeometryLodCommand.Parameters[featureSubcategoryParamName].Value = geometryLod.FeatureCode.Subcategory;
+                        insertIntoGeometryLodCommand.Parameters[featureTypeParamName].Value = geometryLod.FeatureCode.Type;
+                        insertIntoGeometryLodCommand.Parameters[featureSubcodeParamName].Value = geometryLod.FeatureSubcode;
+                        insertIntoGeometryLodCommand.Parameters[modelNameParamName].Value = geometryLod.ModelName;
+                        insertIntoGeometryLodCommand.Parameters[fileTypeParamName].Value = geometryLod.FileType;
+                        insertIntoGeometryLodCommand.Parameters[contentParamName].Value = await File.ReadAllBytesAsync(file.FullName, cancellationToken);
+
+                        int rowsAffected = await insertIntoGeometryLodCommand.ExecuteNonQueryAsync(cancellationToken);
                     },
-                    (texture, file) =>
+                    async (texture, file) =>
                     {
-                        // insert
-                        const string insert = """
-                                insert into TextureMetadata (
-                                    cdb,
-                                    dataset,
-                                    component_selector_1,
-                                    component_selector_2,
-                                    texture_name,
-                                    file_type,
-                                    content
-                                ) values ()
-                                """;
+                        insertIntoTextureCommand.Parameters[datasetParamName].Value = texture.Dataset.Value;
+                        insertIntoTextureCommand.Parameters[cs1ParamName].Value = texture.ComponentSelector1;
+                        insertIntoTextureCommand.Parameters[cs2ParamName].Value = texture.ComponentSelector2;
+                        insertIntoTextureCommand.Parameters[textureNameParamName].Value = texture.TextureName;
+                        insertIntoTextureCommand.Parameters[fileTypeParamName].Value = texture.FileType;
+                        insertIntoTextureCommand.Parameters[contentParamName].Value = await File.ReadAllBytesAsync(file.FullName, cancellationToken);
+
+                        int rowsAffected = await insertIntoTextureCommand.ExecuteNonQueryAsync(cancellationToken);
                     },
-                    (textureLod, file) =>
+                    async (textureLod, file) =>
                     {
-                        // insert
-                        const string insert = """
-                                insert into Textures (
-                                    cdb,
-                                    dataset,
-                                    component_selector_1,
-                                    component_selector_2,
-                                    lod,
-                                    texture_name,
-                                    file_type,
-                                    content
-                                ) values ()
-                                """;
+                        insertIntoTextureLodCommand.Parameters[datasetParamName].Value = textureLod.Dataset.Value;
+                        insertIntoTextureLodCommand.Parameters[cs1ParamName].Value = textureLod.ComponentSelector1;
+                        insertIntoTextureLodCommand.Parameters[cs2ParamName].Value = textureLod.ComponentSelector2;
+                        insertIntoTextureLodCommand.Parameters[lodParamName].Value = textureLod.LevelOfDetail.Level;
+                        insertIntoTextureLodCommand.Parameters[textureNameParamName].Value = textureLod.TextureName;
+                        insertIntoTextureLodCommand.Parameters[fileTypeParamName].Value = textureLod.FileType;
+                        insertIntoTextureLodCommand.Parameters[contentParamName].Value = await File.ReadAllBytesAsync(file.FullName, cancellationToken);
+
+                        int rowsAffected = await insertIntoTextureLodCommand.ExecuteNonQueryAsync(cancellationToken);
                     });
             }
             // MModel
@@ -784,7 +939,7 @@ create table GeometryLOD (
 
             // Need an index on texture name.
             dbCommand.CommandText = """
-create table TextureMetadata (
+create table Texture (
     cdb text not null references CDB(name),
     dataset integer not null,
     component_selector_1 integer not null,
@@ -806,7 +961,7 @@ create table TextureMetadata (
 
             // Need an index on texture name.
             dbCommand.CommandText = """
-create table Textures (
+create table TextureLod (
     cdb text not null references CDB(name),
     dataset integer not null,
     component_selector_1 integer not null,
