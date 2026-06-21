@@ -1,9 +1,14 @@
 ﻿using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Silnith.CDB;
+using Silnith.CDB.SQLite;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -92,53 +97,119 @@ namespace CDBPopulator
          * Feature Code
          */
 
+        private static IHost Setup(string[] args)
+        {
+            HostApplicationBuilder hostApplicationBuilder = Host.CreateApplicationBuilder(args);
+
+            hostApplicationBuilder.Services.AddSingleton<DbConnectionStringBuilder, SqliteConnectionStringBuilder>(serviceProvider =>
+            {
+                return new()
+                {
+                    DataSource = ":memory:",
+                    Mode = SqliteOpenMode.ReadWriteCreate,
+                    Cache = SqliteCacheMode.Default,
+                    ForeignKeys = true,
+                    RecursiveTriggers = true,
+                    Pooling = true,
+                };
+            });
+            hostApplicationBuilder.Services.AddTransient<DbConnection, SqliteConnection>(serviceProvider =>
+            {
+                DbConnectionStringBuilder dbConnectionStringBuilder = serviceProvider.GetRequiredService<DbConnectionStringBuilder>();
+                SqliteConnection sqliteConnection = new(dbConnectionStringBuilder.ConnectionString);
+                sqliteConnection.Open();
+                return sqliteConnection;
+            });
+            //hostApplicationBuilder.Services.AddSingleton<DbProviderFactory>(serviceProvider =>
+            //{
+            //    string providerInvariantName = "System.Data.Sqlite";
+            //    return DbProviderFactories.GetFactory(providerInvariantName);
+            //});
+            //hostApplicationBuilder.Services.AddSingleton<DbDataSource>(serviceProvider =>
+            //{
+            //    DbProviderFactory dbProviderFactory = serviceProvider.GetRequiredService<DbProviderFactory>();
+            //    DbConnectionStringBuilder dbConnectionStringBuilder = serviceProvider.GetRequiredService<DbConnectionStringBuilder>();
+            //    return dbProviderFactory.CreateDataSource(dbConnectionStringBuilder.ConnectionString);
+            //});
+            //hostApplicationBuilder.Services.AddTransient<DbConnection>(serviceProvider =>
+            //{
+            //    DbDataSource dbDataSource = serviceProvider.GetRequiredService<DbDataSource>();
+            //    return dbDataSource.OpenConnection();
+            //});
+
+            hostApplicationBuilder.Services.AddSingleton<FeatureCodeDirectoryVisitor>();
+            hostApplicationBuilder.Services.AddSingleton<LevelOfDetailDirectoryWalker>();
+            hostApplicationBuilder.Services.AddSingleton<MovingModelDirectoryVisitor>();
+            hostApplicationBuilder.Services.AddSingleton<TextureDirectoryVisitor>();
+            hostApplicationBuilder.Services.AddSingleton<TiledDatasetVisitor>();
+
+            return hostApplicationBuilder.Build();
+        }
+
+        private static void CreateAndAttachParameter(DbCommand dbCommand, string dbParameterName, DbType dbType)
+        {
+            DbParameter dbParameter = dbCommand.CreateParameter();
+            dbCommand.Parameters.Add(dbParameter);
+            dbParameter.DbType = dbType;
+            dbParameter.ParameterName = dbParameterName;
+        }
+
         static async Task<int> Main(string[] args)
         {
+            using var host = Setup(args);
+
             CancellationTokenSource source = new();
             CancellationToken cancellationToken = source.Token;
-            SqliteConnectionStringBuilder sqliteConnectionStringBuilder = new()
+
+            await using DbConnection dbConnection = host.Services.GetRequiredService<DbConnection>();
+
+            await CreateSqliteSchema(dbConnection, cancellationToken);
+
+            string cdbName = "CDB";
+            await using (DbCommand dbCommand = dbConnection.CreateCommand())
             {
-                DataSource = ":memory:",
-            };
-            using SqliteConnection sqliteConnection = new(sqliteConnectionStringBuilder.ConnectionString);
-            await sqliteConnection.OpenAsync(cancellationToken);
-
-            await CreateSqliteSchema(sqliteConnection, cancellationToken);
-
-            DirectoryInfo cdbRoot = new("CDB");
+                const string nameParameterName = "$name";
+                const string sql = $"""
+                    insert into CDB (name) values ({nameParameterName})
+                    """;
+                dbCommand.CommandText = sql;
+                CreateAndAttachParameter(dbCommand, nameParameterName, DbType.String);
+                await dbCommand.PrepareAsync(cancellationToken);
+                dbCommand.Parameters[nameParameterName].Value = cdbName;
+                int rowsAffected = await dbCommand.ExecuteNonQueryAsync(cancellationToken);
+            }
+            DirectoryInfo cdbRoot = new(cdbName);
             // Metadata
             {
-                using DbCommand dbCommand = sqliteConnection.CreateCommand();
-                dbCommand.CommandText = "insert into Metadata (name, file_type, content) values ($name, $file_type, $content)";
-                DbParameter nameParam = dbCommand.CreateParameter();
-                DbParameter typeParam = dbCommand.CreateParameter();
-                DbParameter contentParam = dbCommand.CreateParameter();
-                nameParam.DbType = DbType.String;
-                nameParam.Direction = ParameterDirection.Input;
-                nameParam.ParameterName = "$name";
-                typeParam.DbType = DbType.String;
-                typeParam.Direction = ParameterDirection.Input;
-                typeParam.ParameterName = "$file_type";
-                contentParam.DbType = DbType.String;
-                contentParam.Direction = ParameterDirection.Input;
-                contentParam.ParameterName = "$content";
-                dbCommand.Parameters.Add(nameParam);
-                dbCommand.Parameters.Add(typeParam);
-                dbCommand.Parameters.Add(contentParam);
                 DirectoryInfo metadataDir = new(Path.Combine(cdbRoot.FullName, "Metadata"));
-                foreach (string metadataFilename in Directory.EnumerateFiles(metadataDir.FullName))
-                {
-                    FileInfo metadataFile = new(Path.Combine(metadataDir.FullName, metadataFilename));
 
-                    nameParam.Value = metadataFile.Name.Remove(metadataFile.Name.Length - metadataFile.Extension.Length);
-                    typeParam.Value = metadataFile.Extension.Substring(1);
-                    contentParam.Value = await File.ReadAllBytesAsync(metadataFile.FullName, cancellationToken);
+                const string cdbParameterName = "$cdb";
+                const string nameParameterName = "$name";
+                const string fileTypeParameterName = "$file_type";
+                const string contentParameterName = "$content";
+                const string sql = $"insert into Metadata (cdb, name, file_type, content) values ({cdbParameterName}, {nameParameterName}, {fileTypeParameterName}, {contentParameterName})";
+
+                await using DbCommand dbCommand = dbConnection.CreateCommand();
+                dbCommand.CommandText = sql;
+                CreateAndAttachParameter(dbCommand, cdbParameterName, DbType.String);
+                CreateAndAttachParameter(dbCommand, nameParameterName, DbType.String);
+                CreateAndAttachParameter(dbCommand, fileTypeParameterName, DbType.String);
+                CreateAndAttachParameter(dbCommand, contentParameterName, DbType.Binary);
+                await dbCommand.PrepareAsync(cancellationToken);
+                dbCommand.Parameters[cdbParameterName].Value = cdbName;
+
+                foreach (FileInfo metadataFile in metadataDir.EnumerateFiles())
+                {
+                    dbCommand.Parameters[nameParameterName].Value = metadataFile.Name.Remove(metadataFile.Name.Length - metadataFile.Extension.Length);
+                    dbCommand.Parameters[fileTypeParameterName].Value = metadataFile.Extension.Substring(1);
+                    dbCommand.Parameters[contentParameterName].Value = await File.ReadAllBytesAsync(metadataFile.FullName, cancellationToken);
 
                     int rowsAffected = await dbCommand.ExecuteNonQueryAsync(cancellationToken);
                 }
             }
             // GTModel
             {
+                DirectoryInfo gtModelDir = new(Path.Combine(cdbRoot.FullName, "GTModel"));
                 /*
                  * - /GTModel/500_GTModelGeometry/A_Something/E_Something/010_Something/D500_S001_T001_something.duh
                  */
@@ -168,14 +239,16 @@ namespace CDBPopulator
                  * 502_GTModelSignature
                  * 512_GTModelSignature
                  */
-                DirectoryInfo gtModelDir = new(Path.Combine(cdbRoot.FullName, "GTModel"));
+                FeatureCodeDirectoryVisitor featureCodeDirectoryVisitor = host.Services.GetRequiredService<FeatureCodeDirectoryVisitor>();
+                TextureDirectoryVisitor textureDirectoryVisitor = host.Services.GetRequiredService<TextureDirectoryVisitor>();
+                LevelOfDetailDirectoryWalker levelOfDetailDirectoryWalker = host.Services.GetRequiredService<LevelOfDetailDirectoryWalker>();
                 DirectoryInfo directoryInfo = new(Path.Combine(gtModelDir.FullName, "500_GTModelGeometry"));
                 int datasetFromDirectory = 500;
                 Regex gtModelGeometryFileNamePattern = new("^D(?<dataset>\\d{3})_S(?<component_selector_1>\\d{3})_T(?<component_selector_2>\\d{3})_(?<fc_category>[A-Z])(?<fc_subcategory>[A-Z])(?<fc_type>\\d{3})_(?<feature_subcode>\\d{3})_(?<modl>[^.]+)\\.(?<file_type>[^.]+)$",
                     RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
                 Regex gtModelGeometryLevelOfDetailFileNamePattern = new("^D(?<dataset>\\d{3})_S(?<component_selector_1>\\d{3})_T(?<component_selector_2>\\d{3})_L(?<lod_negated>C?)(?<lod>\\d{2})_(?<fc_category>[A-Z])(?<fc_subcategory>[A-Z])(?<fc_type>\\d{3})_(?<feature_subcode>\\d{3})_(?<modl>[^.]+)\\.(?<file_type>[^.]+)$",
                     RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
-                FeatureCode.WalkDirectories(directoryInfo, (featureCodeFromDirectory, directory) =>
+                featureCodeDirectoryVisitor.WalkDirectories(directoryInfo, (featureCodeFromDirectory, directory) =>
                 {
                     foreach (var file in directory.EnumerateFiles())
                     {
@@ -223,40 +296,40 @@ namespace CDBPopulator
                         }
                     }
 
-                    foreach (var lodDir in directory.EnumerateDirectories())
+                    levelOfDetailDirectoryWalker.WalkModelGeometryDirectories(directory, (lod, lodDir) =>
                     {
-                        if (LevelOfDetail.TryFromCode(lodDir.Name, out var lod))
+                        var code = lod!.Level;
+
+                        foreach (var file in lodDir.EnumerateFiles())
                         {
-                            var code = lod.Code;
-
-                            foreach (var file in lodDir.EnumerateFiles())
+                            Match fileNameMatch = gtModelGeometryLevelOfDetailFileNamePattern.Match(file.Name);
+                            if (!fileNameMatch.Success)
                             {
-                                Match fileNameMatch = gtModelGeometryLevelOfDetailFileNamePattern.Match(file.Name);
-                                if (fileNameMatch.Success)
-                                {
-                                    var dataset = int.Parse(fileNameMatch.Groups["dataset"].Value, CultureInfo.InvariantCulture);
-                                    var componentSelector1 = int.Parse(fileNameMatch.Groups["component_selector_1"].Value, CultureInfo.InvariantCulture);
-                                    var componentSelector2 = int.Parse(fileNameMatch.Groups["component_selector_2"].Value, CultureInfo.InvariantCulture);
-                                    var lodNegated = fileNameMatch.Groups["lod_negated"].Value;
-                                    var lodValue = int.Parse(fileNameMatch.Groups["lod"].Value, CultureInfo.InvariantCulture);
-                                    var fcCategory = fileNameMatch.Groups["fc_category"].Value;
-                                    var fcSubcategory = fileNameMatch.Groups["fc_subcategory"].Value;
-                                    var fcType = int.Parse(fileNameMatch.Groups["fc_type"].Value, CultureInfo.InvariantCulture);
-                                    var fsc = int.Parse(fileNameMatch.Groups["feature_subcode"].Value, CultureInfo.InvariantCulture);
-                                    var modl = fileNameMatch.Groups["modl"].Value;
-                                    var ext = fileNameMatch.Groups["file_type"].Value;
+                                continue;
+                            }
+                            var dataset = int.Parse(fileNameMatch.Groups["dataset"].Value, CultureInfo.InvariantCulture);
+                            var componentSelector1 = int.Parse(fileNameMatch.Groups["component_selector_1"].Value, CultureInfo.InvariantCulture);
+                            var componentSelector2 = int.Parse(fileNameMatch.Groups["component_selector_2"].Value, CultureInfo.InvariantCulture);
+                            var lodNegated = fileNameMatch.Groups["lod_negated"].Value;
+                            var lodValue = int.Parse(fileNameMatch.Groups["lod"].Value, CultureInfo.InvariantCulture);
+                            var fcCategory = fileNameMatch.Groups["fc_category"].Value;
+                            var fcSubcategory = fileNameMatch.Groups["fc_subcategory"].Value;
+                            var fcType = int.Parse(fileNameMatch.Groups["fc_type"].Value, CultureInfo.InvariantCulture);
+                            var fsc = int.Parse(fileNameMatch.Groups["feature_subcode"].Value, CultureInfo.InvariantCulture);
+                            var modl = fileNameMatch.Groups["modl"].Value;
+                            var ext = fileNameMatch.Groups["file_type"].Value;
 
-                                    LevelOfDetail levelOfDetail = LevelOfDetail.FromRegexMatch(lodNegated, lodValue);
-                                    FeatureCode featureCode = new(fcCategory, fcSubcategory, fcType);
+                            LevelOfDetail levelOfDetail = LevelOfDetail.FromRegexMatch(lodNegated, lodValue);
+                            FeatureCode featureCode = new(fcCategory, fcSubcategory, fcType);
 
-                                    if (datasetFromDirectory != dataset
-                                        || featureCodeFromDirectory != featureCode)
-                                    {
-                                        // TODO: Log error.
-                                    }
+                            if (datasetFromDirectory != dataset
+                                || featureCodeFromDirectory != featureCode)
+                            {
+                                // TODO: Log error.
+                            }
 
-                                    // Insert into database.
-                                    const string insert2 = """
+                            // Insert into database.
+                            const string insert2 = """
                                             insert into GeometryLOD
                                             (
                                                 cdb,
@@ -273,10 +346,8 @@ namespace CDBPopulator
                                                 content
                                             ) values ()
                                             """;
-                                }
-                            }
                         }
-                    }
+                    });
                 });
                 /*
                  * This next bit applies to the following datasets:
@@ -289,7 +360,7 @@ namespace CDBPopulator
                  * 509_GTModelInteriorMaterial
                  * 513_GTModelInteriorCMT
                  */
-                TextureName.WalkDirectories(new DirectoryInfo(Path.Combine(gtModelDir.FullName, "501_GTModelTexture")), (textureName, dir) =>
+                textureDirectoryVisitor.WalkDirectories(new DirectoryInfo(Path.Combine(gtModelDir.FullName, "501_GTModelTexture")), (textureName, dir) =>
                 {
                     Regex TextureCmtFileNamePattern = new("^D(?<dataset>\\d{3})_S(?<component_selector_1>\\d{3})_T(?<component_selector_2>\\d{3})_(?<name>[^.]+)\\.(?<file_type>[^.]+)$",
                         RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
@@ -352,14 +423,17 @@ namespace CDBPopulator
             }
             // MModel
             {
+                DirectoryInfo mmodelDir = new(Path.Combine(cdbRoot.FullName, "MModel"));
                 /*
                  * MModel is based on the DIS Entity Type.
                  * 
                  * Applies to 600_MModelGeometry.
                  * 603
                  */
-                DirectoryInfo mmodelDir = new(Path.Combine(cdbRoot.FullName, "MModel"));
-                DisEntityType.WalkDirectories(new(Path.Combine(mmodelDir.FullName, "600_MModelGeometry")), (disEntityTypeFromDirectory, dir) =>
+                MovingModelDirectoryVisitor movingModelDirectoryVisitor = host.Services.GetRequiredService<MovingModelDirectoryVisitor>();
+                TextureDirectoryVisitor textureDirectoryVisitor = host.Services.GetRequiredService<TextureDirectoryVisitor>();
+                LevelOfDetailDirectoryWalker levelOfDetailDirectoryWalker = host.Services.GetRequiredService<LevelOfDetailDirectoryWalker>();
+                movingModelDirectoryVisitor.WalkDirectories(new(Path.Combine(mmodelDir.FullName, "600_MModelGeometry")), (disEntityTypeFromDirectory, dir) =>
                 {
                     Regex mModelGeometryFilesPattern = new("^D(?<dataset>\\d{3})_S(?<component_selector_1>\\d{3})_T(?<component_selector_2>\\d{3})_(?<mmdc>[^.]+)\\.(?<file_type>[^.]+)$",
                         RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
@@ -409,7 +483,7 @@ namespace CDBPopulator
                  * without size:
                  * 605_MModelCMT
                  */
-                TextureName.WalkDirectories(new DirectoryInfo(Path.Combine(mmodelDir.FullName, "601_MModelTexture")), (textureName, dir) =>
+                textureDirectoryVisitor.WalkDirectories(new DirectoryInfo(Path.Combine(mmodelDir.FullName, "601_MModelTexture")), (textureName, dir) =>
                 {
                     Regex TextureFileNamePattern = new("^D(?<dataset>\\d{3})_S(?<component_selector_1>\\d{3})_T(?<component_selector_2>\\d{3})_(?<name>[^.]+)\\.(?<file_type>[^.]+)$",
                         RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
@@ -470,35 +544,33 @@ namespace CDBPopulator
                  * 606_MModelSignature is DIS Entity Type with an LOD.
                  */
                 // D606_Snnn_Tnnn_LOD_MMDC.ext
-                DisEntityType.WalkDirectories(new(Path.Combine(mmodelDir.FullName, "600_MModelGeometry")), (disEntityTypeFromDirectory, dir) =>
+                movingModelDirectoryVisitor.WalkDirectories(new(Path.Combine(mmodelDir.FullName, "600_MModelGeometry")), (disEntityTypeFromDirectory, dir) =>
                 {
                     Regex mModelGeometryLodFilesPattern = new("^D(?<dataset>\\d{3})_S(?<component_selector_1>\\d{3})_T(?<component_selector_2>\\d{3})_(?<lod>LC?\\d{2})_(?<mmdc>[^.]+)\\.(?<file_type>[^.]+)$",
                         RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
 
-                    foreach (var lodDir in dir.EnumerateDirectories())
+                    levelOfDetailDirectoryWalker.WalkModelGeometryDirectories(dir, (lod, lodDir) =>
                     {
-                        if (LevelOfDetail.TryFromCode(lodDir.Name, out var lod))
+                        foreach (var file in lodDir.EnumerateFiles())
                         {
-                            foreach (var file in lodDir.EnumerateFiles())
+                            Match lodMatch = mModelGeometryLodFilesPattern.Match(file.Name);
+                            if (lodMatch.Success)
                             {
-                                Match lodMatch = mModelGeometryLodFilesPattern.Match(file.Name);
-                                if (lodMatch.Success)
+                                // TODO: Grab it!
+                                var dataset = int.Parse(lodMatch.Groups["dataset"].Value, CultureInfo.InvariantCulture);
+                                var componentSelector1 = int.Parse(lodMatch.Groups["component_selector_1"].Value, CultureInfo.InvariantCulture);
+                                var componentSelector2 = int.Parse(lodMatch.Groups["component_selector_2"].Value, CultureInfo.InvariantCulture);
+                                var lod2 = lodMatch.Groups["lod"].Value;
+                                var mmdc = lodMatch.Groups["mmdc"].Value;
+                                var fileType = lodMatch.Groups["file_type"].Value;
+
+                                if (mmdc != disEntityTypeFromDirectory.MovingModelDisCode) // || lod2 != lod.Level
                                 {
-                                    // TODO: Grab it!
-                                    var dataset = int.Parse(lodMatch.Groups["dataset"].Value, CultureInfo.InvariantCulture);
-                                    var componentSelector1 = int.Parse(lodMatch.Groups["component_selector_1"].Value, CultureInfo.InvariantCulture);
-                                    var componentSelector2 = int.Parse(lodMatch.Groups["component_selector_2"].Value, CultureInfo.InvariantCulture);
-                                    var lod2 = lodMatch.Groups["lod"].Value;
-                                    var mmdc = lodMatch.Groups["mmdc"].Value;
-                                    var fileType = lodMatch.Groups["file_type"].Value;
+                                    // TODO: Log an error.
+                                }
 
-                                    if (mmdc != disEntityTypeFromDirectory.MovingModelDisCode|| lod2 != lod.Code)
-                                    {
-                                        // TODO: Log an error.
-                                    }
-
-                                    // insert
-                                    const string insert = """
+                                // insert
+                                const string insert = """
                                     insert into ModelsLOD (
                                         cdb,
                                         dataset,
@@ -516,34 +588,227 @@ namespace CDBPopulator
                                         content
                                     ) values ()
                                     """;
+                            }
+                        }
+                    });
+                });
+            }
+            // Tiles
+            {
+                DirectoryInfo tilesDir = new(Path.Combine(cdbRoot.FullName, "Tiles"));
+                /*
+                 * Tiled datasets:
+                 * Elevation
+                 * MinMaxElevation
+                 * MaxCulture
+                 * Imagery
+                 * RMTexture
+                 * RMDescriptor
+                 * GSFeature
+                 * GTFeature
+                 * GeoPolitical
+                 * VectorMaterial
+                 * RoadNetwork
+                 * RailRoadNetwork
+                 * PowerLineNetwork
+                 * HydrographyNetwork
+                 * GSModelGeometry
+                 * GSModelTexture
+                 * GSModelSignature
+                 * GSModelDescriptor
+                 * GSModelMaterial
+                 * GSModelCMT
+                 * GSModelInteriorGeometry
+                 * GSModelInteriorTexture
+                 * GSModelInteriorDescriptor
+                 * GSModelInteriorMaterial
+                 * GSModelInteriorCMT
+                 * T2DModelGeometry
+                 * T2DModelCMT
+                 * Navigation
+                 */
+                TiledDatasetVisitor tiledDatasetVisitor = host.Services.GetRequiredService<TiledDatasetVisitor>();
+
+                const string cdbParameterName = "$cdb";
+                const string latitudeParameterName = "$latitude";
+                const string longitudeParameterName = "$longitude";
+                const string datasetParameterName = "$dataset";
+                const string cs1ParameterName = "$cs1";
+                const string cs2ParameterName = "$cs2";
+                const string lodParameterName = "$lod";
+                const string upParameterName = "$up";
+                const string rightParameterName = "$right";
+                const string fileTypeParameterName = "$file_type";
+                const string contentParameterName = "$content";
+                const string insertIntoTilesStatement = $"""
+                            insert into Tiles (
+                                cdb,
+                                latitude,
+                                longitude,
+                                dataset,
+                                component_selector_1,
+                                component_selector_2,
+                                lod,
+                                up,
+                                right,
+                                file_type,
+                                content
+                            ) values (
+                                {cdbParameterName},
+                                {latitudeParameterName},
+                                {longitudeParameterName},
+                                {datasetParameterName},
+                                {cs1ParameterName},
+                                {cs2ParameterName},
+                                {lodParameterName},
+                                {upParameterName},
+                                {rightParameterName},
+                                {fileTypeParameterName},
+                                {contentParameterName}
+                            )
+                            """;
+                await using DbCommand insertIntoTilesCommand = dbConnection.CreateCommand();
+                insertIntoTilesCommand.CommandText = insertIntoTilesStatement;
+                CreateAndAttachParameter(insertIntoTilesCommand, cdbParameterName, DbType.String);
+                CreateAndAttachParameter(insertIntoTilesCommand, latitudeParameterName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTilesCommand, longitudeParameterName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTilesCommand, datasetParameterName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTilesCommand, cs1ParameterName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTilesCommand, cs2ParameterName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTilesCommand, lodParameterName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTilesCommand, upParameterName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTilesCommand, rightParameterName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTilesCommand, fileTypeParameterName, DbType.String);
+                CreateAndAttachParameter(insertIntoTilesCommand, contentParameterName, DbType.Binary);
+                await insertIntoTilesCommand.PrepareAsync(cancellationToken);
+                insertIntoTilesCommand.Parameters[cdbParameterName].Value = cdbName;
+                tiledDatasetVisitor.VisitFiles(tilesDir, async (tile, file) =>
+                {
+                    // Insert!
+                    insertIntoTilesCommand.Parameters[latitudeParameterName].Value = tile.LatitudeValue.Value;
+                    insertIntoTilesCommand.Parameters[longitudeParameterName].Value = tile.LongitudeValue.Value;
+                    insertIntoTilesCommand.Parameters[datasetParameterName].Value = tile.DatasetValue.Value;
+                    insertIntoTilesCommand.Parameters[cs1ParameterName].Value = tile.ComponentSelector1;
+                    insertIntoTilesCommand.Parameters[cs2ParameterName].Value = tile.ComponentSelector2;
+                    insertIntoTilesCommand.Parameters[lodParameterName].Value = tile.Level.Level;
+                    insertIntoTilesCommand.Parameters[upParameterName].Value = tile.Up;
+                    insertIntoTilesCommand.Parameters[rightParameterName].Value = tile.Right;
+                    insertIntoTilesCommand.Parameters[fileTypeParameterName].Value = tile.FileType;
+                    insertIntoTilesCommand.Parameters[contentParameterName].Value = await File.ReadAllBytesAsync(file.FullName, cancellationToken);
+                    int rowsAffected = await insertIntoTilesCommand.ExecuteNonQueryAsync(cancellationToken);
+
+                    /*
+                     * Datasets in ZIP archives:
+                     * GSModelGeometry
+                     * GSModelTexture
+                     * GSModelMaterial
+                     * GSModelDescriptor
+                     * GSModelCMT
+                     * GSModelInteriorGeometry
+                     * GSModelInteriorTexture
+                     * GSModelInteriorMaterial
+                     * GSModelInteriorDescriptor
+                     * GSModelInteriorCMT
+                     * GSModelMetadata
+                     * name inside archive:
+                     * LatLon_Dnnn_Snnn_Tnnn_LOD_Un_Rn_extra_tokens.ext
+                     * Extra Tokens definitions:
+                     * dataset:
+                     * GSModelGeometry: FeatureCode_FSC_MODL
+                     * GSModelInteriorGeometry: FeatureCode_FSC_MODL
+                     * GSModelTexture: TNAM
+                     * GSModelInteriorTexture: TNAM
+                     * GSModelMaterial: TNAM
+                     * GSModelInteriorMaterial: TNAM
+                     * GSModelGeometry: FeatureCode_FSC_MODL
+                     * GSModelInteriorGeometry: FeatureCode_FSC_MODL
+                     * GSModelCMT: TNAM
+                     * GSModelInteriorCMT: TNAM
+                     * 
+                     * Need an index on:
+                     * latitude
+                     * longitude
+                     * dataset
+                     * component selectors 1 & 2
+                     * lod
+                     * up
+                     * right
+                     */
+                    Regex zippedTiledDatasetFilenamePatternFeature = new(
+                        "^(?<north_south>[NS])(?<latitude>\\d{2})(?<east_west>[EW])(?<longitude>\\d{3})_D(?<dataset>\\d{3})_S(?<selector1>\\d{3})_T(?<selector2>\\d{3})_L(?<lod_negated>C?)(?<lod>\\d{2})_U(?<up>\\d+)_R(?<right>\\d+)_(?<feature_category>[A-Z])(?<feature_subcategory>[A-Z])(?<feature_type>\\d{3})_(?<feature_subcode>\\d{3})_(?<model_name>[^.]+)\\.(?<ext>[^.]+)$",
+                        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.NonBacktracking);
+                    Regex zippedTiledDatasetFilenamePatternTexture = new(
+                        "^(?<north_south>[NS])(?<latitude>\\d{2})(?<east_west>[EW])(?<longitude>\\d{3})_D(?<dataset>\\d{3})_S(?<selector1>\\d{3})_T(?<selector2>\\d{3})_L(?<lod_negated>C?)(?<lod>\\d{2})_U(?<up>\\d+)_R(?<right>\\d+)_(?<texture_name>[^.]+)\\.(?<ext>[^.]+)$",
+                        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.NonBacktracking);
+                    if (CultureInfo.InvariantCulture.CompareInfo.Compare(tile.FileType, "zip", CompareOptions.IgnoreCase) == 0)
+                    {
+                        using ZipArchive zipArchive = ZipFile.OpenRead(file.FullName);
+                        foreach (var entry in zipArchive.Entries)
+                        {
+                            /*
+                             * Unfortunately, file names that match the "feature code" pattern
+                             * can also match the "texture name" pattern, because it just groups
+                             * everything after the known stuff as the name of a texture.
+                             * Therefore, order is crucial here.
+                             */
+                            Match featureMatch = zippedTiledDatasetFilenamePatternFeature.Match(entry.Name);
+                            if (featureMatch.Success)
+                            {
+                                Latitude latitude = Latitude.FromRegexMatch(
+                                        featureMatch.Groups["north_south"].Value,
+                                        featureMatch.Groups["latitude"].Value);
+                                Longitude longitude = Longitude.FromRegexMatch(
+                                    featureMatch.Groups["east_west"].Value,
+                                    featureMatch.Groups["longitude"].Value);
+                                int dataset = int.Parse(featureMatch.Groups["dataset"].Value, CultureInfo.InvariantCulture);
+                                int componentSelector1 = int.Parse(featureMatch.Groups["selector1"].Value, CultureInfo.InvariantCulture);
+                                int componentSelector2 = int.Parse(featureMatch.Groups["selector2"].Value, CultureInfo.InvariantCulture);
+                                LevelOfDetail levelOfDetail = LevelOfDetail.FromRegexMatch(
+                                    featureMatch.Groups["lod_negated"].Value,
+                                    featureMatch.Groups["lod"].Value);
+                                int up = int.Parse(featureMatch.Groups["up"].Value, CultureInfo.InvariantCulture);
+                                int right = int.Parse(featureMatch.Groups["right"].Value, CultureInfo.InvariantCulture);
+                                FeatureCode featureCode = new(
+                                    featureMatch.Groups["feature_category"].Value,
+                                    featureMatch.Groups["feature_subcategory"].Value,
+                                    int.Parse(featureMatch.Groups["feature_type"].Value, CultureInfo.InvariantCulture));
+                                int featureSubcode = int.Parse(featureMatch.Groups["feature_subcode"].Value, CultureInfo.InvariantCulture);
+                                string modelName = featureMatch.Groups["model_name"].Value;
+                                string fileType = featureMatch.Groups["ext"].Value;
+                            }
+                            else
+                            {
+                                Match textureMatch = zippedTiledDatasetFilenamePatternTexture.Match(entry.Name);
+                                if (textureMatch.Success)
+                                {
+                                    Latitude latitude = Latitude.FromRegexMatch(
+                                            textureMatch.Groups["north_south"].Value,
+                                            textureMatch.Groups["latitude"].Value);
+                                    Longitude longitude = Longitude.FromRegexMatch(
+                                        textureMatch.Groups["east_west"].Value,
+                                        textureMatch.Groups["longitude"].Value);
+                                    int dataset = int.Parse(textureMatch.Groups["dataset"].Value, CultureInfo.InvariantCulture);
+                                    int componentSelector1 = int.Parse(textureMatch.Groups["selector1"].Value, CultureInfo.InvariantCulture);
+                                    int componentSelector2 = int.Parse(textureMatch.Groups["selector2"].Value, CultureInfo.InvariantCulture);
+                                    LevelOfDetail levelOfDetail = LevelOfDetail.FromRegexMatch(
+                                        textureMatch.Groups["lod_negated"].Value,
+                                        textureMatch.Groups["lod"].Value);
+                                    int up = int.Parse(textureMatch.Groups["up"].Value, CultureInfo.InvariantCulture);
+                                    int right = int.Parse(textureMatch.Groups["right"].Value, CultureInfo.InvariantCulture);
+                                    string textureName = textureMatch.Groups["texture_name"].Value;
+                                    string fileType = textureMatch.Groups["ext"].Value;
+                                }
+                                else
+                                {
+                                    // Unrecognized file, ignore it.
                                 }
                             }
                         }
                     }
                 });
             }
-            // Tiles
-            {
-                Regex latitudeDirectoryPattern = new("^(?<north_south>[NS])(?<latitude>\\d{2})$",
-                    RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.NonBacktracking);
-                Regex longitudeDirectoryPattern = new("^(?<east_west>[EW])(?<longitude>\\d{3})$",
-                    RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.NonBacktracking);
-                Regex layerDirectoryPattern = new("^(?<code>\\d{3})_(?<name>.+)$",
-                    RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.NonBacktracking);
-                Regex lodDirectoryPattern = new("^(?<sign>[L][C]?)(?<lod>\\d{2})$",
-                    RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.NonBacktracking);
-                Regex upDirectoryPattern = new("^U(?<up>\\d+)$",
-                    RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.NonBacktracking);
-                Regex rightDirectoryPattern = new("^R(?<right>\\d+)$",
-                    RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.NonBacktracking);
 
-                Regex filenamePattern1 = new("^(?<north_south>[NS])(?<latitude>\\d{2})(?<east_west>[EW])(?<longitude>\\d{3})_D(?<dataset>\\d{3})_S(?<selector1>\\d{3})_T(?<selector2>\\d{3})_(?<sign>[L][C]?)(?<lod>\\d{2})_(?<category>.)(?<subcategory>.)(?<type>\\d{3})_(?<name>.+)\\.(?<ext>.+)$",
-                    RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.NonBacktracking);
-                Regex filenamePattern2 = new("^D(?<dataset>\\d{3})_S(?<selector1>\\d{3})_T(?<selector2>\\d{3})_(?<category>.)(?<subcategory>.)(?<type>\\d{3})_(?<name>.+)\\.(?<ext>.+)$",
-                    RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.NonBacktracking);
-            }
-
-            await sqliteConnection.CloseAsync();
+            await dbConnection.CloseAsync();
 
             return 0;
         }
@@ -713,6 +978,36 @@ create table Models (
         subcategory,
         specific,
         extra,
+        file_type
+    )
+)
+""";
+            rowsAffected = await dbCommand.ExecuteNonQueryAsync(cancellationToken);
+
+            // Need an index on latitude, longitude, dataset, cs1, cs2, lod, up
+            dbCommand.CommandText = """
+create table Tiles (
+    cdb text not null references CDB(name),
+    latitude integer not null,
+    longitude integer not null,
+    dataset integer not null,
+    component_selector_1 integer not null,
+    component_selector_2 integer not null,
+    lod integer not null,
+    up integer not null,
+    right integer not null,
+    file_type text not null,
+    content blob not null,
+    primary key(
+        cdb,
+        latitude,
+        longitude,
+        dataset,
+        component_selector_1,
+        component_selector_2,
+        lod,
+        up,
+        right,
         file_type
     )
 )
