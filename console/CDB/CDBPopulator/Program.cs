@@ -143,6 +143,8 @@ namespace CDBPopulator
             hostApplicationBuilder.Services.AddSingleton<TextureDirectoryVisitor>();
             hostApplicationBuilder.Services.AddSingleton<TiledDatasetVisitor>();
 
+            hostApplicationBuilder.Services.AddSingleton<MetadataVisitor>();
+
             return hostApplicationBuilder.Build();
         }
 
@@ -182,244 +184,121 @@ namespace CDBPopulator
             // Metadata
             {
                 DirectoryInfo metadataDir = new(Path.Combine(cdbRoot.FullName, "Metadata"));
+                MetadataVisitor metadataVisitor = host.Services.GetRequiredService<MetadataVisitor>();
 
                 const string cdbParameterName = "$cdb";
                 const string nameParameterName = "$name";
                 const string fileTypeParameterName = "$file_type";
                 const string contentParameterName = "$content";
-                const string sql = $"insert into Metadata (cdb, name, file_type, content) values ({cdbParameterName}, {nameParameterName}, {fileTypeParameterName}, {contentParameterName})";
+                const string insertIntoMetadataStatement = $"""
+                        insert into Metadata (
+                            cdb,
+                            name,
+                            file_type,
+                            content
+                        ) values (
+                            {cdbParameterName},
+                            {nameParameterName},
+                            {fileTypeParameterName},
+                            {contentParameterName}
+                        )
+                        """;
 
-                await using DbCommand dbCommand = dbConnection.CreateCommand();
-                dbCommand.CommandText = sql;
-                CreateAndAttachParameter(dbCommand, cdbParameterName, DbType.String);
-                CreateAndAttachParameter(dbCommand, nameParameterName, DbType.String);
-                CreateAndAttachParameter(dbCommand, fileTypeParameterName, DbType.String);
-                CreateAndAttachParameter(dbCommand, contentParameterName, DbType.Binary);
-                await dbCommand.PrepareAsync(cancellationToken);
-                dbCommand.Parameters[cdbParameterName].Value = cdbName;
+                await using DbCommand insertIntoMetadataCommand = dbConnection.CreateCommand();
+                insertIntoMetadataCommand.CommandText = insertIntoMetadataStatement;
+                CreateAndAttachParameter(insertIntoMetadataCommand, cdbParameterName, DbType.String);
+                CreateAndAttachParameter(insertIntoMetadataCommand, nameParameterName, DbType.String);
+                CreateAndAttachParameter(insertIntoMetadataCommand, fileTypeParameterName, DbType.String);
+                CreateAndAttachParameter(insertIntoMetadataCommand, contentParameterName, DbType.Binary);
+                await insertIntoMetadataCommand.PrepareAsync(cancellationToken);
+                insertIntoMetadataCommand.Parameters[cdbParameterName].Value = cdbName;
 
-                foreach (FileInfo metadataFile in metadataDir.EnumerateFiles())
+                metadataVisitor.WalkMetadata(metadataDir, async (name, ext, file) =>
                 {
-                    dbCommand.Parameters[nameParameterName].Value = metadataFile.Name.Remove(metadataFile.Name.Length - metadataFile.Extension.Length);
-                    dbCommand.Parameters[fileTypeParameterName].Value = metadataFile.Extension.Substring(1);
-                    dbCommand.Parameters[contentParameterName].Value = await File.ReadAllBytesAsync(metadataFile.FullName, cancellationToken);
+                    insertIntoMetadataCommand.Parameters[nameParameterName].Value = name;
+                    insertIntoMetadataCommand.Parameters[fileTypeParameterName].Value = ext;
+                    insertIntoMetadataCommand.Parameters[contentParameterName].Value = await File.ReadAllBytesAsync(file.FullName, cancellationToken);
 
-                    int rowsAffected = await dbCommand.ExecuteNonQueryAsync(cancellationToken);
-                }
+                    int rowsAffected = await insertIntoMetadataCommand.ExecuteNonQueryAsync(cancellationToken);
+                });
             }
             // GTModel
             {
                 DirectoryInfo gtModelDir = new(Path.Combine(cdbRoot.FullName, "GTModel"));
-                /*
-                 * - /GTModel/500_GTModelGeometry/A_Something/E_Something/010_Something/D500_S001_T001_something.duh
-                 */
-                /*
-                 * GTModel contains the following datasets:
-                 * GTModelGeometry
-                 * GTModelTexture
-                 * GTModelDescriptor
-                 * GTModelMaterial
-                 * GTModelCMT
-                 * GTModelInteriorGeometry
-                 * GTModelInteriorTexture
-                 * GTModelInteriorDescriptor
-                 * GTModelInteriorMaterial
-                 * GTModelInteriorCMT
-                 * GTModelSignature
-                 */
-                /*
-                 * for datasets:
-                 * 500_GTModelGeometry Entry File
-                 * 510_GTModelGeometry Level of Detail
-                 * 503_GTModelDescriptor
-                 * also:
-                 * 506_GTModelInteriorGeometry
-                 * 508_GTModelInteriorDescriptor
-                 * also:
-                 * 502_GTModelSignature
-                 * 512_GTModelSignature
-                 */
-                FeatureCodeDirectoryVisitor featureCodeDirectoryVisitor = host.Services.GetRequiredService<FeatureCodeDirectoryVisitor>();
-                TextureDirectoryVisitor textureDirectoryVisitor = host.Services.GetRequiredService<TextureDirectoryVisitor>();
-                LevelOfDetailDirectoryWalker levelOfDetailDirectoryWalker = host.Services.GetRequiredService<LevelOfDetailDirectoryWalker>();
-                DirectoryInfo directoryInfo = new(Path.Combine(gtModelDir.FullName, "500_GTModelGeometry"));
-                int datasetFromDirectory = 500;
-                Regex gtModelGeometryFileNamePattern = new("^D(?<dataset>\\d{3})_S(?<component_selector_1>\\d{3})_T(?<component_selector_2>\\d{3})_(?<fc_category>[A-Z])(?<fc_subcategory>[A-Z])(?<fc_type>\\d{3})_(?<feature_subcode>\\d{3})_(?<modl>[^.]+)\\.(?<file_type>[^.]+)$",
-                    RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
-                Regex gtModelGeometryLevelOfDetailFileNamePattern = new("^D(?<dataset>\\d{3})_S(?<component_selector_1>\\d{3})_T(?<component_selector_2>\\d{3})_L(?<lod_negated>C?)(?<lod>\\d{2})_(?<fc_category>[A-Z])(?<fc_subcategory>[A-Z])(?<fc_type>\\d{3})_(?<feature_subcode>\\d{3})_(?<modl>[^.]+)\\.(?<file_type>[^.]+)$",
-                    RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
-                featureCodeDirectoryVisitor.WalkDirectories(directoryInfo, (featureCodeFromDirectory, directory) =>
-                {
-                    foreach (var file in directory.EnumerateFiles())
+                GTModelVisitor gtModelVisitor = host.Services.GetRequiredService<GTModelVisitor>();
+                gtModelVisitor.WalkGeotypicalModels(gtModelDir,
+                    (geometry, file) =>
                     {
-                        Match fileNameMatch = gtModelGeometryFileNamePattern.Match(file.Name);
-                        /*
-                         * The only difference between "model geometry" and "model descriptor" is the file type, flt versus xml.
-                         */
-                        if (fileNameMatch.Success)
-                        {
-                            var dataset = int.Parse(fileNameMatch.Groups["dataset"].Value, CultureInfo.InvariantCulture);
-                            var componentSelector1 = int.Parse(fileNameMatch.Groups["component_selector_1"].Value, CultureInfo.InvariantCulture);
-                            var componentSelector2 = int.Parse(fileNameMatch.Groups["component_selector_2"].Value, CultureInfo.InvariantCulture);
-                            var fcCategory = fileNameMatch.Groups["fc_category"].Value;
-                            var fcSubcategory = fileNameMatch.Groups["fc_subcategory"].Value;
-                            var fcType = int.Parse(fileNameMatch.Groups["fc_type"].Value, CultureInfo.InvariantCulture);
-                            var fsc = int.Parse(fileNameMatch.Groups["feature_subcode"].Value, CultureInfo.InvariantCulture);
-                            var modl = fileNameMatch.Groups["modl"].Value;
-                            var ext = fileNameMatch.Groups["file_type"].Value;
-
-                            FeatureCode featureCode = new(fcCategory, fcSubcategory, fcType);
-
-                            if (datasetFromDirectory != dataset
-                                || featureCodeFromDirectory != featureCode)
-                            {
-                                // TODO: Log error.
-                            }
-
-                            // Insert into database.
-                            const string insert1 = """
-                                    insert into Geometry
-                                    (
-                                        cdb,
-                                        dataset,
-                                        component_selector_1,
-                                        component_selector_2,
-                                        feature_category,
-                                        feature_subcategory,
-                                        feature_type,
-                                        feature_subcode,
-                                        model_name,
-                                        file_type,
-                                        content
-                                    ) values ()
-                                    """;
-                        }
-                    }
-
-                    levelOfDetailDirectoryWalker.WalkModelGeometryDirectories(directory, (lod, lodDir) =>
+                        // Insert into database.
+                        const string insert1 = """
+                                insert into Geometry
+                                (
+                                    cdb,
+                                    dataset,
+                                    component_selector_1,
+                                    component_selector_2,
+                                    feature_category,
+                                    feature_subcategory,
+                                    feature_type,
+                                    feature_subcode,
+                                    model_name,
+                                    file_type,
+                                    content
+                                ) values ()
+                                """;
+                    },
+                    (geometryLod, file) =>
                     {
-                        var code = lod!.Level;
-
-                        foreach (var file in lodDir.EnumerateFiles())
-                        {
-                            Match fileNameMatch = gtModelGeometryLevelOfDetailFileNamePattern.Match(file.Name);
-                            if (!fileNameMatch.Success)
-                            {
-                                continue;
-                            }
-                            var dataset = int.Parse(fileNameMatch.Groups["dataset"].Value, CultureInfo.InvariantCulture);
-                            var componentSelector1 = int.Parse(fileNameMatch.Groups["component_selector_1"].Value, CultureInfo.InvariantCulture);
-                            var componentSelector2 = int.Parse(fileNameMatch.Groups["component_selector_2"].Value, CultureInfo.InvariantCulture);
-                            var lodNegated = fileNameMatch.Groups["lod_negated"].Value;
-                            var lodValue = int.Parse(fileNameMatch.Groups["lod"].Value, CultureInfo.InvariantCulture);
-                            var fcCategory = fileNameMatch.Groups["fc_category"].Value;
-                            var fcSubcategory = fileNameMatch.Groups["fc_subcategory"].Value;
-                            var fcType = int.Parse(fileNameMatch.Groups["fc_type"].Value, CultureInfo.InvariantCulture);
-                            var fsc = int.Parse(fileNameMatch.Groups["feature_subcode"].Value, CultureInfo.InvariantCulture);
-                            var modl = fileNameMatch.Groups["modl"].Value;
-                            var ext = fileNameMatch.Groups["file_type"].Value;
-
-                            LevelOfDetail levelOfDetail = LevelOfDetail.FromRegexMatch(lodNegated, lodValue);
-                            FeatureCode featureCode = new(fcCategory, fcSubcategory, fcType);
-
-                            if (datasetFromDirectory != dataset
-                                || featureCodeFromDirectory != featureCode)
-                            {
-                                // TODO: Log error.
-                            }
-
-                            // Insert into database.
-                            const string insert2 = """
-                                            insert into GeometryLOD
-                                            (
-                                                cdb,
-                                                dataset,
-                                                component_selector_1,
-                                                component_selector_2,
-                                                lod,
-                                                feature_category,
-                                                feature_subcategory,
-                                                feature_type,
-                                                feature_subcode,
-                                                model_name,
-                                                file_type,
-                                                content
-                                            ) values ()
-                                            """;
-                        }
+                        // Insert into database.
+                        const string insert2 = """
+                                insert into GeometryLOD
+                                (
+                                    cdb,
+                                    dataset,
+                                    component_selector_1,
+                                    component_selector_2,
+                                    lod,
+                                    feature_category,
+                                    feature_subcategory,
+                                    feature_type,
+                                    feature_subcode,
+                                    model_name,
+                                    file_type,
+                                    content
+                                ) values ()
+                                """;
+                    },
+                    (texture, file) =>
+                    {
+                        // insert
+                        const string insert = """
+                                insert into TextureMetadata (
+                                    cdb,
+                                    dataset,
+                                    component_selector_1,
+                                    component_selector_2,
+                                    texture_name,
+                                    file_type,
+                                    content
+                                ) values ()
+                                """;
+                    },
+                    (textureLod, file) =>
+                    {
+                        // insert
+                        const string insert = """
+                                insert into Textures (
+                                    cdb,
+                                    dataset,
+                                    component_selector_1,
+                                    component_selector_2,
+                                    lod,
+                                    texture_name,
+                                    file_type,
+                                    content
+                                ) values ()
+                                """;
                     });
-                });
-                /*
-                 * This next bit applies to the following datasets:
-                 * 501_GTModelTexture
-                 * 511_GTModelTexture
-                 * 504_GTModelMaterial
-                 * 505_GTModelCMT
-                 * also:
-                 * 507_GTModelInteriorTexture
-                 * 509_GTModelInteriorMaterial
-                 * 513_GTModelInteriorCMT
-                 */
-                textureDirectoryVisitor.WalkDirectories(new DirectoryInfo(Path.Combine(gtModelDir.FullName, "501_GTModelTexture")), (textureName, dir) =>
-                {
-                    Regex TextureCmtFileNamePattern = new("^D(?<dataset>\\d{3})_S(?<component_selector_1>\\d{3})_T(?<component_selector_2>\\d{3})_(?<name>[^.]+)\\.(?<file_type>[^.]+)$",
-                        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
-                    Regex TextureFileLodNamePattern = new("^D(?<dataset>\\d{3})_S(?<component_selector_1>\\d{3})_T(?<component_selector_2>\\d{3})_L(?<lod_negated>C?)(?<lod>\\d{2})_(?<name>[^.]+)\\.(?<file_type>[^.]+)$",
-                        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
-
-                    foreach (var file in dir.EnumerateFiles())
-                    {
-                        Match cmtMatch = TextureCmtFileNamePattern.Match(file.Name);
-                        if (cmtMatch.Success)
-                        {
-                            var dataset = int.Parse(cmtMatch.Groups["dataset"].Value, CultureInfo.InvariantCulture);
-                            var componentSelector1 = int.Parse(cmtMatch.Groups["component_selector_1"].Value, CultureInfo.InvariantCulture);
-                            var componentSelector2 = int.Parse(cmtMatch.Groups["component_selector_2"].Value, CultureInfo.InvariantCulture);
-                            var name = cmtMatch.Groups["name"].Value;
-                            var ext = cmtMatch.Groups["file_type"].Value;
-
-                            // insert
-                            const string insert = """
-                                    insert into TextureMetadata (
-                                        cdb,
-                                        dataset,
-                                        component_selector_1,
-                                        component_selector_2,
-                                        texture_name,
-                                        file_type,
-                                        content
-                                    ) values ()
-                                    """;
-                        }
-                        Match lodMatch = TextureFileLodNamePattern.Match(file.Name);
-                        if (lodMatch.Success)
-                        {
-                            var dataset = int.Parse(lodMatch.Groups["dataset"].Value, CultureInfo.InvariantCulture);
-                            var componentSelector1 = int.Parse(lodMatch.Groups["component_selector_1"].Value, CultureInfo.InvariantCulture);
-                            var componentSelector2 = int.Parse(lodMatch.Groups["component_selector_2"].Value, CultureInfo.InvariantCulture);
-                            var lodNegated = lodMatch.Groups["lod_negated"].Value;
-                            var lodValue = int.Parse(lodMatch.Groups["lod"].Value, CultureInfo.InvariantCulture);
-                            var name = lodMatch.Groups["name"].Value;
-                            var ext = lodMatch.Groups["file_type"].Value;
-
-                            LevelOfDetail levelOfDetail = LevelOfDetail.FromRegexMatch(lodNegated, lodValue);
-
-                            // insert
-                            const string insert = """
-                                    insert into Textures (
-                                        cdb,
-                                        dataset,
-                                        component_selector_1,
-                                        component_selector_2,
-                                        lod,
-                                        texture_name,
-                                        file_type,
-                                        content
-                                    ) values ()
-                                    """;
-                        }
-                    }
-                });
             }
             // MModel
             {
