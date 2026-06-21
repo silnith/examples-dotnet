@@ -17,5 +17,9 @@ public class NavigationVisitor
     /// <param name="navigationDir">The Navigation directory.</param>
     public void WalkNavigationDatasets(DirectoryInfo navigationDir)
     {
+        if (!navigationDir.Exists)
+        {
+            return;
+        }
     }
 }

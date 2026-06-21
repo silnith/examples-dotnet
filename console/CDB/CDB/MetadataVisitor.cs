@@ -54,6 +54,11 @@ public class MetadataVisitor : Visitor
     /// <param name="visitMetadataFile">The action to take for each metadata file.</param>
     public void WalkMetadata(DirectoryInfo metadataDir, MetadataFileVisitor visitMetadataFile)
     {
+        if (!metadataDir.Exists)
+        {
+            return;
+        }
+
         // No reason to enumerate child directories, just files.
         foreach (var file in metadataDir.EnumerateFiles("*", enumerationOptions))
         {

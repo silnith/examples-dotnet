@@ -59,6 +59,11 @@ public class GTModelVisitor : Visitor
         VisitTexture textureAction,
         VisitTextureLod textureLodAction)
     {
+        if (!gtModelDir.Exists)
+        {
+            return;
+        }
+
         foreach (DirectoryInfo datasetDir in gtModelDir.EnumerateDirectories("*", enumerationOptions))
         {
             Match datasetMatch = Dataset.TiledDatasetDirectoryPattern.Match(datasetDir.Name);

@@ -1,8 +1,8 @@
 ﻿using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Silnith.CDB;
-using Silnith.CDB.SQLite;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -144,6 +144,7 @@ namespace CDBPopulator
             hostApplicationBuilder.Services.AddSingleton<TiledDatasetVisitor>();
 
             hostApplicationBuilder.Services.AddSingleton<MetadataVisitor>();
+            hostApplicationBuilder.Services.AddSingleton<GTModelVisitor>();
 
             return hostApplicationBuilder.Build();
         }
@@ -156,19 +157,19 @@ namespace CDBPopulator
             dbParameter.ParameterName = dbParameterName;
         }
 
-        static async Task<int> Main(string[] args)
+        static int Main(string[] args)
         {
             using var host = Setup(args);
 
-            CancellationTokenSource source = new();
-            CancellationToken cancellationToken = source.Token;
+            ILogger<Program> logger = host.Services.GetRequiredService<ILogger<Program>>();
+            // Do not close resources acquired from the dependency injection container,
+            // it will do that on its own.
+            DbConnection dbConnection = host.Services.GetRequiredService<DbConnection>();
 
-            await using DbConnection dbConnection = host.Services.GetRequiredService<DbConnection>();
-
-            await CreateSqliteSchema(dbConnection, cancellationToken);
+            CreateSqliteSchema(dbConnection);
 
             string cdbName = "CDB";
-            await using (DbCommand dbCommand = dbConnection.CreateCommand())
+            using (DbCommand dbCommand = dbConnection.CreateCommand())
             {
                 const string nameParameterName = "$name";
                 const string sql = $"""
@@ -176,9 +177,9 @@ namespace CDBPopulator
                     """;
                 dbCommand.CommandText = sql;
                 CreateAndAttachParameter(dbCommand, nameParameterName, DbType.String);
-                await dbCommand.PrepareAsync(cancellationToken);
+                dbCommand.Prepare();
                 dbCommand.Parameters[nameParameterName].Value = cdbName;
-                int rowsAffected = await dbCommand.ExecuteNonQueryAsync(cancellationToken);
+                int rowsAffected = dbCommand.ExecuteNonQuery();
             }
 
             const string cdbParamName = "$cdb";
@@ -214,22 +215,23 @@ namespace CDBPopulator
                         )
                         """;
 
-                await using DbCommand insertIntoMetadataCommand = dbConnection.CreateCommand();
+                using DbCommand insertIntoMetadataCommand = dbConnection.CreateCommand();
                 insertIntoMetadataCommand.CommandText = insertIntoMetadataStatement;
                 CreateAndAttachParameter(insertIntoMetadataCommand, cdbParamName, DbType.String);
                 CreateAndAttachParameter(insertIntoMetadataCommand, nameParamName, DbType.String);
                 CreateAndAttachParameter(insertIntoMetadataCommand, fileTypeParamName, DbType.String);
                 CreateAndAttachParameter(insertIntoMetadataCommand, contentParamName, DbType.Binary);
-                await insertIntoMetadataCommand.PrepareAsync(cancellationToken);
+                insertIntoMetadataCommand.Prepare();
                 insertIntoMetadataCommand.Parameters[cdbParamName].Value = cdbName;
 
-                metadataVisitor.WalkMetadata(metadataDir, async (name, ext, file) =>
+                metadataVisitor.WalkMetadata(metadataDir, (name, ext, file) =>
                 {
                     insertIntoMetadataCommand.Parameters[nameParamName].Value = name;
                     insertIntoMetadataCommand.Parameters[fileTypeParamName].Value = ext;
-                    insertIntoMetadataCommand.Parameters[contentParamName].Value = await File.ReadAllBytesAsync(file.FullName, cancellationToken);
+                    insertIntoMetadataCommand.Parameters[contentParamName].Value = File.ReadAllBytes(file.FullName);
 
-                    int rowsAffected = await insertIntoMetadataCommand.ExecuteNonQueryAsync(cancellationToken);
+                    logger.LogInformation("Inserting Metadata file {File}", file);
+                    int rowsAffected = insertIntoMetadataCommand.ExecuteNonQuery();
                 });
             }
             // GTModel
@@ -336,7 +338,7 @@ namespace CDBPopulator
                     )
                     """;
 
-                await using DbCommand insertIntoGeometryCommand = dbConnection.CreateCommand();
+                using DbCommand insertIntoGeometryCommand = dbConnection.CreateCommand();
                 {
                     insertIntoGeometryCommand.CommandText = insertIntoGeometryStatement;
                     CreateAndAttachParameter(insertIntoGeometryCommand, cdbParamName, DbType.String);
@@ -350,10 +352,10 @@ namespace CDBPopulator
                     CreateAndAttachParameter(insertIntoGeometryCommand, modelNameParamName, DbType.String);
                     CreateAndAttachParameter(insertIntoGeometryCommand, fileTypeParamName, DbType.String);
                     CreateAndAttachParameter(insertIntoGeometryCommand, contentParamName, DbType.Binary);
-                    await insertIntoGeometryCommand.PrepareAsync(cancellationToken);
+                    insertIntoGeometryCommand.Prepare();
                     insertIntoGeometryCommand.Parameters[cdbParamName].Value = cdbName;
                 }
-                await using DbCommand insertIntoGeometryLodCommand = dbConnection.CreateCommand();
+                using DbCommand insertIntoGeometryLodCommand = dbConnection.CreateCommand();
                 {
                     insertIntoGeometryLodCommand.CommandText = insertIntoGeometryLodStatement;
                     CreateAndAttachParameter(insertIntoGeometryLodCommand, cdbParamName, DbType.String);
@@ -368,10 +370,10 @@ namespace CDBPopulator
                     CreateAndAttachParameter(insertIntoGeometryLodCommand, modelNameParamName, DbType.String);
                     CreateAndAttachParameter(insertIntoGeometryLodCommand, fileTypeParamName, DbType.String);
                     CreateAndAttachParameter(insertIntoGeometryLodCommand, contentParamName, DbType.Binary);
-                    await insertIntoGeometryLodCommand.PrepareAsync(cancellationToken);
+                    insertIntoGeometryLodCommand.Prepare();
                     insertIntoGeometryLodCommand.Parameters[cdbParamName].Value = cdbName;
                 }
-                await using DbCommand insertIntoTextureCommand = dbConnection.CreateCommand();
+                using DbCommand insertIntoTextureCommand = dbConnection.CreateCommand();
                 {
                     insertIntoTextureCommand.CommandText = insertIntoTextureStatement;
                     CreateAndAttachParameter(insertIntoTextureCommand, cdbParamName, DbType.String);
@@ -381,10 +383,10 @@ namespace CDBPopulator
                     CreateAndAttachParameter(insertIntoTextureCommand, textureNameParamName, DbType.String);
                     CreateAndAttachParameter(insertIntoTextureCommand, fileTypeParamName, DbType.String);
                     CreateAndAttachParameter(insertIntoTextureCommand, contentParamName, DbType.Binary);
-                    await insertIntoTextureCommand.PrepareAsync(cancellationToken);
+                    insertIntoTextureCommand.Prepare();
                     insertIntoTextureCommand.Parameters[cdbParamName].Value = cdbName;
                 }
-                await using DbCommand insertIntoTextureLodCommand = dbConnection.CreateCommand();
+                using DbCommand insertIntoTextureLodCommand = dbConnection.CreateCommand();
                 {
                     insertIntoTextureLodCommand.CommandText = insertIntoTextureLodStatement;
                     CreateAndAttachParameter(insertIntoTextureLodCommand, cdbParamName, DbType.String);
@@ -395,12 +397,12 @@ namespace CDBPopulator
                     CreateAndAttachParameter(insertIntoTextureLodCommand, textureNameParamName, DbType.String);
                     CreateAndAttachParameter(insertIntoTextureLodCommand, fileTypeParamName, DbType.String);
                     CreateAndAttachParameter(insertIntoTextureLodCommand, contentParamName, DbType.Binary);
-                    await insertIntoTextureLodCommand.PrepareAsync(cancellationToken);
+                    insertIntoTextureLodCommand.Prepare();
                     insertIntoTextureLodCommand.Parameters[cdbParamName].Value = cdbName;
                 }
 
                 gtModelVisitor.WalkGeotypicalModels(gtModelDir,
-                    async (geometry, file) =>
+                    (geometry, file) =>
                     {
                         insertIntoGeometryCommand.Parameters[datasetParamName].Value = geometry.Dataset.Value;
                         insertIntoGeometryCommand.Parameters[cs1ParamName].Value = geometry.ComponentSelector1;
@@ -411,11 +413,11 @@ namespace CDBPopulator
                         insertIntoGeometryCommand.Parameters[featureSubcodeParamName].Value = geometry.FeatureSubcode;
                         insertIntoGeometryCommand.Parameters[modelNameParamName].Value = geometry.ModelName;
                         insertIntoGeometryCommand.Parameters[fileTypeParamName].Value = geometry.FileType;
-                        insertIntoGeometryCommand.Parameters[contentParamName].Value = await File.ReadAllBytesAsync(file.FullName, cancellationToken);
+                        insertIntoGeometryCommand.Parameters[contentParamName].Value = File.ReadAllBytes(file.FullName);
 
-                        int rowsAffected = await insertIntoGeometryCommand.ExecuteNonQueryAsync(cancellationToken);
+                        int rowsAffected = insertIntoGeometryCommand.ExecuteNonQuery();
                     },
-                    async (geometryLod, file) =>
+                    (geometryLod, file) =>
                     {
                         insertIntoGeometryLodCommand.Parameters[datasetParamName].Value = geometryLod.Dataset.Value;
                         insertIntoGeometryLodCommand.Parameters[cs1ParamName].Value = geometryLod.ComponentSelector1;
@@ -427,22 +429,22 @@ namespace CDBPopulator
                         insertIntoGeometryLodCommand.Parameters[featureSubcodeParamName].Value = geometryLod.FeatureSubcode;
                         insertIntoGeometryLodCommand.Parameters[modelNameParamName].Value = geometryLod.ModelName;
                         insertIntoGeometryLodCommand.Parameters[fileTypeParamName].Value = geometryLod.FileType;
-                        insertIntoGeometryLodCommand.Parameters[contentParamName].Value = await File.ReadAllBytesAsync(file.FullName, cancellationToken);
+                        insertIntoGeometryLodCommand.Parameters[contentParamName].Value = File.ReadAllBytes(file.FullName);
 
-                        int rowsAffected = await insertIntoGeometryLodCommand.ExecuteNonQueryAsync(cancellationToken);
+                        int rowsAffected = insertIntoGeometryLodCommand.ExecuteNonQuery();
                     },
-                    async (texture, file) =>
+                    (texture, file) =>
                     {
                         insertIntoTextureCommand.Parameters[datasetParamName].Value = texture.Dataset.Value;
                         insertIntoTextureCommand.Parameters[cs1ParamName].Value = texture.ComponentSelector1;
                         insertIntoTextureCommand.Parameters[cs2ParamName].Value = texture.ComponentSelector2;
                         insertIntoTextureCommand.Parameters[textureNameParamName].Value = texture.TextureName;
                         insertIntoTextureCommand.Parameters[fileTypeParamName].Value = texture.FileType;
-                        insertIntoTextureCommand.Parameters[contentParamName].Value = await File.ReadAllBytesAsync(file.FullName, cancellationToken);
+                        insertIntoTextureCommand.Parameters[contentParamName].Value = File.ReadAllBytes(file.FullName);
 
-                        int rowsAffected = await insertIntoTextureCommand.ExecuteNonQueryAsync(cancellationToken);
+                        int rowsAffected = insertIntoTextureCommand.ExecuteNonQuery();
                     },
-                    async (textureLod, file) =>
+                    (textureLod, file) =>
                     {
                         insertIntoTextureLodCommand.Parameters[datasetParamName].Value = textureLod.Dataset.Value;
                         insertIntoTextureLodCommand.Parameters[cs1ParamName].Value = textureLod.ComponentSelector1;
@@ -450,9 +452,9 @@ namespace CDBPopulator
                         insertIntoTextureLodCommand.Parameters[lodParamName].Value = textureLod.LevelOfDetail.Level;
                         insertIntoTextureLodCommand.Parameters[textureNameParamName].Value = textureLod.TextureName;
                         insertIntoTextureLodCommand.Parameters[fileTypeParamName].Value = textureLod.FileType;
-                        insertIntoTextureLodCommand.Parameters[contentParamName].Value = await File.ReadAllBytesAsync(file.FullName, cancellationToken);
+                        insertIntoTextureLodCommand.Parameters[contentParamName].Value = File.ReadAllBytes(file.FullName);
 
-                        int rowsAffected = await insertIntoTextureLodCommand.ExecuteNonQueryAsync(cancellationToken);
+                        int rowsAffected = insertIntoTextureLodCommand.ExecuteNonQuery();
                     });
             }
             // MModel
@@ -701,7 +703,7 @@ namespace CDBPopulator
                                 {contentParameterName}
                             )
                             """;
-                await using DbCommand insertIntoTilesCommand = dbConnection.CreateCommand();
+                using DbCommand insertIntoTilesCommand = dbConnection.CreateCommand();
                 insertIntoTilesCommand.CommandText = insertIntoTilesStatement;
                 CreateAndAttachParameter(insertIntoTilesCommand, cdbParameterName, DbType.String);
                 CreateAndAttachParameter(insertIntoTilesCommand, latitudeParameterName, DbType.Int32);
@@ -714,7 +716,7 @@ namespace CDBPopulator
                 CreateAndAttachParameter(insertIntoTilesCommand, rightParameterName, DbType.Int32);
                 CreateAndAttachParameter(insertIntoTilesCommand, fileTypeParameterName, DbType.String);
                 CreateAndAttachParameter(insertIntoTilesCommand, contentParameterName, DbType.Binary);
-                await insertIntoTilesCommand.PrepareAsync(cancellationToken);
+                insertIntoTilesCommand.Prepare();
                 insertIntoTilesCommand.Parameters[cdbParameterName].Value = cdbName;
                 tiledDatasetVisitor.VisitFiles(tilesDir, async (tile, file) =>
                 {
@@ -728,8 +730,8 @@ namespace CDBPopulator
                     insertIntoTilesCommand.Parameters[upParameterName].Value = tile.Up;
                     insertIntoTilesCommand.Parameters[rightParameterName].Value = tile.Right;
                     insertIntoTilesCommand.Parameters[fileTypeParameterName].Value = tile.FileType;
-                    insertIntoTilesCommand.Parameters[contentParameterName].Value = await File.ReadAllBytesAsync(file.FullName, cancellationToken);
-                    int rowsAffected = await insertIntoTilesCommand.ExecuteNonQueryAsync(cancellationToken);
+                    insertIntoTilesCommand.Parameters[contentParameterName].Value = File.ReadAllBytes(file.FullName);
+                    int rowsAffected = insertIntoTilesCommand.ExecuteNonQuery();
 
                     /*
                      * Datasets in ZIP archives:
@@ -842,15 +844,15 @@ namespace CDBPopulator
                 });
             }
 
-            await dbConnection.CloseAsync();
+            dbConnection.Close();
 
             return 0;
         }
 
-        static async Task CreateSqliteSchema(DbConnection dbConnection, CancellationToken cancellationToken = default)
+        static void CreateSqliteSchema(DbConnection dbConnection)
         {
             int rowsAffected;
-            using DbTransaction dbTransaction = await dbConnection.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+            using DbTransaction dbTransaction = dbConnection.BeginTransaction(IsolationLevel.Serializable);
 
             using DbCommand dbCommand = dbConnection.CreateCommand();
 
@@ -861,7 +863,7 @@ create table CDB (
     name text primary key
 )
 """;
-            rowsAffected = await dbCommand.ExecuteNonQueryAsync(cancellationToken);
+            rowsAffected = dbCommand.ExecuteNonQuery();
 
             dbCommand.CommandText = """
 create table Metadata (
@@ -872,7 +874,7 @@ create table Metadata (
     primary key(cdb, name, file_type)
 )
 """;
-            rowsAffected = await dbCommand.ExecuteNonQueryAsync(cancellationToken);
+            rowsAffected = dbCommand.ExecuteNonQuery();
 
             // Need an index on dataset (for everything)
             // Need an index on feature_category, feature_subcategory, feature_type
@@ -903,7 +905,7 @@ create table Geometry (
     )
 )
 """;
-            rowsAffected = await dbCommand.ExecuteNonQueryAsync(cancellationToken);
+            rowsAffected = dbCommand.ExecuteNonQuery();
 
             // Need an index on feature_category, feature_subcategory, feature_type, lod
             dbCommand.CommandText = """
@@ -935,7 +937,7 @@ create table GeometryLOD (
     )
 )
 """;
-            rowsAffected = await dbCommand.ExecuteNonQueryAsync(cancellationToken);
+            rowsAffected = dbCommand.ExecuteNonQuery();
 
             // Need an index on texture name.
             dbCommand.CommandText = """
@@ -957,7 +959,7 @@ create table Texture (
     )
 )
 """;
-            rowsAffected = await dbCommand.ExecuteNonQueryAsync(cancellationToken);
+            rowsAffected = dbCommand.ExecuteNonQuery();
 
             // Need an index on texture name.
             dbCommand.CommandText = """
@@ -981,7 +983,7 @@ create table TextureLod (
     )
 )
 """;
-            rowsAffected = await dbCommand.ExecuteNonQueryAsync(cancellationToken);
+            rowsAffected = dbCommand.ExecuteNonQuery();
 
             // Maybe an index on kind, domain, country, category.
             // Need an index on kind, domain, country, category, subcategory, specific, extra.
@@ -1016,7 +1018,7 @@ create table Models (
     )
 )
 """;
-            rowsAffected = await dbCommand.ExecuteNonQueryAsync(cancellationToken);
+            rowsAffected = dbCommand.ExecuteNonQuery();
 
             // Need an index on latitude, longitude, dataset, cs1, cs2, lod, up
             dbCommand.CommandText = """
@@ -1046,9 +1048,9 @@ create table Tiles (
     )
 )
 """;
-            rowsAffected = await dbCommand.ExecuteNonQueryAsync(cancellationToken);
+            rowsAffected = dbCommand.ExecuteNonQuery();
 
-            await dbTransaction.CommitAsync(cancellationToken);
+            dbTransaction.Commit();
         }
     }
 }

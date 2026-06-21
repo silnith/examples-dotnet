@@ -17,5 +17,9 @@ public class TiledDatasetVisitor2
     /// <param name="tilesDir">The Tiles directory.</param>
     public void VisitTiles(DirectoryInfo tilesDir)
     {
+        if (!tilesDir.Exists)
+        {
+            return;
+        }
     }
 }

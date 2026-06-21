@@ -17,5 +17,9 @@ public class MovingModelVisitor
     /// <param name="mModelDir">The MModel directory.</param>
     public void VisitMovingModels(DirectoryInfo mModelDir)
     {
+        if (!mModelDir.Exists)
+        {
+            return;
+        }
     }
 }
