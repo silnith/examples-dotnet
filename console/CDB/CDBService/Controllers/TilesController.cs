@@ -24,7 +24,7 @@ public class TilesController : ControllerBase
         _logger = logger;
     }
 
-    [HttpGet("/{location:regex(^[NS]\\d{2}[EW]\\d{3}$)}_D{dataset:int}_S{cs1:int}_T{cs2:int}_U{up:int}_R{right:int}.{ext}")]
+    [HttpGet("/{location:regex(^[[NS]]\\d{{2}}[[EW]]\\d{{3}}$)}_D{dataset:int}_S{cs1:int}_T{cs2:int}_U{up:int}_R{right:int}.{ext}")]
     public async Task<ActionResult> GetFileAsync(
         [FromRoute(Name = "location")] string location,
         [FromRoute(Name = "dataset")] int dataset,
