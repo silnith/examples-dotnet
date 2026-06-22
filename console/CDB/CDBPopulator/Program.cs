@@ -944,6 +944,43 @@ create table Models (
 """;
             rowsAffected = dbCommand.ExecuteNonQuery();
 
+            // Maybe an index on kind, domain, country, category.
+            // Need an index on kind, domain, country, category, subcategory, specific, extra.
+            dbCommand.CommandText = """
+create table ModelsLod (
+    cdb text not null references CDB(name),
+    dataset integer not null,
+    component_selector_1 integer not null,
+    component_selector_2 integer not null,
+    lod integer not null,
+    kind integer not null,
+    domain integer not null,
+    country integer not null,
+    category integer not null,
+    subcategory integer not null,
+    specific integer not null,
+    extra integer not null,
+    file_type text not null,
+    content blob not null,
+    primary key(
+        cdb,
+        dataset,
+        component_selector_1,
+        component_selector_2,
+        lod,
+        kind,
+        domain,
+        country,
+        category,
+        subcategory,
+        specific,
+        extra,
+        file_type
+    )
+)
+""";
+            rowsAffected = dbCommand.ExecuteNonQuery();
+
             // Need an index on latitude, longitude, dataset, cs1, cs2, lod, up
             dbCommand.CommandText = """
 create table Tiles (

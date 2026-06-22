@@ -10,6 +10,17 @@ public class NavigationVisitor : VisitorBase
     private readonly ILogger<NavigationVisitor> logger;
 
     /// <summary>
+    /// A constructor intended for dependency injection.
+    /// </summary>
+    /// <param name="logger">A logger.</param>
+    public NavigationVisitor(ILogger<NavigationVisitor> logger)
+    {
+        ArgumentNullException.ThrowIfNull(logger);
+
+        this.logger = logger;
+    }
+
+    /// <summary>
     /// Walks the Navigation datasets and visits all recognized files.
     /// </summary>
     /// <remarks>
