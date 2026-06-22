@@ -135,6 +135,7 @@ namespace CDBPopulator
 
             const string modelNameParamName = "$model_name";
             const string textureNameParamName = "$texture_name";
+            const string sizeParamName = "$size";
 
             const string kindParamName = "$kind";
             const string domainParamName = "$domain";
@@ -310,6 +311,42 @@ namespace CDBPopulator
                 CreateAndAttachParameter(insertIntoTextureLodCommand, contentParamName, DbType.Binary);
                 insertIntoTextureLodCommand.Prepare();
                 insertIntoTextureLodCommand.Parameters[cdbParamName].Value = cdbName;
+            }
+            using DbCommand insertIntoTextureSizedCommand = dbConnection.CreateCommand();
+            {
+                const string insertIntoTextureSizedStatement = $"""
+                        insert into TextureSized (
+                            cdb,
+                            dataset,
+                            component_selector_1,
+                            component_selector_2,
+                            size,
+                            texture_name,
+                            file_type,
+                            content
+                        ) values (
+                            {cdbParamName},
+                            {datasetParamName},
+                            {cs1ParamName},
+                            {cs2ParamName},
+                            {sizeParamName},
+                            {textureNameParamName},
+                            {fileTypeParamName},
+                            {contentParamName}
+                        )
+                        """;
+
+                insertIntoTextureSizedCommand.CommandText = insertIntoTextureSizedStatement;
+                CreateAndAttachParameter(insertIntoTextureSizedCommand, cdbParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoTextureSizedCommand, datasetParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTextureSizedCommand, cs1ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTextureSizedCommand, cs2ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTextureSizedCommand, sizeParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTextureSizedCommand, textureNameParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoTextureSizedCommand, fileTypeParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoTextureSizedCommand, contentParamName, DbType.Binary);
+                insertIntoTextureSizedCommand.Prepare();
+                insertIntoTextureSizedCommand.Parameters[cdbParamName].Value = cdbName;
             }
 
             using DbCommand insertIntoModelsCommand = dbConnection.CreateCommand();
@@ -607,19 +644,15 @@ namespace CDBPopulator
                     },
                     (modelTexture, file) =>
                     {
-                        // TODO: insert!
-                        const string insert = """
-                                    insert into TextureSized (
-                                        cdb,
-                                        dataset,
-                                        component_selector_1,
-                                        component_selector_2,
-                                        texture_size,
-                                        texture_name,
-                                        file_type,
-                                        content
-                                    ) values ()
-                                    """;
+                        insertIntoTextureSizedCommand.Parameters[datasetParamName].Value = modelTexture.Dataset.Value;
+                        insertIntoTextureSizedCommand.Parameters[cs1ParamName].Value = modelTexture.ComponentSelector1;
+                        insertIntoTextureSizedCommand.Parameters[cs2ParamName].Value = modelTexture.ComponentSelector2;
+                        insertIntoTextureSizedCommand.Parameters[sizeParamName].Value = modelTexture.TextureSize;
+                        insertIntoTextureSizedCommand.Parameters[textureNameParamName].Value = modelTexture.TextureName;
+                        insertIntoTextureSizedCommand.Parameters[fileTypeParamName].Value = modelTexture.FileType;
+                        insertIntoTextureSizedCommand.Parameters[contentParamName].Value = File.ReadAllBytes(file.FullName);
+
+                        int rowsAffected = insertIntoTextureSizedCommand.ExecuteNonQuery();
                     },
                     (texture, file) =>
                     {
@@ -902,6 +935,30 @@ create table TextureLod (
         component_selector_1,
         component_selector_2,
         lod,
+        texture_name,
+        file_type
+    )
+)
+""";
+            rowsAffected = dbCommand.ExecuteNonQuery();
+
+            // Need an index on texture name.
+            dbCommand.CommandText = """
+create table TextureSized (
+    cdb text not null references CDB(name),
+    dataset integer not null,
+    component_selector_1 integer not null,
+    component_selector_2 integer not null,
+    size integer not null,
+    texture_name text not null,
+    file_type text not null,
+    content blob not null,
+    primary key(
+        cdb,
+        dataset,
+        component_selector_1,
+        component_selector_2,
+        size,
         texture_name,
         file_type
     )
