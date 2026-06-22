@@ -9,6 +9,7 @@ using System.Data.Common;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace CDBPopulator
@@ -500,6 +501,36 @@ namespace CDBPopulator
                 insertIntoTilesCommand.Prepare();
                 insertIntoTilesCommand.Parameters[cdbParamName].Value = cdbName;
             }
+            using DbCommand insertIntoNavigationCommand = dbConnection.CreateCommand();
+            {
+                const string insertIntoNavigationStatement = $"""
+                            insert into navigation (
+                                cdb,
+                                dataset,
+                                component_selector_1,
+                                component_selector_2,
+                                file_type,
+                                content
+                            ) values (
+                                {cdbParamName},
+                                {datasetParamName},
+                                {cs1ParamName},
+                                {cs2ParamName},
+                                {fileTypeParamName},
+                                {contentParamName}
+                            )
+                            """;
+
+                insertIntoNavigationCommand.CommandText = insertIntoNavigationStatement;
+                CreateAndAttachParameter(insertIntoNavigationCommand, cdbParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoNavigationCommand, datasetParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoNavigationCommand, cs1ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoNavigationCommand, cs2ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoNavigationCommand, fileTypeParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoNavigationCommand, contentParamName, DbType.Binary);
+                insertIntoNavigationCommand.Prepare();
+                insertIntoNavigationCommand.Parameters[cdbParamName].Value = cdbName;
+            }
 
             DirectoryInfo cdbRoot = new(cdbName);
             // Metadata
@@ -798,7 +829,16 @@ namespace CDBPopulator
             // Navigation
             {
                 NavigationVisitor navigationVisitor = host.Services.GetRequiredService<NavigationVisitor>();
-                navigationVisitor.VisitNavigationDatasets(cdbRoot);
+                navigationVisitor.VisitNavigationDatasets(cdbRoot, (navigation, file) =>
+                {
+                    insertIntoNavigationCommand.Parameters[datasetParamName].Value = navigation.Dataset.Value;
+                    insertIntoNavigationCommand.Parameters[cs1ParamName].Value = navigation.ComponentSelector1;
+                    insertIntoNavigationCommand.Parameters[cs2ParamName].Value = navigation.ComponentSelector2;
+                    insertIntoNavigationCommand.Parameters[fileTypeParamName].Value = navigation.FileType;
+                    insertIntoNavigationCommand.Parameters[contentParamName].Value = File.ReadAllBytes(file.FullName);
+
+                    int rowsAffected = insertIntoNavigationCommand.ExecuteNonQuery();
+                });
             }
 
             dbConnection.Close();
@@ -1062,6 +1102,25 @@ create table Tiles (
         lod,
         up,
         right,
+        file_type
+    )
+)
+""";
+            rowsAffected = dbCommand.ExecuteNonQuery();
+
+            dbCommand.CommandText = """
+create table Navigation (
+    cdb text not null references CDB(name),
+    dataset integer not null,
+    component_selector_1 integer not null,
+    component_selector_2 integer not null,
+    file_type text not null,
+    content blob not null,
+    primary key(
+        cdb,
+        dataset,
+        component_selector_1,
+        component_selector_2,
         file_type
     )
 )

@@ -22,6 +22,7 @@
       <Folder Include="CDB\GTModel\513_GTModelInteriorCMT\" />
       <Folder Include="CDB\GTModel\512_GTModelSignature\" />
       <Folder Include="CDB\MModel\606_MModelSignature\1_Platform\1_Land\225_United_States\1_Tank\1_1_225_1_1_8_0\L04\" />
+      <Folder Include="CDB\Navigation\400_NavData\" />
       <Folder Include="CDB\Tiles\" />
     </ItemGroup>
 

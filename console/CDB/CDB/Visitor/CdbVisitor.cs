@@ -6,7 +6,7 @@
 public class CdbVisitor : VisitorBase
 {
     private readonly MetadataVisitor metadataVisitor;
-    private readonly GTModelVisitor gTModelVisitor;
+    private readonly GTModelVisitor gtModelVisitor;
     private readonly MovingModelVisitor movingModelVisitor;
     private readonly TiledDatasetVisitor tiledDatasetVisitor;
     private readonly NavigationVisitor navigationVisitor;
@@ -25,12 +25,13 @@ public class CdbVisitor : VisitorBase
     {
         metadataVisitor.VisitMetadata(cdbDir,
             null);
-        gTModelVisitor.VisitGeotypicalModels(cdbDir,
+        gtModelVisitor.VisitGeotypicalModels(cdbDir,
             null, null, null, null);
         movingModelVisitor.VisitMovingModels(cdbDir,
             null, null, null, null);
         tiledDatasetVisitor.VisitTiles(cdbDir,
             null);
-        navigationVisitor.VisitNavigationDatasets(cdbDir);
+        navigationVisitor.VisitNavigationDatasets(cdbDir,
+            null);
     }
 }

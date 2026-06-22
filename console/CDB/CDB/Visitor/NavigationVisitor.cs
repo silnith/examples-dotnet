@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using System.Text.RegularExpressions;
 
 namespace Silnith.CDB.Visitor;
 
@@ -7,6 +8,9 @@ namespace Silnith.CDB.Visitor;
 /// </summary>
 public class NavigationVisitor : VisitorBase
 {
+    private static readonly Regex NavigationFilenamePattern = new(
+        @"^D(?<dataset>\d{3})_S(?<component_selector_1>\d{3})_T(?<component_selector_2>\d{3})\.(?<file_type>[^.]+)$",
+        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
     private readonly ILogger<NavigationVisitor> logger;
 
     /// <summary>
@@ -30,7 +34,8 @@ public class NavigationVisitor : VisitorBase
     /// </para>
     /// </remarks>
     /// <param name="cdbDir">The CDB root directory.</param>
-    public void VisitNavigationDatasets(DirectoryInfo cdbDir)
+    /// <param name="visitFile">The action to invoke for every file found in the Navigation dataset.</param>
+    public void VisitNavigationDatasets(DirectoryInfo cdbDir, Action<Navigation, FileInfo> visitFile)
     {
         DirectoryInfo navigationDir = new(Path.Combine(cdbDir.FullName, "Navigation"));
         if (!navigationDir.Exists)
@@ -38,6 +43,38 @@ public class NavigationVisitor : VisitorBase
             logger.LogTrace("{Directory} does not exist.  Skipping.",
                 navigationDir);
             return;
+        }
+
+        foreach (var datasetDir in navigationDir.EnumerateDirectories("*", enumerationOptions))
+        {
+            Match datasetMatch = Dataset.DirectoryPattern.Match(datasetDir.Name);
+            if (!datasetMatch.Success)
+            {
+                logger.LogTrace("{Directory} is not a Dataset directory.  Skipping.",
+                    datasetDir);
+                continue;
+            }
+            Dataset datasetFromDirectory = Dataset.FromDirectoryMatch(datasetMatch);
+
+            foreach (var file in datasetDir.EnumerateFiles("*", enumerationOptions))
+            {
+                Match match = Navigation.FilenamePattern.Match(file.Name);
+                if (!match.Success)
+                {
+                    logger.LogTrace("{File} is not a Navigation file.",
+                        file);
+                    continue;
+                }
+                Navigation navigation = Navigation.FromFilenameMatch(match);
+
+                if (datasetFromDirectory != navigation.Dataset)
+                {
+                    logger.LogWarning("Directory {DirectoryDataset} does not match file {FileDataset}",
+                        datasetFromDirectory, navigation.Dataset);
+                }
+
+                visitFile(navigation, file);
+            }
         }
     }
 }
