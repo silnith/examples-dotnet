@@ -8,7 +8,7 @@ namespace Silnith.CDB;
 /// A distinct type for latitude values.
 /// </summary>
 /// <param name="Value">The latitude value.</param>
-public record Latitude([Range(-90, 89)] int Value)
+public record Latitude([property: Range(-90, 89)] int Value)
 {
     /// <summary>
     /// A pattern for latitude as it is used in CDB tiled dataset directories.

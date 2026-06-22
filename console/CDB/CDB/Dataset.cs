@@ -13,7 +13,7 @@ namespace Silnith.CDB;
 /// </para>
 /// </remarks>
 /// <param name="Value">The dataset code.</param>
-public record Dataset([Range(0, 999)] int Value)
+public record Dataset([property: Range(0, 999)] int Value)
 {
     /// <summary>
     /// A pattern for datasets as they are used in CDB tiled dataset directories.

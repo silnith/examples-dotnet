@@ -8,7 +8,7 @@ namespace Silnith.CDB;
 /// A distinct type for longitude values.
 /// </summary>
 /// <param name="Value">The longitude value.</param>
-public record Longitude([Range(-180, 179)] int Value)
+public record Longitude([property: Range(-180, 179)] int Value)
 {
     /// <summary>
     /// A pattern for longitude as it is used in CDB tiled dataset directories.

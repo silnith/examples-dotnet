@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Silnith.CDB;
@@ -24,8 +25,8 @@ public record Tile(
         Latitude LatitudeValue,
         Longitude LongitudeValue,
         Dataset DatasetValue,
-        int ComponentSelector1,
-        int ComponentSelector2,
+        [property: Range(0, 999)] int ComponentSelector1,
+        [property: Range(0, 999)] int ComponentSelector2,
         LevelOfDetail Level,
         int Up,
         int Right,

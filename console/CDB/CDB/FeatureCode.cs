@@ -28,9 +28,9 @@ namespace Silnith.CDB;
 /// <param name="Type">The feature type in the subcategory.</param>
 /// <seealso href="https://github.com/opengeospatial/cdb-volume-1"/>
 public record FeatureCode(
-    [MaxLength(1)] string Category,
-    [MaxLength(1)] string Subcategory,
-    [Range(0, 999)] int Type)
+    [property: MaxLength(1)] string Category,
+    [property: MaxLength(1)] string Subcategory,
+    [property: Range(0, 999)] int Type)
 {
     /// <summary>
     /// Matches directory names of the form <c>A_Category</c>,

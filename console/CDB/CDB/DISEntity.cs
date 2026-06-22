@@ -23,13 +23,13 @@ namespace Silnith.CDB;
 /// <param name="Specific">The specific entity.  TBD</param>
 /// <param name="Extra">Extra classification for the entity.  TBD</param>
 public record DISEntity(
-    [Range(0, 999)] int Kind,
-    [Range(0, 999)] int Domain,
-    [Range(0, 999)] int Country,
-    [Range(0, 999)] int Category,
-    [Range(0, 999)] int Subcategory,
-    [Range(0, 999)] int Specific,
-    [Range(0, 999)] int Extra)
+    [property: Range(0, 999)] int Kind,
+    [property: Range(0, 999)] int Domain,
+    [property: Range(0, 999)] int Country,
+    [property: Range(0, 999)] int Category,
+    [property: Range(0, 999)] int Subcategory,
+    [property: Range(0, 999)] int Specific,
+    [property: Range(0, 999)] int Extra)
 {
     /// <summary>
     /// The pattern for the first four directories defined in 3.3.8.3 DIS Entity Type.

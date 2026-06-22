@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Silnith.CDB;
@@ -14,8 +15,8 @@ namespace Silnith.CDB;
 /// <param name="FileType">The file type.</param>
 public record TextureLod(
         Dataset Dataset,
-        int ComponentSelector1,
-        int ComponentSelector2,
+        [property: Range(0, 999)] int ComponentSelector1,
+        [property: Range(0, 999)] int ComponentSelector2,
         LevelOfDetail LevelOfDetail,
         string TextureName,
         string FileType)

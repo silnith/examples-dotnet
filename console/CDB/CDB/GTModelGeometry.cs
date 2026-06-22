@@ -16,10 +16,10 @@ namespace Silnith.CDB;
 /// <param name="FileType">The file type.</param>
 public record GTModelGeometry(
     Dataset Dataset,
-    [Range(0, 999)] int ComponentSelector1,
-    [Range(0, 999)] int ComponentSelector2,
+    [property: Range(0, 999)] int ComponentSelector1,
+    [property: Range(0, 999)] int ComponentSelector2,
     FeatureCode FeatureCode,
-    [Range(0, 999)] int FeatureSubcode,
+    [property: Range(0, 999)] int FeatureSubcode,
     string ModelName,
     string FileType)
 {

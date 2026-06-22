@@ -13,8 +13,8 @@ namespace Silnith.CDB;
 /// <param name="FileType">The file type.</param>
 public record Navigation(
     Dataset Dataset,
-    [Range(0, 999)] int ComponentSelector1,
-    [Range(0, 999)] int ComponentSelector2,
+    [property: Range(0, 999)] int ComponentSelector1,
+    [property: Range(0, 999)] int ComponentSelector2,
     string FileType)
 {
     /// <summary>
