@@ -1,11 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using Silnith.CDB;
-using System.Data;
 using System.Data.Common;
+using System.Data;
 using System.Net.Mime;
 using System.Text.RegularExpressions;
 
-namespace CDBService.Controllers;
+namespace Silnith.CDB.Service.Controllers;
 
 [ApiController]
 [Route("[controller]")]

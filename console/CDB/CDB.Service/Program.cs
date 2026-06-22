@@ -1,8 +1,7 @@
-
 using Microsoft.Data.Sqlite;
 using System.Data.Common;
 
-namespace CDBService;
+namespace Silnith.CDB.Service;
 
 public class Program
 {

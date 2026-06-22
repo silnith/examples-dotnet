@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "CDBPopulator": {
+    "CDB.Importer": {
       "commandName": "Project",
       "workingDirectory": "."
     }
