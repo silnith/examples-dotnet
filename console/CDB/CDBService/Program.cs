@@ -29,22 +29,12 @@ public class Program
                 Pooling = true,
             };
         });
-        builder.Services.AddSingleton(serviceProvider =>
+        builder.Services.AddTransient<DbConnection, SqliteConnection>(serviceProvider =>
         {
-            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-            string providerInvariantName = "Microsoft.Data.Sqlite";
-            return DbProviderFactories.GetFactory(providerInvariantName);
-        });
-        builder.Services.AddSingleton(serviceProvider =>
-        {
-            DbProviderFactory dbProviderFactory = serviceProvider.GetRequiredService<DbProviderFactory>();
             DbConnectionStringBuilder dbConnectionStringBuilder = serviceProvider.GetRequiredService<DbConnectionStringBuilder>();
-            return dbProviderFactory.CreateDataSource(dbConnectionStringBuilder.ConnectionString);
-        });
-        builder.Services.AddTransient(serviceProvider =>
-        {
-            DbDataSource dbDataSource = serviceProvider.GetRequiredService<DbDataSource>();
-            return dbDataSource.OpenConnection();
+            SqliteConnection sqliteConnection = new(dbConnectionStringBuilder.ConnectionString);
+            sqliteConnection.Open();
+            return sqliteConnection;
         });
 
         var app = builder.Build();
