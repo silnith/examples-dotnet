@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Globalization;
-using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace Silnith.CDB;
+namespace Silnith.CDB.Visitor;
 
 /// <summary>
 /// Visits all the files in the Geotypical Models Datasets.
@@ -14,7 +13,7 @@ namespace Silnith.CDB;
 /// Section 3.4. GTModel Library Datasets
 /// </para>
 /// </remarks>
-public class GTModelVisitor : Visitor
+public class GTModelVisitor : VisitorBase
 {
     /*
      * 1. GTModelGeometry
@@ -38,11 +37,34 @@ public class GTModelVisitor : Visitor
 
     private readonly ILogger<GTModelVisitor> logger;
 
-    private readonly FeatureCodeDirectoryVisitor featureCodeDirectoryVisitor;
+    private readonly FeatureCodeDirectoryWalker featureCodeDirectoryWalker;
 
     private readonly LevelOfDetailDirectoryWalker levelOfDetailDirectoryWalker;
 
     private readonly TextureDirectoryVisitor textureDirectoryVisitor;
+
+    /// <summary>
+    /// A constructor intended for dependency injection.
+    /// </summary>
+    /// <param name="logger">A logger.</param>
+    /// <param name="featureCodeDirectoryWalker">A feature code directory walker.</param>
+    /// <param name="levelOfDetailDirectoryWalker">A level of detail directory walker.</param>
+    /// <param name="textureDirectoryVisitor">A texture directory walker.</param>
+    public GTModelVisitor(ILogger<GTModelVisitor> logger,
+        FeatureCodeDirectoryWalker featureCodeDirectoryWalker,
+        LevelOfDetailDirectoryWalker levelOfDetailDirectoryWalker,
+        TextureDirectoryVisitor textureDirectoryVisitor)
+    {
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(featureCodeDirectoryWalker);
+        ArgumentNullException.ThrowIfNull(levelOfDetailDirectoryWalker);
+        ArgumentNullException.ThrowIfNull(textureDirectoryVisitor);
+
+        this.logger = logger;
+        this.featureCodeDirectoryWalker = featureCodeDirectoryWalker;
+        this.levelOfDetailDirectoryWalker = levelOfDetailDirectoryWalker;
+        this.textureDirectoryVisitor = textureDirectoryVisitor;
+    }
 
     public delegate void VisitGTModel(GTModelGeometry modelGeometry, FileInfo file);
     public delegate void VisitGTModelLod(GTModelGeometryLod modelGeometryLod, FileInfo file);
@@ -52,89 +74,98 @@ public class GTModelVisitor : Visitor
     /// <summary>
     ///  Walks the GTModel directory and visits all recognized files.
     /// </summary>
-    /// <param name="gtModelDir">The GTModel directory.</param>
-    public void WalkGeotypicalModels(DirectoryInfo gtModelDir,
+    /// <param name="cdbDir">The CDB root directory.</param>
+    public void VisitGeotypicalModels(DirectoryInfo cdbDir,
         VisitGTModel modelAction,
         VisitGTModelLod modelLodAction,
         VisitTexture textureAction,
         VisitTextureLod textureLodAction)
     {
+        DirectoryInfo gtModelDir = new(Path.Combine(cdbDir.FullName, "GTModel"));
         if (!gtModelDir.Exists)
         {
+            logger.LogTrace("{Directory} does not exist.  Skipping.", gtModelDir);
             return;
         }
 
         foreach (DirectoryInfo datasetDir in gtModelDir.EnumerateDirectories("*", enumerationOptions))
         {
-            Match datasetMatch = Dataset.TiledDatasetDirectoryPattern.Match(datasetDir.Name);
+            Match datasetMatch = Dataset.DirectoryPattern.Match(datasetDir.Name);
             if (!datasetMatch.Success)
             {
-                logger.LogWarning("Unrecognized dataset directory {Directory} in GTModel.", datasetDir);
+                logger.LogTrace("{Directory} is not a Dataset directory.  Skipping.",
+                    datasetDir);
                 continue;
             }
-            Dataset datasetFromDirectory = Dataset.FromTiledDatasetDirectoryMatch(datasetMatch);
+            Dataset datasetFromDirectory = Dataset.FromDirectoryMatch(datasetMatch);
 
             // See 3.4.1. GTModel Directory Structure 1: Geometry and Descriptor
             // See 3.4.3. GTModel Directory Structure 3: Interior Geometry and Descriptor
             // See 3.4.5. GTModel Directory Structure 5: Signature
-            featureCodeDirectoryVisitor.WalkDirectories(datasetDir, (featureCode, featureTypeDir) =>
+            featureCodeDirectoryWalker.WalkDirectories(datasetDir, (featureCode, featureDir) =>
             {
                 // See 3.4.1.1. GTModelGeometry Entry File Naming Convention
                 // See 3.4.1.3. GTModelDescriptor Naming Convention
                 // The only difference between the two is the file type.
                 // See 3.4.3.2. GTModelInteriorDescriptor Naming Convention
-                foreach (FileInfo file in featureTypeDir.EnumerateFiles("*", enumerationOptions))
+                foreach (FileInfo file in featureDir.EnumerateFiles("*", enumerationOptions))
                 {
-                    Match gtModelGeometryMatch = GTModelGeometry.FilenamePattern.Match(file.Name);
-                    if (gtModelGeometryMatch.Success)
+                    Match geometryMatch = GTModelGeometry.FilenamePattern.Match(file.Name);
+                    if (!geometryMatch.Success)
                     {
-                        GTModelGeometry gtModelGeometry = GTModelGeometry.FromFilenameMatch(gtModelGeometryMatch);
-
-                        if (datasetFromDirectory != gtModelGeometry.Dataset)
-                        {
-                            logger.LogWarning("Directory {DirectoryDataset} does not match file {FileDataset}",
-                                datasetFromDirectory, gtModelGeometry.Dataset);
-                        }
-                        if (featureCode != gtModelGeometry.FeatureCode)
-                        {
-                            logger.LogWarning("Directory {DirectoryFeatureCode} does not match file {FileFeatureCode}",
-                                featureCode, gtModelGeometry.FeatureCode);
-                        }
-
-                        modelAction(gtModelGeometry, file);
+                        logger.LogTrace("{File} is not a Geotypical Model.  Skipping.",
+                            file);
+                        continue;
                     }
+                    GTModelGeometry geometry = GTModelGeometry.FromFilenameMatch(geometryMatch);
+
+                    if (datasetFromDirectory != geometry.Dataset)
+                    {
+                        logger.LogWarning("Directory {DirectoryDataset} does not match file {FileDataset}",
+                            datasetFromDirectory, geometry.Dataset);
+                    }
+                    if (featureCode != geometry.FeatureCode)
+                    {
+                        logger.LogWarning("Directory {DirectoryFeatureCode} does not match file {FileFeatureCode}",
+                            featureCode, geometry.FeatureCode);
+                    }
+
+                    modelAction(geometry, file);
                 }
 
-                levelOfDetailDirectoryWalker.WalkModelGeometryDirectories(featureTypeDir, (lod, lodDir) =>
+                levelOfDetailDirectoryWalker.WalkModelGeometryDirectories(featureDir, (lod, lodDir) =>
                 {
                     // See 3.4.1.2. GTModelGeometry Level of Detail Naming Convention
                     // See 3.4.3.1. GTModelInteriorGeometry Naming Convention
                     // See 3.4.5.1. GTModelSignature Naming Convention
                     foreach (FileInfo file in lodDir.EnumerateFiles("*", enumerationOptions))
                     {
-                        Match gtModelGeometryLodMatch = GTModelGeometryLod.FilenamePattern.Match(file.Name);
-                        if (gtModelGeometryLodMatch.Success)
+                        Match geometryLodMatch = GTModelGeometryLod.FilenamePattern.Match(file.Name);
+                        if (!geometryLodMatch.Success)
                         {
-                            GTModelGeometryLod gtModelGeometryLod = GTModelGeometryLod.FromFilenameMatch(gtModelGeometryLodMatch);
-
-                            if (datasetFromDirectory != gtModelGeometryLod.Dataset)
-                            {
-                                logger.LogWarning("Directory {DirectoryDataset} does not match file {FileDataset}",
-                                    datasetFromDirectory, gtModelGeometryLod.Dataset);
-                            }
-                            if (featureCode != gtModelGeometryLod.FeatureCode)
-                            {
-                                logger.LogWarning("Directory {DirectoryFeatureCode} does not match file {FileFeatureCode}",
-                                    featureCode, gtModelGeometryLod.FeatureCode);
-                            }
-                            if (lod != gtModelGeometryLod.LevelOfDetail)
-                            {
-                                logger.LogWarning("Directory {DirectoryLod} does not match file {FileLod}",
-                                    lod, gtModelGeometryLod.LevelOfDetail);
-                            }
-
-                            modelLodAction(gtModelGeometryLod, file);
+                            logger.LogTrace("{File} is not a Geotypical Model Level of Detail.  Skipping.",
+                                file);
+                            continue;
                         }
+                        GTModelGeometryLod geometryLod = GTModelGeometryLod.FromFilenameMatch(geometryLodMatch);
+
+                        if (datasetFromDirectory != geometryLod.Dataset)
+                        {
+                            logger.LogWarning("Directory {DirectoryDataset} does not match file {FileDataset}",
+                                datasetFromDirectory, geometryLod.Dataset);
+                        }
+                        if (featureCode != geometryLod.FeatureCode)
+                        {
+                            logger.LogWarning("Directory {DirectoryFeatureCode} does not match file {FileFeatureCode}",
+                                featureCode, geometryLod.FeatureCode);
+                        }
+                        if (lod != geometryLod.LevelOfDetail)
+                        {
+                            logger.LogWarning("Directory {DirectoryLod} does not match file {FileLod}",
+                                lod, geometryLod.LevelOfDetail);
+                        }
+
+                        modelLodAction(geometryLod, file);
                     }
                 });
             });
@@ -184,13 +215,19 @@ public class GTModelVisitor : Visitor
                                 logger.LogWarning("Directory {DirectoryDataset} does not match file {FileDataset}",
                                     datasetFromDirectory, texture.Dataset);
                             }
-                            if (CultureInfo.InvariantCulture.CompareInfo.Compare(textureName, texture.TextureName, CompareOptions.IgnoreCase) != 0)
+                            if (CultureInfo.InvariantCulture.CompareInfo.Compare(textureName, texture.Name, CompareOptions.IgnoreCase) != 0)
                             {
                                 logger.LogWarning("Texture directory {DirectoryName} does not match file {FileName}",
-                                    textureName, texture.TextureName);
+                                    textureName, texture.Name);
                             }
 
                             textureAction(texture, file);
+                        }
+                        else
+                        {
+                            logger.LogTrace("{File} is not a texture file.  Skipping.",
+                                file);
+                            continue;
                         }
                     }
                 }

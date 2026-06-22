@@ -7,8 +7,8 @@ namespace Silnith.CDB;
 /// <summary>
 /// A distinct type for representing a level of detail.
 /// </summary>
-/// <param name="Level">The level of detail.</param>
-public record LevelOfDetail([Range(-10, 23)] int Level)
+/// <param name="Value">The level of detail.</param>
+public record LevelOfDetail([Range(-10, 23)] int Value)
 {
     /// <summary>
     /// The pattern for levels of detail as they are used in model geometry directories.

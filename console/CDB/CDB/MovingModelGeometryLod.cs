@@ -1,32 +1,27 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Silnith.CDB;
 
 /// <summary>
-/// Identifying characteristics of a Geotypical Model Geometry Level of Detail file.
+/// Identifying characteristics of a Moving Model Geometry file.
 /// </summary>
 /// <param name="Dataset">The dataset.</param>
 /// <param name="ComponentSelector1">Component selector 1.  The meaning of this is relative to the dataset.</param>
 /// <param name="ComponentSelector2">Component selector 2.  The meaning of this is relative to component selector 1.</param>
 /// <param name="LevelOfDetail">The level of detail.</param>
-/// <param name="FeatureCode">The feature code.</param>
-/// <param name="FeatureSubcode">The feature subcode.</param>
-/// <param name="ModelName">The name of the model.</param>
+/// <param name="MMDC">The moving model DIS code.</param>
 /// <param name="FileType">The file type.</param>
-public record GTModelGeometryLod(
-        Dataset Dataset,
-        [Range(0, 999)] int ComponentSelector1,
-        [Range(0, 999)] int ComponentSelector2,
-        LevelOfDetail LevelOfDetail,
-        FeatureCode FeatureCode,
-        [Range(0, 999)] int FeatureSubcode,
-        string ModelName,
-        string FileType)
+public record MovingModelGeometryLod(
+    Dataset Dataset,
+    int ComponentSelector1,
+    int ComponentSelector2,
+    LevelOfDetail LevelOfDetail,
+    DISEntity MMDC,
+    string FileType)
 {
     /// <summary>
-    /// The pattern based on 3.4.1.2. GTModelGeometry Level of Detail Naming Convention.
+    /// The pattern based on 3.5.1.1. MModelGeometry Naming Convention.
     /// </summary>
     /// <remarks>
     /// <list type="table">
@@ -36,27 +31,29 @@ public record GTModelGeometryLod(
     /// <item><term>component_selector_2</term><description>Parseable as an integer.</description></item>
     /// <item><term>lod_negated</term><description>"C" if the level of detail is negative.</description></item>
     /// <item><term>lod</term><description>Parseable as an integer.</description></item>
-    /// <item><term>fc_category</term><description>The feature category.</description></item>
-    /// <item><term>fc_subcategory</term><description>The feature subcategory.</description></item>
-    /// <item><term>fc_type</term><description>The feature type code.  Parseable as an integer.</description></item>
-    /// <item><term>feature_subcode</term><description>Parseable as an integer.</description></item>
-    /// <item><term>modl</term><description>The name of the model.</description></item>
+    /// <item><term>kind</term><description>Parseable as an integer.</description></item>
+    /// <item><term>domain</term><description>Parseable as an integer.</description></item>
+    /// <item><term>country</term><description>Parseable as an integer.</description></item>
+    /// <item><term>category</term><description>Parseable as an integer.</description></item>
+    /// <item><term>subcategory</term><description>Parseable as an integer.</description></item>
+    /// <item><term>specific</term><description>Parseable as an integer.</description></item>
+    /// <item><term>extra</term><description>Parseable as an integer.</description></item>
     /// <item><term>file_type</term><description>The file type.</description></item>
     /// </list>
     /// </remarks>
     public static Regex FilenamePattern
     {
         get;
-    } = new(@"^D(?<dataset>\d{3})_S(?<component_selector_1>\d{3})_T(?<component_selector_2>\d{3})_L(?<lod_negated>C?)(?<lod>\d{2})_(?<fc_category>[A-Z])(?<fc_subcategory>[A-Z])(?<fc_type>\d{3})_(?<feature_subcode>\d{3})_(?<modl>[^.]+)\.(?<file_type>[^.]+)$",
+    } = new(@"^D(?<dataset>\d{3})_S(?<component_selector_1>\d{3})_T(?<component_selector_2>\d{3})_L(?<lod_negated>C?)(?<lod>\d{2})_(?<kind>\d{1,3})_(?<domain>\d{1,3})_(?<country>\d{1,3})_(?<category>\d{1,3})_(?<subcategory>\d{1,3})_(?<specific>\d{1,3})_(?<extra>\d{1,3})\.(?<file_type>[^.]+)$",
         RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
 
     /// <summary>
-    /// Extracts the Geotypical Model Geometry Level of Detail from the captured groups of
+    /// Extracts the Geotypical Model Geometry from the captured groups of
     /// <see cref="FilenamePattern"/>.
     /// </summary>
     /// <param name="match">A successful match against <see cref="FilenamePattern"/>.</param>
-    /// <returns>The Geotypical Model Geometry Level of Detail.</returns>
-    public static GTModelGeometryLod FromFilenameMatch(Match match)
+    /// <returns>The Geotypical Model Geometry.</returns>
+    public static MovingModelGeometryLod FromFilenameMatch(Match match)
     {
         return new(
             new Dataset(int.Parse(match.Groups["dataset"].Value, CultureInfo.InvariantCulture)),
@@ -67,12 +64,14 @@ public record GTModelGeometryLod(
                 "C" or "c" => -int.Parse(match.Groups["lod"].Value, CultureInfo.InvariantCulture),
                 _ => int.Parse(match.Groups["lod"].Value, CultureInfo.InvariantCulture),
             }),
-            new FeatureCode(
-                match.Groups["fc_category"].Value,
-                match.Groups["fc_subcategory"].Value,
-                int.Parse(match.Groups["fc_type"].Value, CultureInfo.InvariantCulture)),
-            int.Parse(match.Groups["feature_subcode"].Value, CultureInfo.InvariantCulture),
-            match.Groups["modl"].Value,
+            new DISEntity(
+                int.Parse(match.Groups["kind"].Value, CultureInfo.InvariantCulture),
+                int.Parse(match.Groups["domain"].Value, CultureInfo.InvariantCulture),
+                int.Parse(match.Groups["country"].Value, CultureInfo.InvariantCulture),
+                int.Parse(match.Groups["category"].Value, CultureInfo.InvariantCulture),
+                int.Parse(match.Groups["subcategory"].Value, CultureInfo.InvariantCulture),
+                int.Parse(match.Groups["specific"].Value, CultureInfo.InvariantCulture),
+                int.Parse(match.Groups["extra"].Value, CultureInfo.InvariantCulture)),
             match.Groups["file_type"].Value);
     }
 }

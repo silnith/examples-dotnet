@@ -68,7 +68,7 @@ public record Tile(
         return new(
             Latitude.FromRegexMatch(match.Groups["north_south"].Value, match.Groups["latitude"].Value),
             Longitude.FromRegexMatch(match.Groups["east_west"].Value, match.Groups["longitude"].Value),
-            Dataset.FromRegexMatch(match.Groups["dataset"].Value),
+            new Dataset(int.Parse(match.Groups["dataset"].Value, CultureInfo.InvariantCulture)),
             int.Parse(match.Groups["selector1"].Value, CultureInfo.InvariantCulture),
             int.Parse(match.Groups["selector2"].Value, CultureInfo.InvariantCulture),
             LevelOfDetail.FromRegexMatch(match.Groups["lod_negated"].Value, match.Groups["lod"].Value),

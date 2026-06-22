@@ -2,14 +2,14 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace Silnith.CDB;
+namespace Silnith.CDB.Visitor;
 
 /// <summary>
 /// Visits a directory hierarchy described in 3.3.8.4. Texture Name,
 /// and calls a delegate for every leaf directory that matches the expected
 /// structure.
 /// </summary>
-public class TextureDirectoryVisitor
+public class TextureDirectoryVisitor : VisitorBase
 {
     /// <summary>
     /// The pattern for the first two directories in the hierarchy.
@@ -40,21 +40,6 @@ public class TextureDirectoryVisitor
     }
 
     /// <summary>
-    /// The options for how to enumerate directory entries.
-    /// This specifies case insensitive matching using simple wildcards, no recursion.
-    /// </summary>
-    private EnumerationOptions EnumerationOptions
-    {
-        get;
-    } = new()
-    {
-        MatchCasing = MatchCasing.CaseInsensitive,
-        MatchType = MatchType.Simple,
-        RecurseSubdirectories = false,
-        ReturnSpecialDirectories = false,
-    };
-
-    /// <summary>
     /// Called for every leaf directory found in the directory hierarchy.
     /// </summary>
     /// <param name="textureName">The texture name from the directory hierarchy.</param>
@@ -74,37 +59,40 @@ public class TextureDirectoryVisitor
     /// <param name="processTextureDirectory">The action to take for every leaf directory in the directory hierarchy.</param>
     public void WalkDirectories(DirectoryInfo dir, ProcessTextureDirectory processTextureDirectory)
     {
-        foreach (var level1Dir in dir.EnumerateDirectories("*", EnumerationOptions))
+        foreach (var level1Dir in dir.EnumerateDirectories("*", enumerationOptions))
         {
-            Match level1Match = PrefixPattern.Match(level1Dir.Name);
+            Match level1Match = Texture.PrefixPattern.Match(level1Dir.Name);
             if (!level1Match.Success)
             {
+                logger.LogTrace("{Directory} is not the first level of a texture hierarchy.  Skipping.",
+                    level1Dir);
                 continue;
             }
             var level1Prefix = level1Match.Groups["prefix"].Value;
 
-            foreach (var level2Dir in level1Dir.EnumerateDirectories("*", EnumerationOptions))
+            foreach (var level2Dir in level1Dir.EnumerateDirectories("*", enumerationOptions))
             {
-                Match level2Match = PrefixPattern.Match(level2Dir.Name);
+                Match level2Match = Texture.PrefixPattern.Match(level2Dir.Name);
                 if (!level2Match.Success)
                 {
+                    logger.LogTrace("{Directory} is not the second level of a texture hierarchy.  Skipping.",
+                        level2Dir);
                     continue;
                 }
                 var level2Prefix = level2Match.Groups["prefix"].Value;
 
-                foreach (var textureDir in level2Dir.EnumerateDirectories("*", EnumerationOptions))
+                foreach (var textureDir in level2Dir.EnumerateDirectories("*", enumerationOptions))
                 {
                     string textureName = textureDir.Name;
-                    if (textureName.StartsWith(level1Prefix, true, CultureInfo.InvariantCulture)
-                        && textureName.StartsWith(level1Prefix + level2Prefix, true, CultureInfo.InvariantCulture))
-                    {
-                        processTextureDirectory(textureName, textureDir);
-                    }
-                    else
+
+                    if (!textureName.StartsWith(level1Prefix, true, CultureInfo.InvariantCulture)
+                        || !textureName.StartsWith(level1Prefix + level2Prefix, true, CultureInfo.InvariantCulture))
                     {
                         logger.LogWarning("Unexpected directory in texture directory hierarchy.  {TextureName} does not begin with {Prefix}.",
                             textureName, level1Prefix + level2Prefix);
                     }
+
+                    processTextureDirectory(textureName, textureDir);
                 }
             }
         }

@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Silnith.CDB;
@@ -15,10 +16,10 @@ namespace Silnith.CDB;
 /// <param name="FileType">The file type.</param>
 public record GTModelGeometry(
     Dataset Dataset,
-    int ComponentSelector1,
-    int ComponentSelector2,
+    [Range(0, 999)] int ComponentSelector1,
+    [Range(0, 999)] int ComponentSelector2,
     FeatureCode FeatureCode,
-    int FeatureSubcode,
+    [Range(0, 999)] int FeatureSubcode,
     string ModelName,
     string FileType)
 {

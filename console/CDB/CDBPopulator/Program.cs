@@ -3,78 +3,18 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Silnith.CDB;
-using System.Collections.Generic;
+using Silnith.CDB.Visitor;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CDBPopulator
 {
     class Program
     {
-        /*
-         * DIS Entity Type
-         * \CDB\MModel\600_MModelGeometry\1_Platform\2_Air\225_United_States\21_Utility_Helo\1_2_225_21_x_x_x\D600_S001_T001_1_2_225_21_x_x_x.flt
-         * \CDB\MModel\600_MModelGeometry\1_Platform\2_Air\225_United_States\21_Utility_Helo\1_2_225_21_x_x_x\D600_S001_T002_1_2_225_21_x_x_x.flt
-         * \CDB\MModel\600_MModelGeometry\1_Platform\1_Land\225_United_States\1_Tank\1_1_225_1_1_3_0\
-         * \CDB\MModel\601_MModelTexture\M\1\M1A2\D601_S005_T001_W11_M1A2.rgb
-         * \CDB\GTModel\510_GTModelGeometry\A_Culture\T_Comm\040_Power_Pylon\Lxx\
-         * \CDB\GTModel\511_GTModelTexture\P\Y\Pylon\D511_Sxxx_Txxx_Lxx_Pylon.rgb
-         * \CDB\GTModel\500_GTModelGeometry\A_Culture\L_Misc_Feature\015_Building\D500_S001_T001_AL015_050_Church-Gothic.flt
-         * \CDB\Tiles\_lat_\_lon_\300_GSModelGeometry\Lxx\Ux\
-         * \CDB\Tiles\_lat_\_lon_\301_GSModelTexture\Lxx\Ux__\latlon___D301_Sxxx_Txxx_Lxx_Ux_Rx_TNAM.rgb
-         * \CDB\GTModel\511_GTModelTexture\_T_\_N_\TNAM\D511_Sxxx_Txxx_Lxx_TNAM.rgb
-         * \CDB\Tiles\_lat_\_lon_\310_T2DModelGeometry\Lxx\Ux\
-         * \CDB\Tiles\_lat_\_lon_\301_GSModelTexture\Lxx\Ux__\latlon___D301_Sxxx_Txxx_Lxx_Ux_Rx_TNAM.rgb
-         * \CDB\GTModel\501_GTModelTexture\_T_\_N_\_TNAM_\D511_Sxxx_Txxx_Lxx_TNAM.rgb
-         * \CDB\MModel\601_MModelTexture\M\1\M1A2\D601_S004_T005_Wxx_M1A2.rgb
-         * \CDB\MModel\601_MModelTexture\M\1\M1A2\D601_S005_T001_Wxx_M1A2.rgb
-         */
-        static readonly SortedDictionary<char, string> categories = new()
-        {
-            { 'A', "A_Culture" },
-            { 'B', "B_Hydrography" },
-            { 'C', "C_Hypsography" },
-            { 'D', "D_Physiography" },
-            { 'E', "E_Vegetation" },
-            { 'F', "F_Demarcation" },
-            { 'G', "G_Aeronautical_Information" },
-            { 'I', "I_Cadastral" },
-            { 'S', "S_Special_Use" },
-            { 'Z', "Z_General" },
-        };
-        static readonly SortedDictionary<char, string> subcategories = new()
-        {
-            { 'C', "C_Woodland" },
-            { 'D', "D_Power_Gen" },
-            { 'E', "E_Fab_Industry" },
-            { 'K', "K_Recreational" },
-            { 'L', "L_Misc_Feature" },
-            { 'T', "T_Comm" },
-        };
-        static readonly SortedDictionary<int, string> codes = new()
-        {
-            // For category A:
-            // If subcategory E, then Assembly_Plant, else Power_Plant
-            { 10, "010_Power_Plant" },
-            { 15, "015_Building" },
-            { 20, "020_Built-Up_Area" },
-            { 50, "050_Display_Sign" },
-            { 30, "030_Power_Line" },
-            { 40, "040_Power_Pylon" },
-            { 80, "080_Comm_Tower" },
-            { 110, "110_Light_Standard" },
-            { 240, "240_Tower-NC" },
-            { 241, "241_Tower_General" },
-            // For category E:
-            { 030, "030_Trees" },
-        };
-
         /*
          * https://github.com/opengeospatial/cdb-volume-1
          * Chapter 3. CDB Structure
@@ -91,10 +31,6 @@ namespace CDBPopulator
          * \CDB\MModel\
          * \CDB\Tiles\
          * \CDB\Navigation\
-         * 
-         * 3.3.8.1. Feature Classification
-         * 
-         * Feature Code
          */
 
         private static IHost Setup(string[] args)
@@ -137,14 +73,17 @@ namespace CDBPopulator
             //    return dbDataSource.OpenConnection();
             //});
 
-            hostApplicationBuilder.Services.AddSingleton<FeatureCodeDirectoryVisitor>();
+            hostApplicationBuilder.Services.AddSingleton<DISEntityDirectoryWalker>();
+            hostApplicationBuilder.Services.AddSingleton<FeatureCodeDirectoryWalker>();
             hostApplicationBuilder.Services.AddSingleton<LevelOfDetailDirectoryWalker>();
-            hostApplicationBuilder.Services.AddSingleton<MovingModelDirectoryVisitor>();
             hostApplicationBuilder.Services.AddSingleton<TextureDirectoryVisitor>();
             hostApplicationBuilder.Services.AddSingleton<TiledDatasetVisitor>();
 
             hostApplicationBuilder.Services.AddSingleton<MetadataVisitor>();
             hostApplicationBuilder.Services.AddSingleton<GTModelVisitor>();
+            hostApplicationBuilder.Services.AddSingleton<MovingModelVisitor>();
+            hostApplicationBuilder.Services.AddSingleton<TiledDatasetVisitor>();
+            hostApplicationBuilder.Services.AddSingleton<NavigationVisitor>();
 
             return hostApplicationBuilder.Build();
         }
@@ -169,17 +108,17 @@ namespace CDBPopulator
             CreateSqliteSchema(dbConnection);
 
             string cdbName = "CDB";
-            using (DbCommand dbCommand = dbConnection.CreateCommand())
+            using (DbCommand insertCdbCommand = dbConnection.CreateCommand())
             {
-                const string nameParameterName = "$name";
-                const string sql = $"""
-                    insert into CDB (name) values ({nameParameterName})
+                const string nameParamName = "$name";
+                const string insertCdbStatement = $"""
+                    insert into CDB (name) values ({nameParamName})
                     """;
-                dbCommand.CommandText = sql;
-                CreateAndAttachParameter(dbCommand, nameParameterName, DbType.String);
-                dbCommand.Prepare();
-                dbCommand.Parameters[nameParameterName].Value = cdbName;
-                int rowsAffected = dbCommand.ExecuteNonQuery();
+                insertCdbCommand.CommandText = insertCdbStatement;
+                CreateAndAttachParameter(insertCdbCommand, nameParamName, DbType.String);
+                insertCdbCommand.Prepare();
+                insertCdbCommand.Parameters[nameParamName].Value = cdbName;
+                int rowsAffected = insertCdbCommand.ExecuteNonQuery();
             }
 
             const string cdbParamName = "$cdb";
@@ -194,10 +133,340 @@ namespace CDBPopulator
             const string fileTypeParamName = "$file_type";
             const string contentParamName = "$content";
 
+            const string modelNameParamName = "$model_name";
+            const string textureNameParamName = "$texture_name";
+
+            const string kindParamName = "$kind";
+            const string domainParamName = "$domain";
+            const string countryParamName = "$country";
+            const string categoryParamName = "$category";
+            const string subcategoryParamName = "$subcategory";
+            const string specificParamName = "$specific";
+            const string extraParamName = "$extra";
+
+            const string latitudeParamName = "$latitude";
+            const string longitudeParamName = "$longitude";
+            const string upParamName = "$up";
+            const string rightParamName = "$right";
+
+            using DbCommand insertIntoGeometryCommand = dbConnection.CreateCommand();
+            {
+                const string insertIntoGeometryStatement = $"""
+                        insert into Geometry (
+                            cdb,
+                            dataset,
+                            component_selector_1,
+                            component_selector_2,
+                            feature_category,
+                            feature_subcategory,
+                            feature_type,
+                            feature_subcode,
+                            model_name,
+                            file_type,
+                            content
+                        ) values (
+                            {cdbParamName},
+                            {datasetParamName},
+                            {cs1ParamName},
+                            {cs2ParamName},
+                            {featureCategoryParamName},
+                            {featureSubcategoryParamName},
+                            {featureTypeParamName},
+                            {featureSubcodeParamName},
+                            {modelNameParamName},
+                            {fileTypeParamName},
+                            {contentParamName}
+                        )
+                        """;
+
+                insertIntoGeometryCommand.CommandText = insertIntoGeometryStatement;
+                CreateAndAttachParameter(insertIntoGeometryCommand, cdbParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoGeometryCommand, datasetParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoGeometryCommand, cs1ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoGeometryCommand, cs2ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoGeometryCommand, featureCategoryParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoGeometryCommand, featureSubcategoryParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoGeometryCommand, featureTypeParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoGeometryCommand, featureSubcodeParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoGeometryCommand, modelNameParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoGeometryCommand, fileTypeParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoGeometryCommand, contentParamName, DbType.Binary);
+                insertIntoGeometryCommand.Prepare();
+                insertIntoGeometryCommand.Parameters[cdbParamName].Value = cdbName;
+            }
+            using DbCommand insertIntoGeometryLodCommand = dbConnection.CreateCommand();
+            {
+                const string insertIntoGeometryLodStatement = $"""
+                        insert into GeometryLod (
+                            cdb,
+                            dataset,
+                            component_selector_1,
+                            component_selector_2,
+                            lod,
+                            feature_category,
+                            feature_subcategory,
+                            feature_type,
+                            feature_subcode,
+                            model_name,
+                            file_type,
+                            content
+                        ) values (
+                            {cdbParamName},
+                            {datasetParamName},
+                            {cs1ParamName},
+                            {cs2ParamName},
+                            {lodParamName},
+                            {featureCategoryParamName},
+                            {featureSubcategoryParamName},
+                            {featureTypeParamName},
+                            {featureSubcodeParamName},
+                            {modelNameParamName},
+                            {fileTypeParamName},
+                            {contentParamName}
+                        )
+                        """;
+
+                insertIntoGeometryLodCommand.CommandText = insertIntoGeometryLodStatement;
+                CreateAndAttachParameter(insertIntoGeometryLodCommand, cdbParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoGeometryLodCommand, datasetParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoGeometryLodCommand, cs1ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoGeometryLodCommand, cs2ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoGeometryLodCommand, lodParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoGeometryLodCommand, featureCategoryParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoGeometryLodCommand, featureSubcategoryParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoGeometryLodCommand, featureTypeParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoGeometryLodCommand, featureSubcodeParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoGeometryLodCommand, modelNameParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoGeometryLodCommand, fileTypeParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoGeometryLodCommand, contentParamName, DbType.Binary);
+                insertIntoGeometryLodCommand.Prepare();
+                insertIntoGeometryLodCommand.Parameters[cdbParamName].Value = cdbName;
+            }
+            using DbCommand insertIntoTextureCommand = dbConnection.CreateCommand();
+            {
+                const string insertIntoTextureStatement = $"""
+                        insert into Texture (
+                            cdb,
+                            dataset,
+                            component_selector_1,
+                            component_selector_2,
+                            texture_name,
+                            file_type,
+                            content
+                        ) values (
+                            {cdbParamName},
+                            {datasetParamName},
+                            {cs1ParamName},
+                            {cs2ParamName},
+                            {textureNameParamName},
+                            {fileTypeParamName},
+                            {contentParamName}
+                        )
+                        """;
+
+                insertIntoTextureCommand.CommandText = insertIntoTextureStatement;
+                CreateAndAttachParameter(insertIntoTextureCommand, cdbParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoTextureCommand, datasetParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTextureCommand, cs1ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTextureCommand, cs2ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTextureCommand, textureNameParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoTextureCommand, fileTypeParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoTextureCommand, contentParamName, DbType.Binary);
+                insertIntoTextureCommand.Prepare();
+                insertIntoTextureCommand.Parameters[cdbParamName].Value = cdbName;
+            }
+            using DbCommand insertIntoTextureLodCommand = dbConnection.CreateCommand();
+            {
+                const string insertIntoTextureLodStatement = $"""
+                        insert into TextureLod (
+                            cdb,
+                            dataset,
+                            component_selector_1,
+                            component_selector_2,
+                            lod,
+                            texture_name,
+                            file_type,
+                            content
+                        ) values (
+                            {cdbParamName},
+                            {datasetParamName},
+                            {cs1ParamName},
+                            {cs2ParamName},
+                            {lodParamName},
+                            {textureNameParamName},
+                            {fileTypeParamName},
+                            {contentParamName}
+                        )
+                        """;
+
+                insertIntoTextureLodCommand.CommandText = insertIntoTextureLodStatement;
+                CreateAndAttachParameter(insertIntoTextureLodCommand, cdbParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoTextureLodCommand, datasetParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTextureLodCommand, cs1ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTextureLodCommand, cs2ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTextureLodCommand, lodParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTextureLodCommand, textureNameParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoTextureLodCommand, fileTypeParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoTextureLodCommand, contentParamName, DbType.Binary);
+                insertIntoTextureLodCommand.Prepare();
+                insertIntoTextureLodCommand.Parameters[cdbParamName].Value = cdbName;
+            }
+
+            using DbCommand insertIntoModelsCommand = dbConnection.CreateCommand();
+            {
+                const string insertIntoModelsStatement = $"""
+                        insert into Models (
+                            cdb,
+                            dataset,
+                            component_selector_1,
+                            component_selector_2,
+                            kind,
+                            domain,
+                            country,
+                            category,
+                            subcategory,
+                            specific,
+                            extra,
+                            file_type,
+                            content
+                        ) values (
+                            {cdbParamName},
+                            {datasetParamName},
+                            {cs1ParamName},
+                            {cs2ParamName},
+                            {kindParamName},
+                            {domainParamName},
+                            {countryParamName},
+                            {categoryParamName},
+                            {subcategoryParamName},
+                            {specificParamName},
+                            {extraParamName},
+                            {fileTypeParamName},
+                            {contentParamName}
+                        )
+                        """;
+
+                insertIntoModelsCommand.CommandText = insertIntoModelsStatement;
+                CreateAndAttachParameter(insertIntoModelsCommand, cdbParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoModelsCommand, datasetParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsCommand, cs1ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsCommand, cs2ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsCommand, kindParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsCommand, domainParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsCommand, countryParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsCommand, categoryParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsCommand, subcategoryParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsCommand, specificParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsCommand, extraParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsCommand, fileTypeParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoModelsCommand, contentParamName, DbType.String);
+                insertIntoModelsCommand.Prepare();
+                insertIntoModelsCommand.Parameters[cdbParamName].Value = cdbName;
+            }
+            using DbCommand insertIntoModelsLodCommand = dbConnection.CreateCommand();
+            {
+                const string insertIntoModelsLodStatement = $"""
+                        insert into ModelsLod (
+                            cdb,
+                            dataset,
+                            component_selector_1,
+                            component_selector_2,
+                            lod,
+                            kind,
+                            domain,
+                            country,
+                            category,
+                            subcategory,
+                            specific,
+                            extra,
+                            file_type,
+                            content
+                        ) values (
+                            {cdbParamName},
+                            {datasetParamName},
+                            {cs1ParamName},
+                            {cs2ParamName},
+                            {lodParamName},
+                            {kindParamName},
+                            {domainParamName},
+                            {countryParamName},
+                            {categoryParamName},
+                            {subcategoryParamName},
+                            {specificParamName},
+                            {extraParamName},
+                            {fileTypeParamName},
+                            {contentParamName}
+                        )
+                        """;
+
+                insertIntoModelsLodCommand.CommandText = insertIntoModelsLodStatement;
+                CreateAndAttachParameter(insertIntoModelsLodCommand, cdbParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoModelsLodCommand, datasetParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsLodCommand, cs1ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsLodCommand, cs2ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsLodCommand, lodParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsLodCommand, kindParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsLodCommand, domainParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsLodCommand, countryParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsLodCommand, categoryParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsLodCommand, subcategoryParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsLodCommand, specificParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsLodCommand, extraParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoModelsLodCommand, fileTypeParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoModelsLodCommand, contentParamName, DbType.String);
+                insertIntoModelsLodCommand.Prepare();
+                insertIntoModelsLodCommand.Parameters[cdbParamName].Value = cdbName;
+            }
+
+            using DbCommand insertIntoTilesCommand = dbConnection.CreateCommand();
+            {
+                const string insertIntoTilesStatement = $"""
+                            insert into Tiles (
+                                cdb,
+                                latitude,
+                                longitude,
+                                dataset,
+                                component_selector_1,
+                                component_selector_2,
+                                lod,
+                                up,
+                                right,
+                                file_type,
+                                content
+                            ) values (
+                                {cdbParamName},
+                                {latitudeParamName},
+                                {longitudeParamName},
+                                {datasetParamName},
+                                {cs1ParamName},
+                                {cs2ParamName},
+                                {lodParamName},
+                                {upParamName},
+                                {rightParamName},
+                                {fileTypeParamName},
+                                {contentParamName}
+                            )
+                            """;
+
+                insertIntoTilesCommand.CommandText = insertIntoTilesStatement;
+                CreateAndAttachParameter(insertIntoTilesCommand, cdbParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoTilesCommand, latitudeParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTilesCommand, longitudeParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTilesCommand, datasetParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTilesCommand, cs1ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTilesCommand, cs2ParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTilesCommand, lodParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTilesCommand, upParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTilesCommand, rightParamName, DbType.Int32);
+                CreateAndAttachParameter(insertIntoTilesCommand, fileTypeParamName, DbType.String);
+                CreateAndAttachParameter(insertIntoTilesCommand, contentParamName, DbType.Binary);
+                insertIntoTilesCommand.Prepare();
+                insertIntoTilesCommand.Parameters[cdbParamName].Value = cdbName;
+            }
+
             DirectoryInfo cdbRoot = new(cdbName);
             // Metadata
             {
-                DirectoryInfo metadataDir = new(Path.Combine(cdbRoot.FullName, "Metadata"));
                 MetadataVisitor metadataVisitor = host.Services.GetRequiredService<MetadataVisitor>();
 
                 const string nameParamName = "$name";
@@ -216,15 +485,17 @@ namespace CDBPopulator
                         """;
 
                 using DbCommand insertIntoMetadataCommand = dbConnection.CreateCommand();
-                insertIntoMetadataCommand.CommandText = insertIntoMetadataStatement;
-                CreateAndAttachParameter(insertIntoMetadataCommand, cdbParamName, DbType.String);
-                CreateAndAttachParameter(insertIntoMetadataCommand, nameParamName, DbType.String);
-                CreateAndAttachParameter(insertIntoMetadataCommand, fileTypeParamName, DbType.String);
-                CreateAndAttachParameter(insertIntoMetadataCommand, contentParamName, DbType.Binary);
-                insertIntoMetadataCommand.Prepare();
-                insertIntoMetadataCommand.Parameters[cdbParamName].Value = cdbName;
+                {
+                    insertIntoMetadataCommand.CommandText = insertIntoMetadataStatement;
+                    CreateAndAttachParameter(insertIntoMetadataCommand, cdbParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoMetadataCommand, nameParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoMetadataCommand, fileTypeParamName, DbType.String);
+                    CreateAndAttachParameter(insertIntoMetadataCommand, contentParamName, DbType.Binary);
+                    insertIntoMetadataCommand.Prepare();
+                    insertIntoMetadataCommand.Parameters[cdbParamName].Value = cdbName;
+                }
 
-                metadataVisitor.WalkMetadata(metadataDir, (name, ext, file) =>
+                metadataVisitor.VisitMetadata(cdbRoot, (name, ext, file) =>
                 {
                     insertIntoMetadataCommand.Parameters[nameParamName].Value = name;
                     insertIntoMetadataCommand.Parameters[fileTypeParamName].Value = ext;
@@ -236,172 +507,9 @@ namespace CDBPopulator
             }
             // GTModel
             {
-                DirectoryInfo gtModelDir = new(Path.Combine(cdbRoot.FullName, "GTModel"));
                 GTModelVisitor gtModelVisitor = host.Services.GetRequiredService<GTModelVisitor>();
 
-                const string modelNameParamName = "$model_name";
-                const string textureNameParamName = "$texture_name";
-                const string insertIntoGeometryStatement = $"""
-                    insert into Geometry (
-                        cdb,
-                        dataset,
-                        component_selector_1,
-                        component_selector_2,
-                        feature_category,
-                        feature_subcategory,
-                        feature_type,
-                        feature_subcode,
-                        model_name,
-                        file_type,
-                        content
-                    ) values (
-                        {cdbParamName},
-                        {datasetParamName},
-                        {cs1ParamName},
-                        {cs2ParamName},
-                        {featureCategoryParamName},
-                        {featureSubcategoryParamName},
-                        {featureTypeParamName},
-                        {featureSubcodeParamName},
-                        {modelNameParamName},
-                        {fileTypeParamName},
-                        {contentParamName}
-                    )
-                    """;
-                const string insertIntoGeometryLodStatement = $"""
-                    insert into GeometryLod (
-                        cdb,
-                        dataset,
-                        component_selector_1,
-                        component_selector_2,
-                        lod,
-                        feature_category,
-                        feature_subcategory,
-                        feature_type,
-                        feature_subcode,
-                        model_name,
-                        file_type,
-                        content
-                    ) values (
-                        {cdbParamName},
-                        {datasetParamName},
-                        {cs1ParamName},
-                        {cs2ParamName},
-                        {lodParamName},
-                        {featureCategoryParamName},
-                        {featureSubcategoryParamName},
-                        {featureTypeParamName},
-                        {featureSubcodeParamName},
-                        {modelNameParamName},
-                        {fileTypeParamName},
-                        {contentParamName}
-                    )
-                    """;
-                const string insertIntoTextureStatement = $"""
-                    insert into Texture (
-                        cdb,
-                        dataset,
-                        component_selector_1,
-                        component_selector_2,
-                        texture_name,
-                        file_type,
-                        content
-                    ) values (
-                        {cdbParamName},
-                        {datasetParamName},
-                        {cs1ParamName},
-                        {cs2ParamName},
-                        {textureNameParamName},
-                        {fileTypeParamName},
-                        {contentParamName}
-                    )
-                    """;
-                const string insertIntoTextureLodStatement = $"""
-                    insert into TextureLod (
-                        cdb,
-                        dataset,
-                        component_selector_1,
-                        component_selector_2,
-                        lod,
-                        texture_name,
-                        file_type,
-                        content
-                    ) values (
-                        {cdbParamName},
-                        {datasetParamName},
-                        {cs1ParamName},
-                        {cs2ParamName},
-                        {lodParamName},
-                        {textureNameParamName},
-                        {fileTypeParamName},
-                        {contentParamName}
-                    )
-                    """;
-
-                using DbCommand insertIntoGeometryCommand = dbConnection.CreateCommand();
-                {
-                    insertIntoGeometryCommand.CommandText = insertIntoGeometryStatement;
-                    CreateAndAttachParameter(insertIntoGeometryCommand, cdbParamName, DbType.String);
-                    CreateAndAttachParameter(insertIntoGeometryCommand, datasetParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoGeometryCommand, cs1ParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoGeometryCommand, cs2ParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoGeometryCommand, featureCategoryParamName, DbType.String);
-                    CreateAndAttachParameter(insertIntoGeometryCommand, featureSubcategoryParamName, DbType.String);
-                    CreateAndAttachParameter(insertIntoGeometryCommand, featureTypeParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoGeometryCommand, featureSubcodeParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoGeometryCommand, modelNameParamName, DbType.String);
-                    CreateAndAttachParameter(insertIntoGeometryCommand, fileTypeParamName, DbType.String);
-                    CreateAndAttachParameter(insertIntoGeometryCommand, contentParamName, DbType.Binary);
-                    insertIntoGeometryCommand.Prepare();
-                    insertIntoGeometryCommand.Parameters[cdbParamName].Value = cdbName;
-                }
-                using DbCommand insertIntoGeometryLodCommand = dbConnection.CreateCommand();
-                {
-                    insertIntoGeometryLodCommand.CommandText = insertIntoGeometryLodStatement;
-                    CreateAndAttachParameter(insertIntoGeometryLodCommand, cdbParamName, DbType.String);
-                    CreateAndAttachParameter(insertIntoGeometryLodCommand, datasetParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoGeometryLodCommand, cs1ParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoGeometryLodCommand, cs2ParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoGeometryLodCommand, lodParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoGeometryLodCommand, featureCategoryParamName, DbType.String);
-                    CreateAndAttachParameter(insertIntoGeometryLodCommand, featureSubcategoryParamName, DbType.String);
-                    CreateAndAttachParameter(insertIntoGeometryLodCommand, featureTypeParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoGeometryLodCommand, featureSubcodeParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoGeometryLodCommand, modelNameParamName, DbType.String);
-                    CreateAndAttachParameter(insertIntoGeometryLodCommand, fileTypeParamName, DbType.String);
-                    CreateAndAttachParameter(insertIntoGeometryLodCommand, contentParamName, DbType.Binary);
-                    insertIntoGeometryLodCommand.Prepare();
-                    insertIntoGeometryLodCommand.Parameters[cdbParamName].Value = cdbName;
-                }
-                using DbCommand insertIntoTextureCommand = dbConnection.CreateCommand();
-                {
-                    insertIntoTextureCommand.CommandText = insertIntoTextureStatement;
-                    CreateAndAttachParameter(insertIntoTextureCommand, cdbParamName, DbType.String);
-                    CreateAndAttachParameter(insertIntoTextureCommand, datasetParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoTextureCommand, cs1ParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoTextureCommand, cs2ParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoTextureCommand, textureNameParamName, DbType.String);
-                    CreateAndAttachParameter(insertIntoTextureCommand, fileTypeParamName, DbType.String);
-                    CreateAndAttachParameter(insertIntoTextureCommand, contentParamName, DbType.Binary);
-                    insertIntoTextureCommand.Prepare();
-                    insertIntoTextureCommand.Parameters[cdbParamName].Value = cdbName;
-                }
-                using DbCommand insertIntoTextureLodCommand = dbConnection.CreateCommand();
-                {
-                    insertIntoTextureLodCommand.CommandText = insertIntoTextureLodStatement;
-                    CreateAndAttachParameter(insertIntoTextureLodCommand, cdbParamName, DbType.String);
-                    CreateAndAttachParameter(insertIntoTextureLodCommand, datasetParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoTextureLodCommand, cs1ParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoTextureLodCommand, cs2ParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoTextureLodCommand, lodParamName, DbType.Int32);
-                    CreateAndAttachParameter(insertIntoTextureLodCommand, textureNameParamName, DbType.String);
-                    CreateAndAttachParameter(insertIntoTextureLodCommand, fileTypeParamName, DbType.String);
-                    CreateAndAttachParameter(insertIntoTextureLodCommand, contentParamName, DbType.Binary);
-                    insertIntoTextureLodCommand.Prepare();
-                    insertIntoTextureLodCommand.Parameters[cdbParamName].Value = cdbName;
-                }
-
-                gtModelVisitor.WalkGeotypicalModels(gtModelDir,
+                gtModelVisitor.VisitGeotypicalModels(cdbRoot,
                     (geometry, file) =>
                     {
                         insertIntoGeometryCommand.Parameters[datasetParamName].Value = geometry.Dataset.Value;
@@ -422,7 +530,7 @@ namespace CDBPopulator
                         insertIntoGeometryLodCommand.Parameters[datasetParamName].Value = geometryLod.Dataset.Value;
                         insertIntoGeometryLodCommand.Parameters[cs1ParamName].Value = geometryLod.ComponentSelector1;
                         insertIntoGeometryLodCommand.Parameters[cs2ParamName].Value = geometryLod.ComponentSelector2;
-                        insertIntoGeometryLodCommand.Parameters[lodParamName].Value = geometryLod.LevelOfDetail.Level;
+                        insertIntoGeometryLodCommand.Parameters[lodParamName].Value = geometryLod.LevelOfDetail.Value;
                         insertIntoGeometryLodCommand.Parameters[featureCategoryParamName].Value = geometryLod.FeatureCode.Category;
                         insertIntoGeometryLodCommand.Parameters[featureSubcategoryParamName].Value = geometryLod.FeatureCode.Subcategory;
                         insertIntoGeometryLodCommand.Parameters[featureTypeParamName].Value = geometryLod.FeatureCode.Type;
@@ -438,7 +546,7 @@ namespace CDBPopulator
                         insertIntoTextureCommand.Parameters[datasetParamName].Value = texture.Dataset.Value;
                         insertIntoTextureCommand.Parameters[cs1ParamName].Value = texture.ComponentSelector1;
                         insertIntoTextureCommand.Parameters[cs2ParamName].Value = texture.ComponentSelector2;
-                        insertIntoTextureCommand.Parameters[textureNameParamName].Value = texture.TextureName;
+                        insertIntoTextureCommand.Parameters[textureNameParamName].Value = texture.Name;
                         insertIntoTextureCommand.Parameters[fileTypeParamName].Value = texture.FileType;
                         insertIntoTextureCommand.Parameters[contentParamName].Value = File.ReadAllBytes(file.FullName);
 
@@ -449,7 +557,7 @@ namespace CDBPopulator
                         insertIntoTextureLodCommand.Parameters[datasetParamName].Value = textureLod.Dataset.Value;
                         insertIntoTextureLodCommand.Parameters[cs1ParamName].Value = textureLod.ComponentSelector1;
                         insertIntoTextureLodCommand.Parameters[cs2ParamName].Value = textureLod.ComponentSelector2;
-                        insertIntoTextureLodCommand.Parameters[lodParamName].Value = textureLod.LevelOfDetail.Level;
+                        insertIntoTextureLodCommand.Parameters[lodParamName].Value = textureLod.LevelOfDetail.Value;
                         insertIntoTextureLodCommand.Parameters[textureNameParamName].Value = textureLod.TextureName;
                         insertIntoTextureLodCommand.Parameters[fileTypeParamName].Value = textureLod.FileType;
                         insertIntoTextureLodCommand.Parameters[contentParamName].Value = File.ReadAllBytes(file.FullName);
@@ -459,109 +567,48 @@ namespace CDBPopulator
             }
             // MModel
             {
-                DirectoryInfo mmodelDir = new(Path.Combine(cdbRoot.FullName, "MModel"));
-                /*
-                 * MModel is based on the DIS Entity Type.
-                 * 
-                 * Applies to 600_MModelGeometry.
-                 * 603
-                 */
-                MovingModelDirectoryVisitor movingModelDirectoryVisitor = host.Services.GetRequiredService<MovingModelDirectoryVisitor>();
-                TextureDirectoryVisitor textureDirectoryVisitor = host.Services.GetRequiredService<TextureDirectoryVisitor>();
-                LevelOfDetailDirectoryWalker levelOfDetailDirectoryWalker = host.Services.GetRequiredService<LevelOfDetailDirectoryWalker>();
-                movingModelDirectoryVisitor.WalkDirectories(new(Path.Combine(mmodelDir.FullName, "600_MModelGeometry")), (disEntityTypeFromDirectory, dir) =>
-                {
-                    Regex mModelGeometryFilesPattern = new("^D(?<dataset>\\d{3})_S(?<component_selector_1>\\d{3})_T(?<component_selector_2>\\d{3})_(?<mmdc>[^.]+)\\.(?<file_type>[^.]+)$",
-                        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
+                MovingModelVisitor movingModelVisitor = host.Services.GetRequiredService<MovingModelVisitor>();
 
-                    foreach (var file in dir.EnumerateFiles())
+                movingModelVisitor.VisitMovingModels(cdbRoot,
+                    (movingModelGeometry, file) =>
                     {
-                        Match fileMatch = mModelGeometryFilesPattern.Match(file.Name);
-                        if (fileMatch.Success)
-                        {
-                            var dataset = int.Parse(fileMatch.Groups["dataset"].Value, CultureInfo.InvariantCulture);
-                            var componentSelector1 = int.Parse(fileMatch.Groups["component_selector_1"].Value, CultureInfo.InvariantCulture);
-                            var componentSelector2 = int.Parse(fileMatch.Groups["component_selector_2"].Value, CultureInfo.InvariantCulture);
-                            var mmdc = fileMatch.Groups["mmdc"].Value;
-                            var fileType = fileMatch.Groups["file_type"].Value;
+                        insertIntoModelsCommand.Parameters[datasetParamName].Value = movingModelGeometry.Dataset.Value;
+                        insertIntoModelsCommand.Parameters[cs1ParamName].Value = movingModelGeometry.ComponentSelector1;
+                        insertIntoModelsCommand.Parameters[cs2ParamName].Value = movingModelGeometry.ComponentSelector2;
+                        insertIntoModelsCommand.Parameters[kindParamName].Value = movingModelGeometry.MMDC.Kind;
+                        insertIntoModelsCommand.Parameters[domainParamName].Value = movingModelGeometry.MMDC.Domain;
+                        insertIntoModelsCommand.Parameters[countryParamName].Value = movingModelGeometry.MMDC.Country;
+                        insertIntoModelsCommand.Parameters[categoryParamName].Value = movingModelGeometry.MMDC.Category;
+                        insertIntoModelsCommand.Parameters[subcategoryParamName].Value = movingModelGeometry.MMDC.Subcategory;
+                        insertIntoModelsCommand.Parameters[specificParamName].Value = movingModelGeometry.MMDC.Specific;
+                        insertIntoModelsCommand.Parameters[extraParamName].Value = movingModelGeometry.MMDC.Extra;
+                        insertIntoModelsCommand.Parameters[fileTypeParamName].Value = movingModelGeometry.FileType;
+                        insertIntoModelsCommand.Parameters[contentParamName].Value = File.ReadAllBytes(file.FullName);
 
-                            if (mmdc != disEntityTypeFromDirectory.MovingModelDisCode)
-                            {
-                                // TODO: Log an error.
-                            }
-
-                            // insert
-                            const string insert = """
-                                    insert into Models (
-                                        cdb,
-                                        dataset,
-                                        component_selector_1,
-                                        component_selector_2,
-                                        kind,
-                                        domain,
-                                        country,
-                                        category,
-                                        subcategory,
-                                        specific,
-                                        extra,
-                                        file_type,
-                                        content
-                                    ) values ()
-                                    """;
-                        }
-                    }
-                });
-                /*
-                 * This next bit applies to the following datasets:
-                 * with size:
-                 * 601_MModelTexture
-                 * 604_MModelMaterial
-                 * without size:
-                 * 605_MModelCMT
-                 */
-                textureDirectoryVisitor.WalkDirectories(new DirectoryInfo(Path.Combine(mmodelDir.FullName, "601_MModelTexture")), (textureName, dir) =>
-                {
-                    Regex TextureFileNamePattern = new("^D(?<dataset>\\d{3})_S(?<component_selector_1>\\d{3})_T(?<component_selector_2>\\d{3})_(?<name>[^.]+)\\.(?<file_type>[^.]+)$",
-                        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
-                    Regex TextureFileSizedNamePattern = new("^D(?<dataset>\\d{3})_S(?<component_selector_1>\\d{3})_T(?<component_selector_2>\\d{3})_W(?<texture_size>\\d{2})_(?<name>[^.]+)\\.(?<file_type>[^.]+)$",
-                        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
-
-                    foreach (var file in dir.EnumerateFiles())
+                        int rowsAffected = insertIntoModelsCommand.ExecuteNonQuery();
+                    },
+                    (movingModelGeometryLod, file) =>
                     {
-                        Match match = TextureFileNamePattern.Match(file.Name);
-                        if (match.Success)
-                        {
-                            var dataset = int.Parse(match.Groups["dataset"].Value, CultureInfo.InvariantCulture);
-                            var componentSelector1 = int.Parse(match.Groups["component_selector_1"].Value, CultureInfo.InvariantCulture);
-                            var componentSelector2 = int.Parse(match.Groups["component_selector_2"].Value, CultureInfo.InvariantCulture);
-                            var name = match.Groups["name"].Value;
-                            var ext = match.Groups["file_type"].Value;
+                        insertIntoModelsLodCommand.Parameters[datasetParamName].Value = movingModelGeometryLod.Dataset.Value;
+                        insertIntoModelsLodCommand.Parameters[cs1ParamName].Value = movingModelGeometryLod.ComponentSelector1;
+                        insertIntoModelsLodCommand.Parameters[cs2ParamName].Value = movingModelGeometryLod.ComponentSelector2;
+                        insertIntoModelsLodCommand.Parameters[lodParamName].Value = movingModelGeometryLod.LevelOfDetail.Value;
+                        insertIntoModelsLodCommand.Parameters[kindParamName].Value = movingModelGeometryLod.MMDC.Kind;
+                        insertIntoModelsLodCommand.Parameters[domainParamName].Value = movingModelGeometryLod.MMDC.Domain;
+                        insertIntoModelsLodCommand.Parameters[countryParamName].Value = movingModelGeometryLod.MMDC.Country;
+                        insertIntoModelsLodCommand.Parameters[categoryParamName].Value = movingModelGeometryLod.MMDC.Category;
+                        insertIntoModelsLodCommand.Parameters[subcategoryParamName].Value = movingModelGeometryLod.MMDC.Subcategory;
+                        insertIntoModelsLodCommand.Parameters[specificParamName].Value = movingModelGeometryLod.MMDC.Specific;
+                        insertIntoModelsLodCommand.Parameters[extraParamName].Value = movingModelGeometryLod.MMDC.Extra;
+                        insertIntoModelsLodCommand.Parameters[fileTypeParamName].Value = movingModelGeometryLod.FileType;
+                        insertIntoModelsLodCommand.Parameters[contentParamName].Value = File.ReadAllBytes(file.FullName);
 
-                            // insert
-                            const string insert = """
-                                    insert into TextureMetadata (
-                                        cdb,
-                                        dataset,
-                                        component_selector_1,
-                                        component_selector_2,
-                                        texture_name,
-                                        file_type,
-                                        content
-                                    ) values ()
-                                    """;
-                        }
-                        Match sizedMatch = TextureFileSizedNamePattern.Match(file.Name);
-                        if (sizedMatch.Success)
-                        {
-                            var dataset = int.Parse(sizedMatch.Groups["dataset"].Value, CultureInfo.InvariantCulture);
-                            var componentSelector1 = int.Parse(sizedMatch.Groups["component_selector_1"].Value, CultureInfo.InvariantCulture);
-                            var componentSelector2 = int.Parse(sizedMatch.Groups["component_selector_2"].Value, CultureInfo.InvariantCulture);
-                            var textureSize = int.Parse(sizedMatch.Groups["texture_size"].Value, CultureInfo.InvariantCulture);
-                            var name = sizedMatch.Groups["name"].Value;
-                            var ext = sizedMatch.Groups["file_type"].Value;
-
-                            // insert
-                            const string insert = """
+                        int rowsAffected = insertIntoModelsLodCommand.ExecuteNonQuery();
+                    },
+                    (modelTexture, file) =>
+                    {
+                        // TODO: insert!
+                        const string insert = """
                                     insert into TextureSized (
                                         cdb,
                                         dataset,
@@ -573,164 +620,36 @@ namespace CDBPopulator
                                         content
                                     ) values ()
                                     """;
-                        }
-                    }
-                });
-                /*
-                 * 606_MModelSignature is DIS Entity Type with an LOD.
-                 */
-                // D606_Snnn_Tnnn_LOD_MMDC.ext
-                movingModelDirectoryVisitor.WalkDirectories(new(Path.Combine(mmodelDir.FullName, "600_MModelGeometry")), (disEntityTypeFromDirectory, dir) =>
-                {
-                    Regex mModelGeometryLodFilesPattern = new("^D(?<dataset>\\d{3})_S(?<component_selector_1>\\d{3})_T(?<component_selector_2>\\d{3})_(?<lod>LC?\\d{2})_(?<mmdc>[^.]+)\\.(?<file_type>[^.]+)$",
-                        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
-
-                    levelOfDetailDirectoryWalker.WalkModelGeometryDirectories(dir, (lod, lodDir) =>
+                    },
+                    (texture, file) =>
                     {
-                        foreach (var file in lodDir.EnumerateFiles())
-                        {
-                            Match lodMatch = mModelGeometryLodFilesPattern.Match(file.Name);
-                            if (lodMatch.Success)
-                            {
-                                // TODO: Grab it!
-                                var dataset = int.Parse(lodMatch.Groups["dataset"].Value, CultureInfo.InvariantCulture);
-                                var componentSelector1 = int.Parse(lodMatch.Groups["component_selector_1"].Value, CultureInfo.InvariantCulture);
-                                var componentSelector2 = int.Parse(lodMatch.Groups["component_selector_2"].Value, CultureInfo.InvariantCulture);
-                                var lod2 = lodMatch.Groups["lod"].Value;
-                                var mmdc = lodMatch.Groups["mmdc"].Value;
-                                var fileType = lodMatch.Groups["file_type"].Value;
+                        insertIntoTextureCommand.Parameters[datasetParamName].Value = texture.Dataset.Value;
+                        insertIntoTextureCommand.Parameters[cs1ParamName].Value = texture.ComponentSelector1;
+                        insertIntoTextureCommand.Parameters[cs2ParamName].Value = texture.ComponentSelector2;
+                        insertIntoTextureCommand.Parameters[textureNameParamName].Value = texture.Name;
+                        insertIntoTextureCommand.Parameters[fileTypeParamName].Value = texture.FileType;
+                        insertIntoTextureCommand.Parameters[contentParamName].Value = File.ReadAllBytes(file.FullName);
 
-                                if (mmdc != disEntityTypeFromDirectory.MovingModelDisCode) // || lod2 != lod.Level
-                                {
-                                    // TODO: Log an error.
-                                }
-
-                                // insert
-                                const string insert = """
-                                    insert into ModelsLOD (
-                                        cdb,
-                                        dataset,
-                                        component_selector_1,
-                                        component_selector_2,
-                                        lod,
-                                        kind,
-                                        domain,
-                                        country,
-                                        category,
-                                        subcategory,
-                                        specific,
-                                        extra,
-                                        file_type,
-                                        content
-                                    ) values ()
-                                    """;
-                            }
-                        }
+                        int rowsAffected = insertIntoTextureCommand.ExecuteNonQuery();
                     });
-                });
             }
             // Tiles
             {
-                DirectoryInfo tilesDir = new(Path.Combine(cdbRoot.FullName, "Tiles"));
-                /*
-                 * Tiled datasets:
-                 * Elevation
-                 * MinMaxElevation
-                 * MaxCulture
-                 * Imagery
-                 * RMTexture
-                 * RMDescriptor
-                 * GSFeature
-                 * GTFeature
-                 * GeoPolitical
-                 * VectorMaterial
-                 * RoadNetwork
-                 * RailRoadNetwork
-                 * PowerLineNetwork
-                 * HydrographyNetwork
-                 * GSModelGeometry
-                 * GSModelTexture
-                 * GSModelSignature
-                 * GSModelDescriptor
-                 * GSModelMaterial
-                 * GSModelCMT
-                 * GSModelInteriorGeometry
-                 * GSModelInteriorTexture
-                 * GSModelInteriorDescriptor
-                 * GSModelInteriorMaterial
-                 * GSModelInteriorCMT
-                 * T2DModelGeometry
-                 * T2DModelCMT
-                 * Navigation
-                 */
                 TiledDatasetVisitor tiledDatasetVisitor = host.Services.GetRequiredService<TiledDatasetVisitor>();
 
-                const string cdbParameterName = "$cdb";
-                const string latitudeParameterName = "$latitude";
-                const string longitudeParameterName = "$longitude";
-                const string datasetParameterName = "$dataset";
-                const string cs1ParameterName = "$cs1";
-                const string cs2ParameterName = "$cs2";
-                const string lodParameterName = "$lod";
-                const string upParameterName = "$up";
-                const string rightParameterName = "$right";
-                const string fileTypeParameterName = "$file_type";
-                const string contentParameterName = "$content";
-                const string insertIntoTilesStatement = $"""
-                            insert into Tiles (
-                                cdb,
-                                latitude,
-                                longitude,
-                                dataset,
-                                component_selector_1,
-                                component_selector_2,
-                                lod,
-                                up,
-                                right,
-                                file_type,
-                                content
-                            ) values (
-                                {cdbParameterName},
-                                {latitudeParameterName},
-                                {longitudeParameterName},
-                                {datasetParameterName},
-                                {cs1ParameterName},
-                                {cs2ParameterName},
-                                {lodParameterName},
-                                {upParameterName},
-                                {rightParameterName},
-                                {fileTypeParameterName},
-                                {contentParameterName}
-                            )
-                            """;
-                using DbCommand insertIntoTilesCommand = dbConnection.CreateCommand();
-                insertIntoTilesCommand.CommandText = insertIntoTilesStatement;
-                CreateAndAttachParameter(insertIntoTilesCommand, cdbParameterName, DbType.String);
-                CreateAndAttachParameter(insertIntoTilesCommand, latitudeParameterName, DbType.Int32);
-                CreateAndAttachParameter(insertIntoTilesCommand, longitudeParameterName, DbType.Int32);
-                CreateAndAttachParameter(insertIntoTilesCommand, datasetParameterName, DbType.Int32);
-                CreateAndAttachParameter(insertIntoTilesCommand, cs1ParameterName, DbType.Int32);
-                CreateAndAttachParameter(insertIntoTilesCommand, cs2ParameterName, DbType.Int32);
-                CreateAndAttachParameter(insertIntoTilesCommand, lodParameterName, DbType.Int32);
-                CreateAndAttachParameter(insertIntoTilesCommand, upParameterName, DbType.Int32);
-                CreateAndAttachParameter(insertIntoTilesCommand, rightParameterName, DbType.Int32);
-                CreateAndAttachParameter(insertIntoTilesCommand, fileTypeParameterName, DbType.String);
-                CreateAndAttachParameter(insertIntoTilesCommand, contentParameterName, DbType.Binary);
-                insertIntoTilesCommand.Prepare();
-                insertIntoTilesCommand.Parameters[cdbParameterName].Value = cdbName;
-                tiledDatasetVisitor.VisitFiles(tilesDir, async (tile, file) =>
+                tiledDatasetVisitor.VisitTiles(cdbRoot, (tile, file) =>
                 {
-                    // Insert!
-                    insertIntoTilesCommand.Parameters[latitudeParameterName].Value = tile.LatitudeValue.Value;
-                    insertIntoTilesCommand.Parameters[longitudeParameterName].Value = tile.LongitudeValue.Value;
-                    insertIntoTilesCommand.Parameters[datasetParameterName].Value = tile.DatasetValue.Value;
-                    insertIntoTilesCommand.Parameters[cs1ParameterName].Value = tile.ComponentSelector1;
-                    insertIntoTilesCommand.Parameters[cs2ParameterName].Value = tile.ComponentSelector2;
-                    insertIntoTilesCommand.Parameters[lodParameterName].Value = tile.Level.Level;
-                    insertIntoTilesCommand.Parameters[upParameterName].Value = tile.Up;
-                    insertIntoTilesCommand.Parameters[rightParameterName].Value = tile.Right;
-                    insertIntoTilesCommand.Parameters[fileTypeParameterName].Value = tile.FileType;
-                    insertIntoTilesCommand.Parameters[contentParameterName].Value = File.ReadAllBytes(file.FullName);
+                    insertIntoTilesCommand.Parameters[latitudeParamName].Value = tile.LatitudeValue.Value;
+                    insertIntoTilesCommand.Parameters[longitudeParamName].Value = tile.LongitudeValue.Value;
+                    insertIntoTilesCommand.Parameters[datasetParamName].Value = tile.DatasetValue.Value;
+                    insertIntoTilesCommand.Parameters[cs1ParamName].Value = tile.ComponentSelector1;
+                    insertIntoTilesCommand.Parameters[cs2ParamName].Value = tile.ComponentSelector2;
+                    insertIntoTilesCommand.Parameters[lodParamName].Value = tile.Level.Value;
+                    insertIntoTilesCommand.Parameters[upParamName].Value = tile.Up;
+                    insertIntoTilesCommand.Parameters[rightParamName].Value = tile.Right;
+                    insertIntoTilesCommand.Parameters[fileTypeParamName].Value = tile.FileType;
+                    insertIntoTilesCommand.Parameters[contentParamName].Value = File.ReadAllBytes(file.FullName);
+
                     int rowsAffected = insertIntoTilesCommand.ExecuteNonQuery();
 
                     /*
@@ -842,6 +761,11 @@ namespace CDBPopulator
                         }
                     }
                 });
+            }
+            // Navigation
+            {
+                NavigationVisitor navigationVisitor = host.Services.GetRequiredService<NavigationVisitor>();
+                navigationVisitor.VisitNavigationDatasets(cdbRoot);
             }
 
             dbConnection.Close();

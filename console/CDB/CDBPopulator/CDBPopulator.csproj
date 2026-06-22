@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -14,6 +14,15 @@
     <ItemGroup>
       <ProjectReference Include="..\CDB.SQLite\CDB.SQLite.csproj" />
       <ProjectReference Include="..\CDB\CDB.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="CDB\GTModel\500_GTModelGeometry\A_Culture\L_Misc_Feature\015_Building\L03\" />
+      <Folder Include="CDB\GTModel\504_GTModelMaterial\C\H\Church-Gothic\" />
+      <Folder Include="CDB\GTModel\513_GTModelInteriorCMT\" />
+      <Folder Include="CDB\GTModel\512_GTModelSignature\" />
+      <Folder Include="CDB\MModel\606_MModelSignature\1_Platform\1_Land\225_United_States\1_Tank\1_1_225_1_1_8_0\L04\" />
+      <Folder Include="CDB\Tiles\" />
     </ItemGroup>
 
 </Project>

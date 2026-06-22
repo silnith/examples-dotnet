@@ -1,14 +1,14 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Text.RegularExpressions;
 
-namespace Silnith.CDB;
+namespace Silnith.CDB.Visitor;
 
 /// <summary>
 /// Visits a directory hierarchy for a tiled dataset described in 3.6.2.4. LOD Directory,
 /// and calls a delegate for every leaf directory that matches the expected
 /// structure.
 /// </summary>
-public class LevelOfDetailDirectoryWalker
+public class LevelOfDetailDirectoryWalker : VisitorBase
 {
     private readonly ILogger<LevelOfDetailDirectoryWalker> logger;
 
@@ -22,21 +22,6 @@ public class LevelOfDetailDirectoryWalker
 
         this.logger = logger;
     }
-
-    /// <summary>
-    /// The options for how to enumerate directory entries.
-    /// This specifies case insensitive matching using simple wildcards, no recursion.
-    /// </summary>
-    private EnumerationOptions EnumerationOptions
-    {
-        get;
-    } = new()
-    {
-        MatchCasing = MatchCasing.CaseInsensitive,
-        MatchType = MatchType.Simple,
-        RecurseSubdirectories = false,
-        ReturnSpecialDirectories = false,
-    };
 
     /// <summary>
     /// Called for every level of detail directory found in the directory hierarchy.
@@ -59,10 +44,9 @@ public class LevelOfDetailDirectoryWalker
     /// <param name="visitDirectory">The action to take for every leaf directory in the directory hierarchy.</param>
     public void WalkTiledDatasetDirectories(DirectoryInfo dir, VisitLevelOfDetailDirectory visitDirectory)
     {
-        foreach (DirectoryInfo lodDir in dir.EnumerateDirectories("*", EnumerationOptions))
+        foreach (DirectoryInfo lodDir in dir.EnumerateDirectories("*", enumerationOptions))
         {
-            Match lodCoarseMatch = LevelOfDetail.TiledDatasetCoarsePattern.Match(lodDir.Name);
-            if (lodCoarseMatch.Success)
+            if (LevelOfDetail.TiledDatasetCoarsePattern.Match(lodDir.Name).Success)
             {
                 visitDirectory(null, lodDir);
             }
@@ -76,7 +60,8 @@ public class LevelOfDetailDirectoryWalker
                 }
                 else
                 {
-                    logger.LogTrace("Skipping {Directory}", lodDir.FullName);
+                    logger.LogTrace("{Directory} is not a Level of Detail directory.  Skipping.",
+                        lodDir);
                     continue;
                 }
             }
@@ -96,14 +81,17 @@ public class LevelOfDetailDirectoryWalker
     /// <param name="visitDirectory">The action to take for every leaf directory in the directory hierarchy.</param>
     public void WalkModelGeometryDirectories(DirectoryInfo dir, VisitLevelOfDetailDirectory visitDirectory)
     {
-        foreach (DirectoryInfo lodDir in dir.EnumerateDirectories("*", EnumerationOptions))
+        foreach (DirectoryInfo lodDir in dir.EnumerateDirectories("*", enumerationOptions))
         {
             Match lodMatch = LevelOfDetail.ModelGeometryDirectoryPattern.Match(lodDir.Name);
             if (!lodMatch.Success)
             {
+                logger.LogTrace("{Directory} is not a Level of Detail directory.  Skipping.",
+                    lodDir);
                 continue;
             }
             LevelOfDetail levelOfDetail = LevelOfDetail.FromModelGeometryDirectoryMatch(lodMatch);
+
             visitDirectory(levelOfDetail, lodDir);
         }
     }

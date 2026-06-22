@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace Silnith.CDB;
+namespace Silnith.CDB.Visitor;
 
 /// <summary>
 /// Visits all the files in the CDB Metadata directory.
@@ -11,7 +11,7 @@ namespace Silnith.CDB;
 /// Section 3.1.1. Metadata Directory
 /// </para>
 /// </remarks>
-public class MetadataVisitor : Visitor
+public class MetadataVisitor : VisitorBase
 {
     /// <summary>
     /// The metadata files defined in the standard.
@@ -50,12 +50,14 @@ public class MetadataVisitor : Visitor
     /// <summary>
     /// Walks the Metadata directory and visits all files.
     /// </summary>
-    /// <param name="metadataDir">The metadata directory.</param>
+    /// <param name="cdbDir">The CDB root directory.</param>
     /// <param name="visitMetadataFile">The action to take for each metadata file.</param>
-    public void WalkMetadata(DirectoryInfo metadataDir, MetadataFileVisitor visitMetadataFile)
+    public void VisitMetadata(DirectoryInfo cdbDir, MetadataFileVisitor visitMetadataFile)
     {
+        DirectoryInfo metadataDir = new(Path.Combine(cdbDir.FullName, "Metadata"));
         if (!metadataDir.Exists)
         {
+            logger.LogTrace("{Directory} does not exist.  Skipping.", metadataDir);
             return;
         }
 
@@ -67,7 +69,7 @@ public class MetadataVisitor : Visitor
 
             if (!recognizedMetadata.Contains(name))
             {
-                logger.LogWarning("Unrecognized Metadata {File}", name);
+                logger.LogInformation("Unrecognized Metadata {File}", name);
             }
 
             visitMetadataFile(name, extension, file);

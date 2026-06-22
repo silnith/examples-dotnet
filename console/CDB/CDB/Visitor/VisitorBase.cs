@@ -1,10 +1,10 @@
-﻿namespace Silnith.CDB;
+﻿namespace Silnith.CDB.Visitor;
 
 /// <summary>
 /// A base class to provide a single location for configuring directory traversal
 /// default behavior.
 /// </summary>
-public abstract class Visitor
+public abstract class VisitorBase
 {
     /// <summary>
     /// The options for how to enumerate directory entries.

@@ -2,14 +2,14 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace Silnith.CDB;
+namespace Silnith.CDB.Visitor;
 
 /// <summary>
 /// Visits a directory hierarchy described in 3.6.2. Tiled Dataset Directory Structure,
 /// and calls a delegate for every file that matches the expected
 /// structure and name.
 /// </summary>
-public class TiledDatasetVisitor
+public class TiledDatasetVisitor : VisitorBase
 {
     /// <summary>
     /// A pattern that matches level 5 directories.
@@ -46,68 +46,80 @@ public class TiledDatasetVisitor
     }
 
     /// <summary>
-    /// The options for how to enumerate directory entries.
-    /// This specifies case insensitive matching using simple wildcards, no recursion.
-    /// </summary>
-    private EnumerationOptions EnumerationOptions
-    {
-        get;
-    } = new()
-    {
-        MatchCasing = MatchCasing.CaseInsensitive,
-        MatchType = MatchType.Simple,
-        RecurseSubdirectories = false,
-        ReturnSpecialDirectories = false,
-    };
-
-    /// <summary>
     /// Called for every file in a tiled dataset directory hierarchy.
     /// </summary>
     /// <param name="tile">The details of the tile extracted from the filename.</param>
     /// <param name="fileInfo">The file.</param>
     public delegate void VisitTiledDatasetFile(Tile tile, FileInfo fileInfo);
 
-    public void VisitFiles(DirectoryInfo dir, VisitTiledDatasetFile visitFile)
+    /// <summary>
+    /// Walks the Tiles directory and visits all recognized files.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// See OGC CDB Core Standard: Volume 1,
+    /// Section 3.6. CDB Tiled Datasets
+    /// </para>
+    /// </remarks>
+    /// <param name="cdbDir">The CDB root directory.</param>
+    /// <param name="visitFile">The action to call for every file found.</param>
+    public void VisitTiles(DirectoryInfo cdbDir, VisitTiledDatasetFile visitFile)
     {
-        foreach (DirectoryInfo latitudeDir in dir.EnumerateDirectories("*", EnumerationOptions))
+        DirectoryInfo tilesDir = new(Path.Combine(cdbDir.FullName, "Tiles"));
+        if (!tilesDir.Exists)
+        {
+            logger.LogTrace("{Directory} does not exist.  Skipping.",
+                tilesDir);
+            return;
+        }
+
+        foreach (DirectoryInfo latitudeDir in tilesDir.EnumerateDirectories("*", enumerationOptions))
         {
             Match latitudeMatch = Latitude.TiledDatasetDirectoryPattern.Match(latitudeDir.Name);
             if (!latitudeMatch.Success)
             {
+                logger.LogTrace("{Directory} is not a Latitude directory.  Skipping.",
+                    latitudeDir);
                 continue;
             }
             Latitude latitudeFromDirectory = Latitude.FromTiledDatasetDirectoryMatch(latitudeMatch);
 
-            foreach (DirectoryInfo longitudeDir in latitudeDir.EnumerateDirectories("*", EnumerationOptions))
+            foreach (DirectoryInfo longitudeDir in latitudeDir.EnumerateDirectories("*", enumerationOptions))
             {
                 Match longitudeMatch = Longitude.TiledDatasetDirectoryPattern.Match(longitudeDir.Name);
                 if (!longitudeMatch.Success)
                 {
+                    logger.LogTrace("{Directory} is not a Longitude directory.  Skipping.",
+                        longitudeDir);
                     continue;
                 }
                 Longitude longitudeFromDirectory = Longitude.FromTiledDatasetDirectoryMatch(longitudeMatch);
 
-                foreach (DirectoryInfo datasetDir in longitudeDir.EnumerateDirectories("*", EnumerationOptions))
+                foreach (DirectoryInfo datasetDir in longitudeDir.EnumerateDirectories("*", enumerationOptions))
                 {
-                    Match datasetMatch = Dataset.TiledDatasetDirectoryPattern.Match(datasetDir.Name);
+                    Match datasetMatch = Dataset.DirectoryPattern.Match(datasetDir.Name);
                     if (!datasetMatch.Success)
                     {
+                        logger.LogTrace("{Directory} is not a Dataset directory.  Skipping.",
+                            datasetDir);
                         continue;
                     }
-                    Dataset datasetFromDirectory = Dataset.FromTiledDatasetDirectoryMatch(datasetMatch);
+                    Dataset datasetFromDirectory = Dataset.FromDirectoryMatch(datasetMatch);
 
                     levelOfDetailDirectoryWalker.WalkTiledDatasetDirectories(datasetDir, (levelOfDetailFromDirectory, lodDir) =>
                     {
-                        foreach (DirectoryInfo upDir in lodDir.EnumerateDirectories("*", EnumerationOptions))
+                        foreach (DirectoryInfo upDir in lodDir.EnumerateDirectories("*", enumerationOptions))
                         {
                             Match upMatch = UpDirPattern.Match(upDir.Name);
                             if (!upMatch.Success)
                             {
+                                logger.LogTrace("{Directory} is not an UREF directory.  Skipping.",
+                                    upDir);
                                 continue;
                             }
                             int upFromDirectory = int.Parse(upMatch.Groups[""].Value, CultureInfo.InvariantCulture);
 
-                            foreach (FileInfo file in upDir.EnumerateFiles("*", EnumerationOptions))
+                            foreach (FileInfo file in upDir.EnumerateFiles("*", enumerationOptions))
                             {
                                 Match fileMatch = Tile.TiledDatasetFilenamePattern.Match(file.Name);
                                 if (!fileMatch.Success)
@@ -132,7 +144,7 @@ public class TiledDatasetVisitor
                                 {
                                     logger.LogError("Directory level 4 {DirectoryLod} does not match file {FileLod}", levelOfDetailFromDirectory, tile.Level);
                                 }
-                                if (levelOfDetailFromDirectory is null && tile.Level.Level < 0)
+                                if (levelOfDetailFromDirectory is null && tile.Level.Value < 0)
                                 {
                                     logger.LogError("File {Tile} should be in level 4 directory LC.", tile);
                                 }
