@@ -39,9 +39,9 @@ public class MovingModelVisitor : VisitorBase
     }
 
     public delegate void MovingModelAction(MovingModelGeometry movingModel, FileInfo file);
-    public delegate void MovingModelActionLod(MovingModelGeometryLod movingModelLod, FileInfo file);
-    public delegate void ModelTextureAction(ModelTexture modelTexture, FileInfo file);
+    public delegate void MovingModelLodAction(MovingModelGeometryLod movingModelLod, FileInfo file);
     public delegate void TextureAction(Texture texture, FileInfo file);
+    public delegate void TextureLodAction(TextureLod modelTexture, FileInfo file);
 
     /// <summary>
     /// Walks the MModel directory and visits all recognized files.
@@ -53,11 +53,15 @@ public class MovingModelVisitor : VisitorBase
     /// </para>
     /// </remarks>
     /// <param name="cdbDir">The CDB root directory.</param>
+    /// <param name="modelAction">The action to take for each moving model file.</param>
+    /// <param name="modelLodAction">The action to take for each moving model level of detail file.</param>
+    /// <param name="textureAction">The action to take for each texture file.</param>
+    /// <param name="textureLodAction">The action to take for each texture level of detail file.</param>
     public void VisitMovingModels(DirectoryInfo cdbDir,
-        MovingModelAction visitMovingModel,
-        MovingModelActionLod visitMovingModelLod,
-        ModelTextureAction modelTextureAction,
-        TextureAction textureAction)
+        MovingModelAction modelAction,
+        MovingModelLodAction modelLodAction,
+        TextureAction textureAction,
+        TextureLodAction textureLodAction)
     {
         DirectoryInfo mModelDir = new(Path.Combine(cdbDir.FullName, "MModel"));
         if (!mModelDir.Exists)
@@ -105,7 +109,7 @@ public class MovingModelVisitor : VisitorBase
                             disEntityType, movingModelGeometry.MMDC);
                     }
 
-                    visitMovingModel(movingModelGeometry, file);
+                    modelAction(movingModelGeometry, file);
                 }
 
                 // See 3.5.3. MModel Directory Structure 3: Signature
@@ -139,7 +143,7 @@ public class MovingModelVisitor : VisitorBase
                                 lod, movingModelGeometryLod.LevelOfDetail);
                         }
 
-                        visitMovingModelLod(movingModelGeometryLod, file);
+                        modelLodAction(movingModelGeometryLod, file);
                     }
                 });
             });
@@ -150,23 +154,23 @@ public class MovingModelVisitor : VisitorBase
                 {
                     // See 3.5.2.1. MModelTexture Naming Convention
                     // See 3.5.2.2. MModelMaterial Naming Convention
-                    Match modelTextureMatch = ModelTexture.FilenamePattern.Match(file.Name);
-                    if (modelTextureMatch.Success)
+                    Match textureLodMatch = TextureLod.FilenamePattern.Match(file.Name);
+                    if (textureLodMatch.Success)
                     {
-                        ModelTexture modelTexture = ModelTexture.FromFilenameMatch(modelTextureMatch);
+                        TextureLod textureLod = TextureLod.FromFilenameMatch(textureLodMatch);
 
-                        if (datasetFromDirectory != modelTexture.Dataset)
+                        if (datasetFromDirectory != textureLod.Dataset)
                         {
                             logger.LogWarning("Directory {DirectoryDataset} does not match file {FileDataset}",
-                                datasetFromDirectory, modelTexture.Dataset);
+                                datasetFromDirectory, textureLod.Dataset);
                         }
-                        if (textureName != modelTexture.TextureName)
+                        if (textureName != textureLod.TextureName)
                         {
                             logger.LogWarning("Directory {DirectoryTexture} does not match file {FileTexture}",
-                                textureName, modelTexture.TextureName);
+                                textureName, textureLod.TextureName);
                         }
 
-                        modelTextureAction(modelTexture, file);
+                        textureLodAction(textureLod, file);
                     }
                     else
                     {

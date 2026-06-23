@@ -40,7 +40,7 @@ public record TextureLod(
     public static Regex FilenamePattern
     {
         get;
-    } = new(@"^D(?<dataset>\d{3})_S(?<component_selector_1>\d{3})_T(?<component_selector_2>\d{3})_L(?<lod_negated>C?)(?<lod>\d{2})_(?<tnam>[^.]+)\.(?<file_type>[^.]+)$",
+    } = new(@"^D(?<dataset>\d{3})_S(?<component_selector_1>\d{3})_T(?<component_selector_2>\d{3})_[LW](?<lod_negated>C?)(?<lod>\d{2})_(?<tnam>[^.]+)\.(?<file_type>[^.]+)$",
         RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
 
     /// <summary>

@@ -292,42 +292,6 @@ internal class Program
             insertIntoTextureLodCommand.Prepare();
             insertIntoTextureLodCommand.Parameters[cdbParamName].Value = cdbName;
         }
-        using DbCommand insertIntoTextureSizedCommand = dbConnection.CreateCommand();
-        {
-            const string insertIntoTextureSizedStatement = $"""
-                        insert into TextureSized (
-                            cdb,
-                            dataset,
-                            component_selector_1,
-                            component_selector_2,
-                            size,
-                            texture_name,
-                            file_type,
-                            content
-                        ) values (
-                            {cdbParamName},
-                            {datasetParamName},
-                            {cs1ParamName},
-                            {cs2ParamName},
-                            {sizeParamName},
-                            {textureNameParamName},
-                            {fileTypeParamName},
-                            {contentParamName}
-                        )
-                        """;
-
-            insertIntoTextureSizedCommand.CommandText = insertIntoTextureSizedStatement;
-            CreateAndAttachParameter(insertIntoTextureSizedCommand, cdbParamName, DbType.String);
-            CreateAndAttachParameter(insertIntoTextureSizedCommand, datasetParamName, DbType.Int32);
-            CreateAndAttachParameter(insertIntoTextureSizedCommand, cs1ParamName, DbType.Int32);
-            CreateAndAttachParameter(insertIntoTextureSizedCommand, cs2ParamName, DbType.Int32);
-            CreateAndAttachParameter(insertIntoTextureSizedCommand, sizeParamName, DbType.Int32);
-            CreateAndAttachParameter(insertIntoTextureSizedCommand, textureNameParamName, DbType.String);
-            CreateAndAttachParameter(insertIntoTextureSizedCommand, fileTypeParamName, DbType.String);
-            CreateAndAttachParameter(insertIntoTextureSizedCommand, contentParamName, DbType.Binary);
-            insertIntoTextureSizedCommand.Prepare();
-            insertIntoTextureSizedCommand.Parameters[cdbParamName].Value = cdbName;
-        }
 
         using DbCommand insertIntoModelsCommand = dbConnection.CreateCommand();
         {
@@ -652,18 +616,6 @@ internal class Program
 
                     int rowsAffected = insertIntoModelsLodCommand.ExecuteNonQuery();
                 },
-                (modelTexture, file) =>
-                {
-                    insertIntoTextureSizedCommand.Parameters[datasetParamName].Value = modelTexture.Dataset.Value;
-                    insertIntoTextureSizedCommand.Parameters[cs1ParamName].Value = modelTexture.ComponentSelector1;
-                    insertIntoTextureSizedCommand.Parameters[cs2ParamName].Value = modelTexture.ComponentSelector2;
-                    insertIntoTextureSizedCommand.Parameters[sizeParamName].Value = modelTexture.TextureSize;
-                    insertIntoTextureSizedCommand.Parameters[textureNameParamName].Value = modelTexture.TextureName;
-                    insertIntoTextureSizedCommand.Parameters[fileTypeParamName].Value = modelTexture.FileType;
-                    insertIntoTextureSizedCommand.Parameters[contentParamName].Value = File.ReadAllBytes(file.FullName);
-
-                    int rowsAffected = insertIntoTextureSizedCommand.ExecuteNonQuery();
-                },
                 (texture, file) =>
                 {
                     insertIntoTextureCommand.Parameters[datasetParamName].Value = texture.Dataset.Value;
@@ -674,6 +626,18 @@ internal class Program
                     insertIntoTextureCommand.Parameters[contentParamName].Value = File.ReadAllBytes(file.FullName);
 
                     int rowsAffected = insertIntoTextureCommand.ExecuteNonQuery();
+                },
+                (textureLod, file) =>
+                {
+                    insertIntoTextureLodCommand.Parameters[datasetParamName].Value = textureLod.Dataset.Value;
+                    insertIntoTextureLodCommand.Parameters[cs1ParamName].Value = textureLod.ComponentSelector1;
+                    insertIntoTextureLodCommand.Parameters[cs2ParamName].Value = textureLod.ComponentSelector2;
+                    insertIntoTextureLodCommand.Parameters[lodParamName].Value = textureLod.LevelOfDetail.Value;
+                    insertIntoTextureLodCommand.Parameters[textureNameParamName].Value = textureLod.TextureName;
+                    insertIntoTextureLodCommand.Parameters[fileTypeParamName].Value = textureLod.FileType;
+                    insertIntoTextureLodCommand.Parameters[contentParamName].Value = File.ReadAllBytes(file.FullName);
+
+                    int rowsAffected = insertIntoTextureLodCommand.ExecuteNonQuery();
                 });
         }
         // Tiles
