@@ -115,7 +115,6 @@ internal class Program
 
         const string modelNameParamName = "$model_name";
         const string textureNameParamName = "$texture_name";
-        const string sizeParamName = "$size";
 
         const string kindParamName = "$kind";
         const string domainParamName = "$domain";
