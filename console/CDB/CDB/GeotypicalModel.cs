@@ -12,15 +12,15 @@ namespace Silnith.CDB;
 /// <param name="ComponentSelector2">Component selector 2.  The meaning of this is relative to component selector 1.</param>
 /// <param name="FeatureCode">The feature code.</param>
 /// <param name="FeatureSubcode">The feature subcode.</param>
-/// <param name="ModelName">The name of the model.</param>
+/// <param name="Name">The name of the model.</param>
 /// <param name="FileType">The file type.</param>
-public record GTModelGeometry(
+public record GeotypicalModel(
     Dataset Dataset,
     [property: Range(0, 999)] int ComponentSelector1,
     [property: Range(0, 999)] int ComponentSelector2,
     FeatureCode FeatureCode,
     [property: Range(0, 999)] int FeatureSubcode,
-    string ModelName,
+    string Name,
     string FileType)
 {
     /// <summary>
@@ -52,7 +52,7 @@ public record GTModelGeometry(
     /// </summary>
     /// <param name="match">A successful match against <see cref="FilenamePattern"/>.</param>
     /// <returns>The Geotypical Model Geometry.</returns>
-    public static GTModelGeometry FromFilenameMatch(Match match)
+    public static GeotypicalModel FromFilenameMatch(Match match)
     {
         return new(
             new Dataset(int.Parse(match.Groups["dataset"].Value, CultureInfo.InvariantCulture)),

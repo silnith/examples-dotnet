@@ -11,14 +11,14 @@ namespace Silnith.CDB;
 /// <param name="ComponentSelector1">Component selector 1.  The meaning of this is relative to the dataset.</param>
 /// <param name="ComponentSelector2">Component selector 2.  The meaning of this is relative to component selector 1.</param>
 /// <param name="LevelOfDetail">The level of detail.</param>
-/// <param name="TextureName">The texture name.</param>
+/// <param name="Name">The texture name.</param>
 /// <param name="FileType">The file type.</param>
 public record TextureLod(
         Dataset Dataset,
         [property: Range(0, 999)] int ComponentSelector1,
         [property: Range(0, 999)] int ComponentSelector2,
         LevelOfDetail LevelOfDetail,
-        string TextureName,
+        string Name,
         string FileType)
 {
     /// <summary>

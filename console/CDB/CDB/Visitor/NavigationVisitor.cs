@@ -11,6 +11,7 @@ public class NavigationVisitor : VisitorBase
     private static readonly Regex NavigationFilenamePattern = new(
         @"^D(?<dataset>\d{3})_S(?<component_selector_1>\d{3})_T(?<component_selector_2>\d{3})\.(?<file_type>[^.]+)$",
         RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
+
     private readonly ILogger<NavigationVisitor> logger;
 
     /// <summary>

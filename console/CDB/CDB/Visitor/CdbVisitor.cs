@@ -9,9 +9,9 @@ public class CdbVisitor : VisitorBase
 {
     private readonly ILogger<CdbVisitor> logger;
     private readonly MetadataVisitor metadataVisitor;
-    private readonly GTModelVisitor gtModelVisitor;
+    private readonly GeotypicalModelVisitor geotypicalModelVisitor;
     private readonly MovingModelVisitor movingModelVisitor;
-    private readonly TiledDatasetVisitor tiledDatasetVisitor;
+    private readonly TileVisitor tileVisitor;
     private readonly NavigationVisitor navigationVisitor;
 
     /// <summary>
@@ -19,22 +19,22 @@ public class CdbVisitor : VisitorBase
     /// </summary>
     /// <param name="logger">A logger.</param>
     /// <param name="metadataVisitor">A visitor for the Metadata directory.</param>
-    /// <param name="gtModelVisitor">A visitor for the GTModel directory.</param>
+    /// <param name="geotypicalModelVisitor">A visitor for the GTModel directory.</param>
     /// <param name="movingModelVisitor">A visitor for the MModel directory.</param>
-    /// <param name="tiledDatasetVisitor">A visitor for the Tiles directory.</param>
+    /// <param name="tileVisitor">A visitor for the Tiles directory.</param>
     /// <param name="navigationVisitor">A visitor for the Navigation directory.</param>
     public CdbVisitor(ILogger<CdbVisitor> logger,
         MetadataVisitor metadataVisitor,
-        GTModelVisitor gtModelVisitor,
+        GeotypicalModelVisitor geotypicalModelVisitor,
         MovingModelVisitor movingModelVisitor,
-        TiledDatasetVisitor tiledDatasetVisitor,
+        TileVisitor tileVisitor,
         NavigationVisitor navigationVisitor)
     {
         this.logger = logger;
         this.metadataVisitor = metadataVisitor;
-        this.gtModelVisitor = gtModelVisitor;
+        this.geotypicalModelVisitor = geotypicalModelVisitor;
         this.movingModelVisitor = movingModelVisitor;
-        this.tiledDatasetVisitor = tiledDatasetVisitor;
+        this.tileVisitor = tileVisitor;
         this.navigationVisitor = navigationVisitor;
     }
 
@@ -54,7 +54,7 @@ public class CdbVisitor : VisitorBase
         metadataVisitor.VisitMetadata(cdbDir,
             (metadata, file) => { });
         logger.LogTrace("Walking GTModel for {CDB}", cdbDir);
-        gtModelVisitor.VisitGeotypicalModels(cdbDir,
+        geotypicalModelVisitor.VisitGeotypicalModels(cdbDir,
             (gtModel, file) => { },
             (gtModelLod, file) => { },
             (texture, file) => { },
@@ -66,7 +66,7 @@ public class CdbVisitor : VisitorBase
             (texture, file) => { },
             (textureLod, file) => { });
         logger.LogTrace("Walking Tiles for {CDB}", cdbDir);
-        tiledDatasetVisitor.VisitTiles(cdbDir,
+        tileVisitor.VisitTiles(cdbDir,
             (tile, file) => { });
         logger.LogTrace("Walking Navigation for {CDB}", cdbDir);
         navigationVisitor.VisitNavigationDatasets(cdbDir,

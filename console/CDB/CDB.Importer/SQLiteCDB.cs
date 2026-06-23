@@ -7,58 +7,6 @@ namespace Silnith.CDB.Importer;
 
 public class SQLiteCDB : IDisposable
 {
-    private static void CreateSqliteSchema(DbConnection dbConnection)
-    {
-        int rowsAffected;
-        using DbTransaction dbTransaction = dbConnection.BeginTransaction(IsolationLevel.Serializable);
-
-        using DbCommand dbCommand = dbConnection.CreateCommand();
-
-        dbCommand.Transaction = dbTransaction;
-
-        dbCommand.CommandText = createTableCDBStatement;
-        rowsAffected = dbCommand.ExecuteNonQuery();
-
-        dbCommand.CommandText = createTableMetadataStatement;
-        rowsAffected = dbCommand.ExecuteNonQuery();
-
-        // Need an index on texture name.
-        dbCommand.CommandText = createTableTextureStatement;
-        rowsAffected = dbCommand.ExecuteNonQuery();
-
-        // Need an index on texture name.
-        dbCommand.CommandText = createTableTextureLodStatement;
-        rowsAffected = dbCommand.ExecuteNonQuery();
-
-        // Need an index on dataset (for everything)
-        // Need an index on feature_category, feature_subcategory, feature_type
-        dbCommand.CommandText = createTableGTModelStatement;
-        rowsAffected = dbCommand.ExecuteNonQuery();
-
-        // Need an index on feature_category, feature_subcategory, feature_type, lod
-        dbCommand.CommandText = createTableGTModelLodStatement;
-        rowsAffected = dbCommand.ExecuteNonQuery();
-
-        // Maybe an index on kind, domain, country, category.
-        // Need an index on kind, domain, country, category, subcategory, specific, extra.
-        dbCommand.CommandText = createTableMovingModelStatement;
-        rowsAffected = dbCommand.ExecuteNonQuery();
-
-        // Maybe an index on kind, domain, country, category.
-        // Need an index on kind, domain, country, category, subcategory, specific, extra.
-        dbCommand.CommandText = createTableMovingModelLodStatement;
-        rowsAffected = dbCommand.ExecuteNonQuery();
-
-        // Need an index on latitude, longitude, dataset, cs1, cs2, lod, up
-        dbCommand.CommandText = CreateTableTileStatement;
-        rowsAffected = dbCommand.ExecuteNonQuery();
-
-        dbCommand.CommandText = CreateTableNavigationStatement;
-        rowsAffected = dbCommand.ExecuteNonQuery();
-
-        dbTransaction.Commit();
-    }
-
     private static void CreateAndAttachParameter(DbCommand dbCommand, string dbParameterName, DbType dbType)
     {
         DbParameter dbParameter = dbCommand.CreateParameter();
@@ -120,7 +68,7 @@ public class SQLiteCDB : IDisposable
 
     #region CDB
 
-    private const string createTableCDBStatement = """
+    private const string createTableCDB = """
         create table if not exists CDB (
             name text primary key
         )
@@ -128,7 +76,7 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateInsertIntoCDBCommand(DbConnection dbConnection)
     {
-        const string insertIntoCDBStatement = $"""
+        const string insertIntoCDB = $"""
             insert into CDB (
                 name
             ) values (
@@ -137,7 +85,7 @@ public class SQLiteCDB : IDisposable
             """;
 
         DbCommand dbCommand = dbConnection.CreateCommand();
-        dbCommand.CommandText = insertIntoCDBStatement;
+        dbCommand.CommandText = insertIntoCDB;
         CreateAndAttachParameter(dbCommand, nameParamName, DbType.String);
         dbCommand.Prepare();
         return dbCommand;
@@ -145,12 +93,12 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateSelectFromCDBCommand(DbConnection dbConnection)
     {
-        const string selectFromCDBStatement = $"""
+        const string selectFromCDB = $"""
             select name
             from CDB
             """;
         DbCommand dbCommand = dbConnection.CreateCommand();
-        dbCommand.CommandText = selectFromCDBStatement;
+        dbCommand.CommandText = selectFromCDB;
         dbCommand.Prepare();
         return dbCommand;
     }
@@ -159,7 +107,7 @@ public class SQLiteCDB : IDisposable
 
     #region Metadata
 
-    private const string createTableMetadataStatement = """
+    private const string createTableMetadata = """
         create table if not exists Metadata (
             cdb text not null references CDB(name),
             name text not null,
@@ -175,7 +123,7 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateInsertIntoMetadataCommand(DbConnection dbConnection)
     {
-        const string insertIntoMetadataStatement = $"""
+        const string insertIntoMetadata = $"""
             insert into Metadata (
                 cdb,
                 name,
@@ -190,7 +138,7 @@ public class SQLiteCDB : IDisposable
             """;
 
         DbCommand dbCommand = dbConnection.CreateCommand();
-        dbCommand.CommandText = insertIntoMetadataStatement;
+        dbCommand.CommandText = insertIntoMetadata;
         CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, nameParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, fileTypeParamName, DbType.String);
@@ -201,7 +149,7 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateSelectFromMetadataCommand(DbConnection dbConnection)
     {
-        const string selectFromMetadataStatement = $"""
+        const string selectFromMetadata = $"""
             select content
             from Metadata
             where cdb = {cdbParamName}
@@ -210,7 +158,7 @@ public class SQLiteCDB : IDisposable
             """;
 
         DbCommand dbCommand = dbConnection.CreateCommand();
-        dbCommand.CommandText = selectFromMetadataStatement;
+        dbCommand.CommandText = selectFromMetadata;
         CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, nameParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, fileTypeParamName, DbType.String);
@@ -222,7 +170,7 @@ public class SQLiteCDB : IDisposable
 
     #region Texture
 
-    private const string createTableTextureStatement = """
+    private const string createTableTexture = """
         create table if not exists Texture (
             cdb text not null references CDB(name),
             dataset integer not null,
@@ -244,7 +192,7 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateInsertIntoTextureCommand(DbConnection dbConnection)
     {
-        const string insertIntoTextureStatement = $"""
+        const string insertIntoTexture = $"""
             insert into Texture (
                 cdb,
                 dataset,
@@ -265,7 +213,7 @@ public class SQLiteCDB : IDisposable
             """;
 
         DbCommand dbCommand = dbConnection.CreateCommand();
-        dbCommand.CommandText = insertIntoTextureStatement;
+        dbCommand.CommandText = insertIntoTexture;
         CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, datasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, cs1ParamName, DbType.Int32);
@@ -279,7 +227,7 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateSelectFromTextureCommand(DbConnection dbConnection)
     {
-        const string selectFromTextureStatement = $"""
+        const string selectFromTexture = $"""
             select content
             from Texture
             where cdb = {cdbParamName}
@@ -291,7 +239,7 @@ public class SQLiteCDB : IDisposable
             """;
 
         DbCommand dbCommand = dbConnection.CreateCommand();
-        dbCommand.CommandText = selectFromTextureStatement;
+        dbCommand.CommandText = selectFromTexture;
         CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, datasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, cs1ParamName, DbType.Int32);
@@ -306,7 +254,7 @@ public class SQLiteCDB : IDisposable
 
     #region Texture LOD
 
-    private const string createTableTextureLodStatement = """
+    private const string createTableTextureLod = """
         create table if not exists TextureLod (
             cdb text not null references CDB(name),
             dataset integer not null,
@@ -330,7 +278,7 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateInsertIntoTextureLodCommand(DbConnection dbConnection)
     {
-        const string insertIntoTextureLodStatement = $"""
+        const string insertIntoTextureLod = $"""
             insert into TextureLod (
                 cdb,
                 dataset,
@@ -353,7 +301,7 @@ public class SQLiteCDB : IDisposable
             """;
 
         DbCommand dbCommand = dbConnection.CreateCommand();
-        dbCommand.CommandText = insertIntoTextureLodStatement;
+        dbCommand.CommandText = insertIntoTextureLod;
         CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, datasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, cs1ParamName, DbType.Int32);
@@ -368,7 +316,7 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateSelectFromTextureLodCommand(DbConnection dbConnection)
     {
-        const string selectFromTextureLodStatement = $"""
+        const string selectFromTextureLod = $"""
             select content
             from TextureLod
             where cdb = {cdbParamName}
@@ -381,7 +329,7 @@ public class SQLiteCDB : IDisposable
             """;
 
         DbCommand dbCommand = dbConnection.CreateCommand();
-        dbCommand.CommandText = selectFromTextureLodStatement;
+        dbCommand.CommandText = selectFromTextureLod;
         CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, datasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, cs1ParamName, DbType.Int32);
@@ -397,7 +345,7 @@ public class SQLiteCDB : IDisposable
 
     #region Geotypical Model
 
-    private const string createTableGTModelStatement = """
+    private const string createTableGeotypicalModel = """
         create table if not exists GeotypicalModel (
             cdb text not null references CDB(name),
             dataset integer not null,
@@ -427,7 +375,7 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateInsertIntoGeotypicalModelCommand(DbConnection dbConnection)
     {
-        const string insertIntoGeometryStatement = $"""
+        const string insertIntoGeotypicalModel = $"""
             insert into GeotypicalModel (
                 cdb,
                 dataset,
@@ -456,7 +404,7 @@ public class SQLiteCDB : IDisposable
             """;
 
         DbCommand dbCommand = dbConnection.CreateCommand();
-        dbCommand.CommandText = insertIntoGeometryStatement;
+        dbCommand.CommandText = insertIntoGeotypicalModel;
         CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, datasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, cs1ParamName, DbType.Int32);
@@ -474,7 +422,7 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateSelectFromGeotypicalModelCommand(DbConnection dbConnection)
     {
-        const string selectFromGTModelStatement = $"""
+        const string selectFromGeotypicalModel = $"""
             select content
             from GeotypicalModel
             where cdb = {cdbParamName}
@@ -490,7 +438,7 @@ public class SQLiteCDB : IDisposable
             """;
 
         DbCommand dbCommand = dbConnection.CreateCommand();
-        dbCommand.CommandText = selectFromGTModelStatement;
+        dbCommand.CommandText = selectFromGeotypicalModel;
         CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, datasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, cs1ParamName, DbType.Int32);
@@ -509,7 +457,7 @@ public class SQLiteCDB : IDisposable
 
     #region Geotypical Model Lod
 
-    private const string createTableGTModelLodStatement = """
+    private const string createTableGeotypicalModelLod = """
         create table if not exists GeotypicalModelLod (
             cdb text not null references CDB(name),
             dataset integer not null,
@@ -541,7 +489,7 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateInsertIntoGeotypicalModelLodCommand(DbConnection dbConnection)
     {
-        const string insertIntoGTModelLodStatement = $"""
+        const string insertIntoGeotypicalModelLod = $"""
             insert into GeotypicalModelLod (
                 cdb,
                 dataset,
@@ -571,27 +519,27 @@ public class SQLiteCDB : IDisposable
             )
             """;
 
-        DbCommand insertIntoGeometryLodCommand = dbConnection.CreateCommand();
-        insertIntoGeometryLodCommand.CommandText = insertIntoGTModelLodStatement;
-        CreateAndAttachParameter(insertIntoGeometryLodCommand, cdbParamName, DbType.String);
-        CreateAndAttachParameter(insertIntoGeometryLodCommand, datasetParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoGeometryLodCommand, cs1ParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoGeometryLodCommand, cs2ParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoGeometryLodCommand, lodParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoGeometryLodCommand, featureCategoryParamName, DbType.String);
-        CreateAndAttachParameter(insertIntoGeometryLodCommand, featureSubcategoryParamName, DbType.String);
-        CreateAndAttachParameter(insertIntoGeometryLodCommand, featureTypeParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoGeometryLodCommand, featureSubcodeParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoGeometryLodCommand, modelNameParamName, DbType.String);
-        CreateAndAttachParameter(insertIntoGeometryLodCommand, fileTypeParamName, DbType.String);
-        CreateAndAttachParameter(insertIntoGeometryLodCommand, contentParamName, DbType.Binary);
-        insertIntoGeometryLodCommand.Prepare();
-        return insertIntoGeometryLodCommand;
+        DbCommand dbCommand = dbConnection.CreateCommand();
+        dbCommand.CommandText = insertIntoGeotypicalModelLod;
+        CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
+        CreateAndAttachParameter(dbCommand, datasetParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, cs1ParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, cs2ParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, lodParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, featureCategoryParamName, DbType.String);
+        CreateAndAttachParameter(dbCommand, featureSubcategoryParamName, DbType.String);
+        CreateAndAttachParameter(dbCommand, featureTypeParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, featureSubcodeParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, modelNameParamName, DbType.String);
+        CreateAndAttachParameter(dbCommand, fileTypeParamName, DbType.String);
+        CreateAndAttachParameter(dbCommand, contentParamName, DbType.Binary);
+        dbCommand.Prepare();
+        return dbCommand;
     }
 
     private static DbCommand CreateSelectFromGeotypicalModelLodCommand(DbConnection dbConnection)
     {
-        const string selectFromGTModelLodStatement = $"""
+        const string selectFromGeotypicalModelLod = $"""
             select content
             from GeotypicalModelLod
             where cdb = {cdbParamName}
@@ -608,7 +556,7 @@ public class SQLiteCDB : IDisposable
             """;
 
         DbCommand dbCommand = dbConnection.CreateCommand();
-        dbCommand.CommandText = selectFromGTModelLodStatement;
+        dbCommand.CommandText = selectFromGeotypicalModelLod;
         CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, datasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, cs1ParamName, DbType.Int32);
@@ -628,7 +576,7 @@ public class SQLiteCDB : IDisposable
 
     #region Moving Model
 
-    private const string createTableMovingModelStatement = """
+    private const string createTableMovingModel = """
         create table if not exists MovingModel (
             cdb text not null references CDB(name),
             dataset integer not null,
@@ -662,7 +610,7 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateInsertIntoMovingModelCommand(DbConnection dbConnection)
     {
-        const string insertIntoMovingModelStatement = $"""
+        const string insertIntoMovingModel = $"""
             insert into MovingModel (
                 cdb,
                 dataset,
@@ -695,7 +643,7 @@ public class SQLiteCDB : IDisposable
             """;
 
         DbCommand dbCommand = dbConnection.CreateCommand();
-        dbCommand.CommandText = insertIntoMovingModelStatement;
+        dbCommand.CommandText = insertIntoMovingModel;
         CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, datasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, cs1ParamName, DbType.Int32);
@@ -715,7 +663,7 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateSelectFromMovingModelCommand(DbConnection dbConnection)
     {
-        const string selectFromMovingModelStatement = $"""
+        const string selectFromMovingModel = $"""
             select content
             from MovingModel
             where cdb = {cdbParamName}
@@ -733,7 +681,7 @@ public class SQLiteCDB : IDisposable
             """;
 
         DbCommand dbCommand = dbConnection.CreateCommand();
-        dbCommand.CommandText = selectFromMovingModelStatement;
+        dbCommand.CommandText = selectFromMovingModel;
         CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, datasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, cs1ParamName, DbType.Int32);
@@ -754,7 +702,7 @@ public class SQLiteCDB : IDisposable
 
     #region Moving Model LOD
 
-    private const string createTableMovingModelLodStatement = """
+    private const string createTableMovingModelLod = """
         create table if not exists MovingModelLod (
             cdb text not null references CDB(name),
             dataset integer not null,
@@ -790,7 +738,7 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateInsertIntoMovingModelLodCommand(DbConnection dbConnection)
     {
-        const string insertIntoMovingModelLodStatement = $"""
+        const string insertIntoMovingModelLod = $"""
             insert into MovingModelLod (
                 cdb,
                 dataset,
@@ -824,29 +772,29 @@ public class SQLiteCDB : IDisposable
             )
             """;
 
-        DbCommand insertIntoModelsLodCommand = dbConnection.CreateCommand();
-        insertIntoModelsLodCommand.CommandText = insertIntoMovingModelLodStatement;
-        CreateAndAttachParameter(insertIntoModelsLodCommand, cdbParamName, DbType.String);
-        CreateAndAttachParameter(insertIntoModelsLodCommand, datasetParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoModelsLodCommand, cs1ParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoModelsLodCommand, cs2ParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoModelsLodCommand, lodParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoModelsLodCommand, kindParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoModelsLodCommand, domainParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoModelsLodCommand, countryParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoModelsLodCommand, categoryParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoModelsLodCommand, subcategoryParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoModelsLodCommand, specificParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoModelsLodCommand, extraParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoModelsLodCommand, fileTypeParamName, DbType.String);
-        CreateAndAttachParameter(insertIntoModelsLodCommand, contentParamName, DbType.String);
-        insertIntoModelsLodCommand.Prepare();
-        return insertIntoModelsLodCommand;
+        DbCommand dbCommand = dbConnection.CreateCommand();
+        dbCommand.CommandText = insertIntoMovingModelLod;
+        CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
+        CreateAndAttachParameter(dbCommand, datasetParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, cs1ParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, cs2ParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, lodParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, kindParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, domainParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, countryParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, categoryParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, subcategoryParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, specificParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, extraParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, fileTypeParamName, DbType.String);
+        CreateAndAttachParameter(dbCommand, contentParamName, DbType.String);
+        dbCommand.Prepare();
+        return dbCommand;
     }
 
     private static DbCommand CreateSelectFromMovingModelLodCommand(DbConnection dbConnection)
     {
-        const string selectFromMovingModelLodStatement = $"""
+        const string selectFromMovingModelLod = $"""
             select content
             from MovingModelLod
             where cdb = {cdbParamName}
@@ -865,7 +813,7 @@ public class SQLiteCDB : IDisposable
             """;
 
         DbCommand dbCommand = dbConnection.CreateCommand();
-        dbCommand.CommandText = selectFromMovingModelLodStatement;
+        dbCommand.CommandText = selectFromMovingModelLod;
         CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, datasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, cs1ParamName, DbType.Int32);
@@ -887,7 +835,7 @@ public class SQLiteCDB : IDisposable
 
     #region Tile
 
-    private const string CreateTableTileStatement = """
+    private const string CreateTableTile = """
         create table if not exists Tile (
             cdb text not null references CDB(name),
             latitude integer not null,
@@ -917,7 +865,7 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateInsertIntoTileCommand(DbConnection dbConnection)
     {
-        const string insertIntoTilesStatement = $"""
+        const string insertIntoTile = $"""
             insert into Tile (
                 cdb,
                 latitude,
@@ -945,26 +893,26 @@ public class SQLiteCDB : IDisposable
             )
             """;
 
-        DbCommand insertIntoTilesCommand = dbConnection.CreateCommand();
-        insertIntoTilesCommand.CommandText = insertIntoTilesStatement;
-        CreateAndAttachParameter(insertIntoTilesCommand, cdbParamName, DbType.String);
-        CreateAndAttachParameter(insertIntoTilesCommand, latitudeParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoTilesCommand, longitudeParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoTilesCommand, datasetParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoTilesCommand, cs1ParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoTilesCommand, cs2ParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoTilesCommand, lodParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoTilesCommand, upParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoTilesCommand, rightParamName, DbType.Int32);
-        CreateAndAttachParameter(insertIntoTilesCommand, fileTypeParamName, DbType.String);
-        CreateAndAttachParameter(insertIntoTilesCommand, contentParamName, DbType.Binary);
-        insertIntoTilesCommand.Prepare();
-        return insertIntoTilesCommand;
+        DbCommand dbCommand = dbConnection.CreateCommand();
+        dbCommand.CommandText = insertIntoTile;
+        CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
+        CreateAndAttachParameter(dbCommand, latitudeParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, longitudeParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, datasetParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, cs1ParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, cs2ParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, lodParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, upParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, rightParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, fileTypeParamName, DbType.String);
+        CreateAndAttachParameter(dbCommand, contentParamName, DbType.Binary);
+        dbCommand.Prepare();
+        return dbCommand;
     }
 
     private static DbCommand CreateSelectFromTileCommand(DbConnection dbConnection)
     {
-        const string selectFromTileStatement = $"""
+        const string selectFromTile = $"""
             select content
             from Tile
             where cdb = {cdbParamName}
@@ -980,7 +928,7 @@ public class SQLiteCDB : IDisposable
             """;
 
         DbCommand dbCommand = dbConnection.CreateCommand();
-        dbCommand.CommandText = selectFromTileStatement;
+        dbCommand.CommandText = selectFromTile;
         CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, latitudeParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, longitudeParamName, DbType.Int32);
@@ -999,7 +947,7 @@ public class SQLiteCDB : IDisposable
 
     #region Navigation
 
-    private const string CreateTableNavigationStatement = """
+    private const string createTableNavigation = """
         create table if not exists Navigation (
             cdb text not null references CDB(name),
             dataset integer not null,
@@ -1019,7 +967,7 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateInsertIntoNavigationCommand(DbConnection dbConnection)
     {
-        const string InsertIntoNavigationStatement = $"""
+        const string insertIntoNavigation = $"""
             insert into Navigation (
                 cdb,
                 dataset,
@@ -1038,7 +986,7 @@ public class SQLiteCDB : IDisposable
             """;
 
         DbCommand dbCommand = dbConnection.CreateCommand();
-        dbCommand.CommandText = InsertIntoNavigationStatement;
+        dbCommand.CommandText = insertIntoNavigation;
         CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, datasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, cs1ParamName, DbType.Int32);
@@ -1051,7 +999,7 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateSelectFromNavigationCommand(DbConnection dbConnection)
     {
-        const string SelectFromNavigationStatement = $"""
+        const string selectFromNavigation = $"""
             select content
             from Navigation
             where cdb = {cdbParamName}
@@ -1062,7 +1010,7 @@ public class SQLiteCDB : IDisposable
             """;
 
         DbCommand dbCommand = dbConnection.CreateCommand();
-        dbCommand.CommandText = SelectFromNavigationStatement;
+        dbCommand.CommandText = selectFromNavigation;
         CreateAndAttachParameter(dbCommand, cdbParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, datasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, cs1ParamName, DbType.Int32);
@@ -1073,6 +1021,57 @@ public class SQLiteCDB : IDisposable
     }
 
     #endregion
+
+    private static void CreateSqliteSchema(DbConnection dbConnection)
+    {
+        int rowsAffected;
+        using DbTransaction dbTransaction = dbConnection.BeginTransaction(IsolationLevel.Serializable);
+
+        using DbCommand dbCommand = dbConnection.CreateCommand();
+        dbCommand.Transaction = dbTransaction;
+
+        dbCommand.CommandText = createTableCDB;
+        rowsAffected = dbCommand.ExecuteNonQuery();
+
+        dbCommand.CommandText = createTableMetadata;
+        rowsAffected = dbCommand.ExecuteNonQuery();
+
+        // Need an index on texture name.
+        dbCommand.CommandText = createTableTexture;
+        rowsAffected = dbCommand.ExecuteNonQuery();
+
+        // Need an index on texture name.
+        dbCommand.CommandText = createTableTextureLod;
+        rowsAffected = dbCommand.ExecuteNonQuery();
+
+        // Need an index on dataset (for everything)
+        // Need an index on feature_category, feature_subcategory, feature_type
+        dbCommand.CommandText = createTableGeotypicalModel;
+        rowsAffected = dbCommand.ExecuteNonQuery();
+
+        // Need an index on feature_category, feature_subcategory, feature_type, lod
+        dbCommand.CommandText = createTableGeotypicalModelLod;
+        rowsAffected = dbCommand.ExecuteNonQuery();
+
+        // Maybe an index on kind, domain, country, category.
+        // Need an index on kind, domain, country, category, subcategory, specific, extra.
+        dbCommand.CommandText = createTableMovingModel;
+        rowsAffected = dbCommand.ExecuteNonQuery();
+
+        // Maybe an index on kind, domain, country, category.
+        // Need an index on kind, domain, country, category, subcategory, specific, extra.
+        dbCommand.CommandText = createTableMovingModelLod;
+        rowsAffected = dbCommand.ExecuteNonQuery();
+
+        // Need an index on latitude, longitude, dataset, cs1, cs2, lod, up
+        dbCommand.CommandText = CreateTableTile;
+        rowsAffected = dbCommand.ExecuteNonQuery();
+
+        dbCommand.CommandText = createTableNavigation;
+        rowsAffected = dbCommand.ExecuteNonQuery();
+
+        dbTransaction.Commit();
+    }
 
     private readonly SqliteConnection dbConnection;
 
@@ -1092,13 +1091,13 @@ public class SQLiteCDB : IDisposable
 
     private readonly DbCommand selectFromTextureLod;
 
-    private readonly DbCommand insertIntoGTModel;
+    private readonly DbCommand insertIntoGeotypicalModel;
 
-    private readonly DbCommand selectFromGTModel;
+    private readonly DbCommand selectFromGeotypicalModel;
 
-    private readonly DbCommand insertIntoGTModelLod;
+    private readonly DbCommand insertIntoGeotypicalModelLod;
 
-    private readonly DbCommand selectFromGTModelLod;
+    private readonly DbCommand selectFromGeotypicalModelLod;
 
     private readonly DbCommand insertIntoMovingModel;
 
@@ -1132,10 +1131,10 @@ public class SQLiteCDB : IDisposable
         this.selectFromTexture = CreateSelectFromTextureCommand(this.dbConnection);
         this.insertIntoTextureLod = CreateInsertIntoTextureLodCommand(this.dbConnection);
         this.selectFromTextureLod = CreateSelectFromTextureLodCommand(this.dbConnection);
-        this.insertIntoGTModel = CreateInsertIntoGeotypicalModelCommand(this.dbConnection);
-        this.selectFromGTModel = CreateSelectFromGeotypicalModelCommand(this.dbConnection);
-        this.insertIntoGTModelLod = CreateInsertIntoGeotypicalModelLodCommand(this.dbConnection);
-        this.selectFromGTModelLod = CreateSelectFromGeotypicalModelLodCommand(this.dbConnection);
+        this.insertIntoGeotypicalModel = CreateInsertIntoGeotypicalModelCommand(this.dbConnection);
+        this.selectFromGeotypicalModel = CreateSelectFromGeotypicalModelCommand(this.dbConnection);
+        this.insertIntoGeotypicalModelLod = CreateInsertIntoGeotypicalModelLodCommand(this.dbConnection);
+        this.selectFromGeotypicalModelLod = CreateSelectFromGeotypicalModelLodCommand(this.dbConnection);
         this.insertIntoMovingModel = CreateInsertIntoMovingModelCommand(this.dbConnection);
         this.selectFromMovingModel = CreateSelectFromMovingModelCommand(this.dbConnection);
         this.insertIntoMovingModelLod = CreateInsertIntoMovingModelLodCommand(this.dbConnection);
@@ -1182,7 +1181,8 @@ public class SQLiteCDB : IDisposable
         selectFromMetadata.Parameters[cdbParamName].Value = cdbName;
         selectFromMetadata.Parameters[nameParamName].Value = metadata.Name;
         selectFromMetadata.Parameters[fileTypeParamName].Value = metadata.FileType;
-        using DbDataReader dbDataReader = selectFromMetadata.ExecuteReader(CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
+        using DbDataReader dbDataReader = selectFromMetadata.ExecuteReader(
+            CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
         do
         {
             while (dbDataReader.Read())
@@ -1219,7 +1219,8 @@ public class SQLiteCDB : IDisposable
         selectFromTexture.Parameters[cs2ParamName].Value = texture.ComponentSelector2;
         selectFromTexture.Parameters[textureNameParamName].Value = texture.Name;
         selectFromTexture.Parameters[fileTypeParamName].Value = texture.FileType;
-        using DbDataReader dbDataReader = selectFromTexture.ExecuteReader(CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
+        using DbDataReader dbDataReader = selectFromTexture.ExecuteReader(
+            CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
         do
         {
             while (dbDataReader.Read())
@@ -1242,7 +1243,7 @@ public class SQLiteCDB : IDisposable
         insertIntoTextureLod.Parameters[cs1ParamName].Value = textureLod.ComponentSelector1;
         insertIntoTextureLod.Parameters[cs2ParamName].Value = textureLod.ComponentSelector2;
         insertIntoTextureLod.Parameters[lodParamName].Value = textureLod.LevelOfDetail.Value;
-        insertIntoTextureLod.Parameters[textureNameParamName].Value = textureLod.TextureName;
+        insertIntoTextureLod.Parameters[textureNameParamName].Value = textureLod.Name;
         insertIntoTextureLod.Parameters[fileTypeParamName].Value = textureLod.FileType;
         insertIntoTextureLod.Parameters[contentParamName].Value = content;
 
@@ -1256,9 +1257,10 @@ public class SQLiteCDB : IDisposable
         selectFromTextureLod.Parameters[cs1ParamName].Value = textureLod.ComponentSelector1;
         selectFromTextureLod.Parameters[cs2ParamName].Value = textureLod.ComponentSelector2;
         selectFromTextureLod.Parameters[lodParamName].Value = textureLod.LevelOfDetail.Value;
-        selectFromTextureLod.Parameters[textureNameParamName].Value = textureLod.TextureName;
+        selectFromTextureLod.Parameters[textureNameParamName].Value = textureLod.Name;
         selectFromTextureLod.Parameters[fileTypeParamName].Value = textureLod.FileType;
-        using DbDataReader dbDataReader = selectFromTextureLod.ExecuteReader(CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
+        using DbDataReader dbDataReader = selectFromTextureLod.ExecuteReader(
+            CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
         do
         {
             while (dbDataReader.Read())
@@ -1274,36 +1276,37 @@ public class SQLiteCDB : IDisposable
         return false;
     }
 
-    public int InsertIntoGTModel(string cdbName, GTModelGeometry geometry, byte[] content)
+    public int InsertIntoGeotypicalModel(string cdbName, GeotypicalModel geotypicalModel, byte[] content)
     {
-        insertIntoGTModel.Parameters[cdbParamName].Value = cdbName;
-        insertIntoGTModel.Parameters[datasetParamName].Value = geometry.Dataset.Value;
-        insertIntoGTModel.Parameters[cs1ParamName].Value = geometry.ComponentSelector1;
-        insertIntoGTModel.Parameters[cs2ParamName].Value = geometry.ComponentSelector2;
-        insertIntoGTModel.Parameters[featureCategoryParamName].Value = geometry.FeatureCode.Category;
-        insertIntoGTModel.Parameters[featureSubcategoryParamName].Value = geometry.FeatureCode.Subcategory;
-        insertIntoGTModel.Parameters[featureTypeParamName].Value = geometry.FeatureCode.Type;
-        insertIntoGTModel.Parameters[featureSubcodeParamName].Value = geometry.FeatureSubcode;
-        insertIntoGTModel.Parameters[modelNameParamName].Value = geometry.ModelName;
-        insertIntoGTModel.Parameters[fileTypeParamName].Value = geometry.FileType;
-        insertIntoGTModel.Parameters[contentParamName].Value = content;
+        insertIntoGeotypicalModel.Parameters[cdbParamName].Value = cdbName;
+        insertIntoGeotypicalModel.Parameters[datasetParamName].Value = geotypicalModel.Dataset.Value;
+        insertIntoGeotypicalModel.Parameters[cs1ParamName].Value = geotypicalModel.ComponentSelector1;
+        insertIntoGeotypicalModel.Parameters[cs2ParamName].Value = geotypicalModel.ComponentSelector2;
+        insertIntoGeotypicalModel.Parameters[featureCategoryParamName].Value = geotypicalModel.FeatureCode.Category;
+        insertIntoGeotypicalModel.Parameters[featureSubcategoryParamName].Value = geotypicalModel.FeatureCode.Subcategory;
+        insertIntoGeotypicalModel.Parameters[featureTypeParamName].Value = geotypicalModel.FeatureCode.Type;
+        insertIntoGeotypicalModel.Parameters[featureSubcodeParamName].Value = geotypicalModel.FeatureSubcode;
+        insertIntoGeotypicalModel.Parameters[modelNameParamName].Value = geotypicalModel.Name;
+        insertIntoGeotypicalModel.Parameters[fileTypeParamName].Value = geotypicalModel.FileType;
+        insertIntoGeotypicalModel.Parameters[contentParamName].Value = content;
 
-        return insertIntoGTModel.ExecuteNonQuery();
+        return insertIntoGeotypicalModel.ExecuteNonQuery();
     }
 
-    public bool TrySelectFromGTModel(string cdbName, GTModelGeometry geometry, [NotNullWhen(true)] out byte[] content)
+    public bool TrySelectFromGeotypicalModel(string cdbName, GeotypicalModel geotypicalModel, [NotNullWhen(true)] out byte[] content)
     {
-        selectFromGTModel.Parameters[cdbParamName].Value = cdbName;
-        selectFromGTModel.Parameters[datasetParamName].Value = geometry.Dataset.Value;
-        selectFromGTModel.Parameters[cs1ParamName].Value = geometry.ComponentSelector1;
-        selectFromGTModel.Parameters[cs2ParamName].Value = geometry.ComponentSelector2;
-        selectFromGTModel.Parameters[featureCategoryParamName].Value = geometry.FeatureCode.Category;
-        selectFromGTModel.Parameters[featureSubcategoryParamName].Value = geometry.FeatureCode.Subcategory;
-        selectFromGTModel.Parameters[featureTypeParamName].Value = geometry.FeatureCode.Type;
-        selectFromGTModel.Parameters[featureSubcodeParamName].Value = geometry.FeatureSubcode;
-        selectFromGTModel.Parameters[modelNameParamName].Value = geometry.ModelName;
-        selectFromGTModel.Parameters[fileTypeParamName].Value = geometry.FileType;
-        using DbDataReader dbDataReader = selectFromGTModel.ExecuteReader(CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
+        selectFromGeotypicalModel.Parameters[cdbParamName].Value = cdbName;
+        selectFromGeotypicalModel.Parameters[datasetParamName].Value = geotypicalModel.Dataset.Value;
+        selectFromGeotypicalModel.Parameters[cs1ParamName].Value = geotypicalModel.ComponentSelector1;
+        selectFromGeotypicalModel.Parameters[cs2ParamName].Value = geotypicalModel.ComponentSelector2;
+        selectFromGeotypicalModel.Parameters[featureCategoryParamName].Value = geotypicalModel.FeatureCode.Category;
+        selectFromGeotypicalModel.Parameters[featureSubcategoryParamName].Value = geotypicalModel.FeatureCode.Subcategory;
+        selectFromGeotypicalModel.Parameters[featureTypeParamName].Value = geotypicalModel.FeatureCode.Type;
+        selectFromGeotypicalModel.Parameters[featureSubcodeParamName].Value = geotypicalModel.FeatureSubcode;
+        selectFromGeotypicalModel.Parameters[modelNameParamName].Value = geotypicalModel.Name;
+        selectFromGeotypicalModel.Parameters[fileTypeParamName].Value = geotypicalModel.FileType;
+        using DbDataReader dbDataReader = selectFromGeotypicalModel.ExecuteReader(
+            CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
         do
         {
             while (dbDataReader.Read())
@@ -1319,38 +1322,39 @@ public class SQLiteCDB : IDisposable
         return false;
     }
 
-    public int InsertIntoGeotypicalModelLod(string cdbName, GTModelGeometryLod geometryLod, byte[] content)
+    public int InsertIntoGeotypicalModelLod(string cdbName, GeotypicalModelLod geotypicalModelLod, byte[] content)
     {
-        insertIntoGTModelLod.Parameters[cdbParamName].Value = cdbName;
-        insertIntoGTModelLod.Parameters[datasetParamName].Value = geometryLod.Dataset.Value;
-        insertIntoGTModelLod.Parameters[cs1ParamName].Value = geometryLod.ComponentSelector1;
-        insertIntoGTModelLod.Parameters[cs2ParamName].Value = geometryLod.ComponentSelector2;
-        insertIntoGTModelLod.Parameters[lodParamName].Value = geometryLod.LevelOfDetail.Value;
-        insertIntoGTModelLod.Parameters[featureCategoryParamName].Value = geometryLod.FeatureCode.Category;
-        insertIntoGTModelLod.Parameters[featureSubcategoryParamName].Value = geometryLod.FeatureCode.Subcategory;
-        insertIntoGTModelLod.Parameters[featureTypeParamName].Value = geometryLod.FeatureCode.Type;
-        insertIntoGTModelLod.Parameters[featureSubcodeParamName].Value = geometryLod.FeatureSubcode;
-        insertIntoGTModelLod.Parameters[modelNameParamName].Value = geometryLod.ModelName;
-        insertIntoGTModelLod.Parameters[fileTypeParamName].Value = geometryLod.FileType;
-        insertIntoGTModelLod.Parameters[contentParamName].Value = content;
+        insertIntoGeotypicalModelLod.Parameters[cdbParamName].Value = cdbName;
+        insertIntoGeotypicalModelLod.Parameters[datasetParamName].Value = geotypicalModelLod.Dataset.Value;
+        insertIntoGeotypicalModelLod.Parameters[cs1ParamName].Value = geotypicalModelLod.ComponentSelector1;
+        insertIntoGeotypicalModelLod.Parameters[cs2ParamName].Value = geotypicalModelLod.ComponentSelector2;
+        insertIntoGeotypicalModelLod.Parameters[lodParamName].Value = geotypicalModelLod.LevelOfDetail.Value;
+        insertIntoGeotypicalModelLod.Parameters[featureCategoryParamName].Value = geotypicalModelLod.FeatureCode.Category;
+        insertIntoGeotypicalModelLod.Parameters[featureSubcategoryParamName].Value = geotypicalModelLod.FeatureCode.Subcategory;
+        insertIntoGeotypicalModelLod.Parameters[featureTypeParamName].Value = geotypicalModelLod.FeatureCode.Type;
+        insertIntoGeotypicalModelLod.Parameters[featureSubcodeParamName].Value = geotypicalModelLod.FeatureSubcode;
+        insertIntoGeotypicalModelLod.Parameters[modelNameParamName].Value = geotypicalModelLod.Name;
+        insertIntoGeotypicalModelLod.Parameters[fileTypeParamName].Value = geotypicalModelLod.FileType;
+        insertIntoGeotypicalModelLod.Parameters[contentParamName].Value = content;
 
-        return insertIntoGTModelLod.ExecuteNonQuery();
+        return insertIntoGeotypicalModelLod.ExecuteNonQuery();
     }
 
-    public bool TrySelectFromGTModelLod(string cdbName, GTModelGeometryLod gtModelGeometryLod, [NotNullWhen(true)] out byte[] content)
+    public bool TrySelectFromGeotypicalModelLod(string cdbName, GeotypicalModelLod geotypicalModelLod, [NotNullWhen(true)] out byte[] content)
     {
-        selectFromGTModelLod.Parameters[cdbParamName].Value = cdbName;
-        selectFromGTModelLod.Parameters[datasetParamName].Value = gtModelGeometryLod.Dataset.Value;
-        selectFromGTModelLod.Parameters[cs1ParamName].Value = gtModelGeometryLod.ComponentSelector1;
-        selectFromGTModelLod.Parameters[cs2ParamName].Value = gtModelGeometryLod.ComponentSelector2;
-        selectFromGTModelLod.Parameters[lodParamName].Value = gtModelGeometryLod.LevelOfDetail.Value;
-        selectFromGTModelLod.Parameters[featureCategoryParamName].Value = gtModelGeometryLod.FeatureCode.Category;
-        selectFromGTModelLod.Parameters[featureSubcategoryParamName].Value = gtModelGeometryLod.FeatureCode.Subcategory;
-        selectFromGTModelLod.Parameters[featureTypeParamName].Value = gtModelGeometryLod.FeatureCode.Type;
-        selectFromGTModelLod.Parameters[featureSubcodeParamName].Value = gtModelGeometryLod.FeatureSubcode;
-        selectFromGTModelLod.Parameters[modelNameParamName].Value = gtModelGeometryLod.ModelName;
-        selectFromGTModelLod.Parameters[fileTypeParamName].Value = gtModelGeometryLod.FileType;
-        using DbDataReader dbDataReader = selectFromGTModelLod.ExecuteReader(CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
+        selectFromGeotypicalModelLod.Parameters[cdbParamName].Value = cdbName;
+        selectFromGeotypicalModelLod.Parameters[datasetParamName].Value = geotypicalModelLod.Dataset.Value;
+        selectFromGeotypicalModelLod.Parameters[cs1ParamName].Value = geotypicalModelLod.ComponentSelector1;
+        selectFromGeotypicalModelLod.Parameters[cs2ParamName].Value = geotypicalModelLod.ComponentSelector2;
+        selectFromGeotypicalModelLod.Parameters[lodParamName].Value = geotypicalModelLod.LevelOfDetail.Value;
+        selectFromGeotypicalModelLod.Parameters[featureCategoryParamName].Value = geotypicalModelLod.FeatureCode.Category;
+        selectFromGeotypicalModelLod.Parameters[featureSubcategoryParamName].Value = geotypicalModelLod.FeatureCode.Subcategory;
+        selectFromGeotypicalModelLod.Parameters[featureTypeParamName].Value = geotypicalModelLod.FeatureCode.Type;
+        selectFromGeotypicalModelLod.Parameters[featureSubcodeParamName].Value = geotypicalModelLod.FeatureSubcode;
+        selectFromGeotypicalModelLod.Parameters[modelNameParamName].Value = geotypicalModelLod.Name;
+        selectFromGeotypicalModelLod.Parameters[fileTypeParamName].Value = geotypicalModelLod.FileType;
+        using DbDataReader dbDataReader = selectFromGeotypicalModelLod.ExecuteReader(
+            CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
         do
         {
             while (dbDataReader.Read())
@@ -1366,26 +1370,26 @@ public class SQLiteCDB : IDisposable
         return false;
     }
 
-    public int InsertIntoMovingModel(string cdbName, MovingModelGeometry movingModelGeometry, byte[] content)
+    public int InsertIntoMovingModel(string cdbName, MovingModel movingModel, byte[] content)
     {
         insertIntoMovingModel.Parameters[cdbParamName].Value = cdbName;
-        insertIntoMovingModel.Parameters[datasetParamName].Value = movingModelGeometry.Dataset.Value;
-        insertIntoMovingModel.Parameters[cs1ParamName].Value = movingModelGeometry.ComponentSelector1;
-        insertIntoMovingModel.Parameters[cs2ParamName].Value = movingModelGeometry.ComponentSelector2;
-        insertIntoMovingModel.Parameters[kindParamName].Value = movingModelGeometry.MMDC.Kind;
-        insertIntoMovingModel.Parameters[domainParamName].Value = movingModelGeometry.MMDC.Domain;
-        insertIntoMovingModel.Parameters[countryParamName].Value = movingModelGeometry.MMDC.Country;
-        insertIntoMovingModel.Parameters[categoryParamName].Value = movingModelGeometry.MMDC.Category;
-        insertIntoMovingModel.Parameters[subcategoryParamName].Value = movingModelGeometry.MMDC.Subcategory;
-        insertIntoMovingModel.Parameters[specificParamName].Value = movingModelGeometry.MMDC.Specific;
-        insertIntoMovingModel.Parameters[extraParamName].Value = movingModelGeometry.MMDC.Extra;
-        insertIntoMovingModel.Parameters[fileTypeParamName].Value = movingModelGeometry.FileType;
+        insertIntoMovingModel.Parameters[datasetParamName].Value = movingModel.Dataset.Value;
+        insertIntoMovingModel.Parameters[cs1ParamName].Value = movingModel.ComponentSelector1;
+        insertIntoMovingModel.Parameters[cs2ParamName].Value = movingModel.ComponentSelector2;
+        insertIntoMovingModel.Parameters[kindParamName].Value = movingModel.MMDC.Kind;
+        insertIntoMovingModel.Parameters[domainParamName].Value = movingModel.MMDC.Domain;
+        insertIntoMovingModel.Parameters[countryParamName].Value = movingModel.MMDC.Country;
+        insertIntoMovingModel.Parameters[categoryParamName].Value = movingModel.MMDC.Category;
+        insertIntoMovingModel.Parameters[subcategoryParamName].Value = movingModel.MMDC.Subcategory;
+        insertIntoMovingModel.Parameters[specificParamName].Value = movingModel.MMDC.Specific;
+        insertIntoMovingModel.Parameters[extraParamName].Value = movingModel.MMDC.Extra;
+        insertIntoMovingModel.Parameters[fileTypeParamName].Value = movingModel.FileType;
         insertIntoMovingModel.Parameters[contentParamName].Value = content;
 
         return insertIntoMovingModel.ExecuteNonQuery();
     }
 
-    public bool TrySelectFromMovingModel(string cdbName, MovingModelGeometry movingModel, [NotNullWhen(true)] out byte[] content)
+    public bool TrySelectFromMovingModel(string cdbName, MovingModel movingModel, [NotNullWhen(true)] out byte[] content)
     {
         selectFromMovingModel.Parameters[cdbParamName].Value = cdbName;
         selectFromMovingModel.Parameters[datasetParamName].Value = movingModel.Dataset.Value;
@@ -1399,7 +1403,8 @@ public class SQLiteCDB : IDisposable
         selectFromMovingModel.Parameters[specificParamName].Value = movingModel.MMDC.Specific;
         selectFromMovingModel.Parameters[extraParamName].Value = movingModel.MMDC.Extra;
         selectFromMovingModel.Parameters[fileTypeParamName].Value = movingModel.FileType;
-        using DbDataReader dbDataReader = selectFromMovingModel.ExecuteReader(CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
+        using DbDataReader dbDataReader = selectFromMovingModel.ExecuteReader(
+            CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
         do
         {
             while (dbDataReader.Read())
@@ -1415,42 +1420,43 @@ public class SQLiteCDB : IDisposable
         return false;
     }
 
-    public int InsertIntoMovingModelLod(string cdbName, MovingModelGeometryLod movingModelGeometryLod, byte[] content)
+    public int InsertIntoMovingModelLod(string cdbName, MovingModelLod movingModelLod, byte[] content)
     {
         insertIntoMovingModelLod.Parameters[cdbParamName].Value = cdbName;
-        insertIntoMovingModelLod.Parameters[datasetParamName].Value = movingModelGeometryLod.Dataset.Value;
-        insertIntoMovingModelLod.Parameters[cs1ParamName].Value = movingModelGeometryLod.ComponentSelector1;
-        insertIntoMovingModelLod.Parameters[cs2ParamName].Value = movingModelGeometryLod.ComponentSelector2;
-        insertIntoMovingModelLod.Parameters[lodParamName].Value = movingModelGeometryLod.LevelOfDetail.Value;
-        insertIntoMovingModelLod.Parameters[kindParamName].Value = movingModelGeometryLod.MMDC.Kind;
-        insertIntoMovingModelLod.Parameters[domainParamName].Value = movingModelGeometryLod.MMDC.Domain;
-        insertIntoMovingModelLod.Parameters[countryParamName].Value = movingModelGeometryLod.MMDC.Country;
-        insertIntoMovingModelLod.Parameters[categoryParamName].Value = movingModelGeometryLod.MMDC.Category;
-        insertIntoMovingModelLod.Parameters[subcategoryParamName].Value = movingModelGeometryLod.MMDC.Subcategory;
-        insertIntoMovingModelLod.Parameters[specificParamName].Value = movingModelGeometryLod.MMDC.Specific;
-        insertIntoMovingModelLod.Parameters[extraParamName].Value = movingModelGeometryLod.MMDC.Extra;
-        insertIntoMovingModelLod.Parameters[fileTypeParamName].Value = movingModelGeometryLod.FileType;
+        insertIntoMovingModelLod.Parameters[datasetParamName].Value = movingModelLod.Dataset.Value;
+        insertIntoMovingModelLod.Parameters[cs1ParamName].Value = movingModelLod.ComponentSelector1;
+        insertIntoMovingModelLod.Parameters[cs2ParamName].Value = movingModelLod.ComponentSelector2;
+        insertIntoMovingModelLod.Parameters[lodParamName].Value = movingModelLod.LevelOfDetail.Value;
+        insertIntoMovingModelLod.Parameters[kindParamName].Value = movingModelLod.MMDC.Kind;
+        insertIntoMovingModelLod.Parameters[domainParamName].Value = movingModelLod.MMDC.Domain;
+        insertIntoMovingModelLod.Parameters[countryParamName].Value = movingModelLod.MMDC.Country;
+        insertIntoMovingModelLod.Parameters[categoryParamName].Value = movingModelLod.MMDC.Category;
+        insertIntoMovingModelLod.Parameters[subcategoryParamName].Value = movingModelLod.MMDC.Subcategory;
+        insertIntoMovingModelLod.Parameters[specificParamName].Value = movingModelLod.MMDC.Specific;
+        insertIntoMovingModelLod.Parameters[extraParamName].Value = movingModelLod.MMDC.Extra;
+        insertIntoMovingModelLod.Parameters[fileTypeParamName].Value = movingModelLod.FileType;
         insertIntoMovingModelLod.Parameters[contentParamName].Value = content;
 
         return insertIntoMovingModelLod.ExecuteNonQuery();
     }
 
-    public bool TrySelectFromMovingModelLod(string cdbName, MovingModelGeometryLod movingModelGeometryLod, [NotNullWhen(true)] out byte[] content)
+    public bool TrySelectFromMovingModelLod(string cdbName, MovingModelLod movingModelLod, [NotNullWhen(true)] out byte[] content)
     {
         selectFromMovingModelLod.Parameters[cdbParamName].Value = cdbName;
-        selectFromMovingModelLod.Parameters[datasetParamName].Value = movingModelGeometryLod.Dataset.Value;
-        selectFromMovingModelLod.Parameters[cs1ParamName].Value = movingModelGeometryLod.ComponentSelector1;
-        selectFromMovingModelLod.Parameters[cs2ParamName].Value = movingModelGeometryLod.ComponentSelector2;
-        selectFromMovingModelLod.Parameters[lodParamName].Value = movingModelGeometryLod.LevelOfDetail.Value;
-        selectFromMovingModelLod.Parameters[kindParamName].Value = movingModelGeometryLod.MMDC.Kind;
-        selectFromMovingModelLod.Parameters[domainParamName].Value = movingModelGeometryLod.MMDC.Domain;
-        selectFromMovingModelLod.Parameters[countryParamName].Value = movingModelGeometryLod.MMDC.Country;
-        selectFromMovingModelLod.Parameters[categoryParamName].Value = movingModelGeometryLod.MMDC.Category;
-        selectFromMovingModelLod.Parameters[subcategoryParamName].Value = movingModelGeometryLod.MMDC.Subcategory;
-        selectFromMovingModelLod.Parameters[specificParamName].Value = movingModelGeometryLod.MMDC.Specific;
-        selectFromMovingModelLod.Parameters[extraParamName].Value = movingModelGeometryLod.MMDC.Extra;
-        selectFromMovingModelLod.Parameters[fileTypeParamName].Value = movingModelGeometryLod.FileType;
-        using DbDataReader dbDataReader = selectFromMovingModelLod.ExecuteReader(CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
+        selectFromMovingModelLod.Parameters[datasetParamName].Value = movingModelLod.Dataset.Value;
+        selectFromMovingModelLod.Parameters[cs1ParamName].Value = movingModelLod.ComponentSelector1;
+        selectFromMovingModelLod.Parameters[cs2ParamName].Value = movingModelLod.ComponentSelector2;
+        selectFromMovingModelLod.Parameters[lodParamName].Value = movingModelLod.LevelOfDetail.Value;
+        selectFromMovingModelLod.Parameters[kindParamName].Value = movingModelLod.MMDC.Kind;
+        selectFromMovingModelLod.Parameters[domainParamName].Value = movingModelLod.MMDC.Domain;
+        selectFromMovingModelLod.Parameters[countryParamName].Value = movingModelLod.MMDC.Country;
+        selectFromMovingModelLod.Parameters[categoryParamName].Value = movingModelLod.MMDC.Category;
+        selectFromMovingModelLod.Parameters[subcategoryParamName].Value = movingModelLod.MMDC.Subcategory;
+        selectFromMovingModelLod.Parameters[specificParamName].Value = movingModelLod.MMDC.Specific;
+        selectFromMovingModelLod.Parameters[extraParamName].Value = movingModelLod.MMDC.Extra;
+        selectFromMovingModelLod.Parameters[fileTypeParamName].Value = movingModelLod.FileType;
+        using DbDataReader dbDataReader = selectFromMovingModelLod.ExecuteReader(
+            CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
         do
         {
             while (dbDataReader.Read())
@@ -1562,10 +1568,10 @@ public class SQLiteCDB : IDisposable
                 insertIntoMovingModelLod.Dispose();
                 selectFromMovingModel.Dispose();
                 insertIntoMovingModel.Dispose();
-                selectFromGTModelLod.Dispose();
-                insertIntoGTModelLod.Dispose();
-                selectFromGTModel.Dispose();
-                insertIntoGTModel.Dispose();
+                selectFromGeotypicalModelLod.Dispose();
+                insertIntoGeotypicalModelLod.Dispose();
+                selectFromGeotypicalModel.Dispose();
+                insertIntoGeotypicalModel.Dispose();
                 selectFromTextureLod.Dispose();
                 insertIntoTextureLod.Dispose();
                 selectFromTexture.Dispose();

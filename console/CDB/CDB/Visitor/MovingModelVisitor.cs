@@ -38,8 +38,8 @@ public class MovingModelVisitor : VisitorBase
         this.levelOfDetailDirectoryWalker = levelOfDetailDirectoryWalker;
     }
 
-    public delegate void MovingModelAction(MovingModelGeometry movingModel, FileInfo file);
-    public delegate void MovingModelLodAction(MovingModelGeometryLod movingModelLod, FileInfo file);
+    public delegate void MovingModelAction(MovingModel movingModel, FileInfo file);
+    public delegate void MovingModelLodAction(MovingModelLod movingModelLod, FileInfo file);
     public delegate void TextureAction(Texture texture, FileInfo file);
     public delegate void TextureLodAction(TextureLod modelTexture, FileInfo file);
 
@@ -53,13 +53,13 @@ public class MovingModelVisitor : VisitorBase
     /// </para>
     /// </remarks>
     /// <param name="cdbDir">The CDB root directory.</param>
-    /// <param name="modelAction">The action to take for each moving model file.</param>
-    /// <param name="modelLodAction">The action to take for each moving model level of detail file.</param>
+    /// <param name="movingModelAction">The action to take for each moving model file.</param>
+    /// <param name="movingModelLodAction">The action to take for each moving model level of detail file.</param>
     /// <param name="textureAction">The action to take for each texture file.</param>
     /// <param name="textureLodAction">The action to take for each texture level of detail file.</param>
     public void VisitMovingModels(DirectoryInfo cdbDir,
-        MovingModelAction modelAction,
-        MovingModelLodAction modelLodAction,
+        MovingModelAction movingModelAction,
+        MovingModelLodAction movingModelLodAction,
         TextureAction textureAction,
         TextureLodAction textureLodAction)
     {
@@ -89,27 +89,27 @@ public class MovingModelVisitor : VisitorBase
                 // See 3.5.1.2. MModelDescriptor Naming Convention
                 foreach (FileInfo file in entityDir.EnumerateFiles("*", enumerationOptions))
                 {
-                    Match movingModelMatch = MovingModelGeometry.FilenamePattern.Match(file.Name);
+                    Match movingModelMatch = MovingModel.FilenamePattern.Match(file.Name);
                     if (!movingModelMatch.Success)
                     {
                         logger.LogWarning("{File} is not a Moving Model.  Skipping.",
                             file);
                         continue;
                     }
-                    MovingModelGeometry movingModelGeometry = MovingModelGeometry.FromFilenameMatch(movingModelMatch);
+                    MovingModel movingModel = MovingModel.FromFilenameMatch(movingModelMatch);
 
-                    if (datasetFromDirectory != movingModelGeometry.Dataset)
+                    if (datasetFromDirectory != movingModel.Dataset)
                     {
                         logger.LogWarning("Directory {DirectoryDataset} does not match file {FileDataset}",
-                            datasetFromDirectory, movingModelGeometry.Dataset);
+                            datasetFromDirectory, movingModel.Dataset);
                     }
-                    if (disEntityType != movingModelGeometry.MMDC)
+                    if (disEntityType != movingModel.MMDC)
                     {
                         logger.LogWarning("Directory {DirectoryDISCode} does not match file {FileDISCode}",
-                            disEntityType, movingModelGeometry.MMDC);
+                            disEntityType, movingModel.MMDC);
                     }
 
-                    modelAction(movingModelGeometry, file);
+                    movingModelAction(movingModel, file);
                 }
 
                 // See 3.5.3. MModel Directory Structure 3: Signature
@@ -118,32 +118,32 @@ public class MovingModelVisitor : VisitorBase
                     foreach (var file in lodDir.EnumerateFiles("*", enumerationOptions))
                     {
                         // See 3.5.3.1. Naming Convention
-                        Match movingModelGeometryLodMatch = MovingModelGeometryLod.FilenamePattern.Match(file.Name);
-                        if (!movingModelGeometryLodMatch.Success)
+                        Match movingModelLodMatch = MovingModelLod.FilenamePattern.Match(file.Name);
+                        if (!movingModelLodMatch.Success)
                         {
                             logger.LogTrace("{File} is not a Moving Model Level of Detail.  Skipping.",
                                 file);
                             continue;
                         }
-                        MovingModelGeometryLod movingModelGeometryLod = MovingModelGeometryLod.FromFilenameMatch(movingModelGeometryLodMatch);
+                        MovingModelLod movingModelLod = MovingModelLod.FromFilenameMatch(movingModelLodMatch);
 
-                        if (datasetFromDirectory != movingModelGeometryLod.Dataset)
+                        if (datasetFromDirectory != movingModelLod.Dataset)
                         {
                             logger.LogWarning("Directory {DirectoryDataset} does not match file {FileDataset}",
-                                datasetFromDirectory, movingModelGeometryLod.Dataset);
+                                datasetFromDirectory, movingModelLod.Dataset);
                         }
-                        if (disEntityType != movingModelGeometryLod.MMDC)
+                        if (disEntityType != movingModelLod.MMDC)
                         {
                             logger.LogWarning("Directory {DirectoryDISCode} does not match file {FileDISCode}",
-                                disEntityType, movingModelGeometryLod.MMDC);
+                                disEntityType, movingModelLod.MMDC);
                         }
-                        if (lod != movingModelGeometryLod.LevelOfDetail)
+                        if (lod != movingModelLod.LevelOfDetail)
                         {
                             logger.LogWarning("Directory {DirectoryLod} does not match file {FileLod}",
-                                lod, movingModelGeometryLod.LevelOfDetail);
+                                lod, movingModelLod.LevelOfDetail);
                         }
 
-                        modelLodAction(movingModelGeometryLod, file);
+                        movingModelLodAction(movingModelLod, file);
                     }
                 });
             });
@@ -164,10 +164,10 @@ public class MovingModelVisitor : VisitorBase
                             logger.LogWarning("Directory {DirectoryDataset} does not match file {FileDataset}",
                                 datasetFromDirectory, textureLod.Dataset);
                         }
-                        if (textureName != textureLod.TextureName)
+                        if (textureName != textureLod.Name)
                         {
                             logger.LogWarning("Directory {DirectoryTexture} does not match file {FileTexture}",
-                                textureName, textureLod.TextureName);
+                                textureName, textureLod.Name);
                         }
 
                         textureLodAction(textureLod, file);

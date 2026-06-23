@@ -9,7 +9,7 @@ namespace Silnith.CDB.Visitor;
 /// and calls a delegate for every file that matches the expected
 /// structure and name.
 /// </summary>
-public class TiledDatasetVisitor : VisitorBase
+public class TileVisitor : VisitorBase
 {
     /// <summary>
     /// A pattern that matches level 5 directories.
@@ -26,7 +26,7 @@ public class TiledDatasetVisitor : VisitorBase
     } = new(@"^U(?<up>\d+)$",
         RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
 
-    private readonly ILogger<TiledDatasetVisitor> logger;
+    private readonly ILogger<TileVisitor> logger;
 
     private readonly LevelOfDetailDirectoryWalker levelOfDetailDirectoryWalker;
 
@@ -35,7 +35,7 @@ public class TiledDatasetVisitor : VisitorBase
     /// </summary>
     /// <param name="logger">A logger.</param>
     /// <param name="levelOfDetailDirectoryWalker">A visitor for levels of detail directories.</param>
-    public TiledDatasetVisitor(ILogger<TiledDatasetVisitor> logger,
+    public TileVisitor(ILogger<TileVisitor> logger,
         LevelOfDetailDirectoryWalker levelOfDetailDirectoryWalker)
     {
         ArgumentNullException.ThrowIfNull(logger);
@@ -62,8 +62,8 @@ public class TiledDatasetVisitor : VisitorBase
     /// </para>
     /// </remarks>
     /// <param name="cdbDir">The CDB root directory.</param>
-    /// <param name="visitFile">The action to call for every file found.</param>
-    public void VisitTiles(DirectoryInfo cdbDir, VisitTiledDatasetFile visitFile)
+    /// <param name="visitTile">The action to call for every file found.</param>
+    public void VisitTiles(DirectoryInfo cdbDir, VisitTiledDatasetFile visitTile)
     {
         DirectoryInfo tilesDir = new(Path.Combine(cdbDir.FullName, "Tiles"));
         if (!tilesDir.Exists)
@@ -121,12 +121,12 @@ public class TiledDatasetVisitor : VisitorBase
 
                             foreach (FileInfo file in upDir.EnumerateFiles("*", enumerationOptions))
                             {
-                                Match fileMatch = Tile.TiledDatasetFilenamePattern.Match(file.Name);
-                                if (!fileMatch.Success)
+                                Match tileMatch = Tile.TiledDatasetFilenamePattern.Match(file.Name);
+                                if (!tileMatch.Success)
                                 {
                                     continue;
                                 }
-                                Tile tile = Tile.FromTiledDatasetFilenameMatch(fileMatch);
+                                Tile tile = Tile.FromTiledDatasetFilenameMatch(tileMatch);
 
                                 if (latitudeFromDirectory != tile.LatitudeValue)
                                 {
@@ -153,7 +153,7 @@ public class TiledDatasetVisitor : VisitorBase
                                     logger.LogError("Directory level 5 {DirectoryUref} does not match file {FileUref}", upFromDirectory, tile.Up);
                                 }
 
-                                visitFile(tile, file);
+                                visitTile(tile, file);
                             }
                         }
                     });

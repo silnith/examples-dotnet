@@ -19,12 +19,12 @@ internal class Program
         hostApplicationBuilder.Services.AddSingleton<FeatureCodeDirectoryWalker>();
         hostApplicationBuilder.Services.AddSingleton<LevelOfDetailDirectoryWalker>();
         hostApplicationBuilder.Services.AddSingleton<TextureDirectoryVisitor>();
-        hostApplicationBuilder.Services.AddSingleton<TiledDatasetVisitor>();
+        hostApplicationBuilder.Services.AddSingleton<TileVisitor>();
 
         hostApplicationBuilder.Services.AddSingleton<MetadataVisitor>();
-        hostApplicationBuilder.Services.AddSingleton<GTModelVisitor>();
+        hostApplicationBuilder.Services.AddSingleton<GeotypicalModelVisitor>();
         hostApplicationBuilder.Services.AddSingleton<MovingModelVisitor>();
-        hostApplicationBuilder.Services.AddSingleton<TiledDatasetVisitor>();
+        hostApplicationBuilder.Services.AddSingleton<TileVisitor>();
         hostApplicationBuilder.Services.AddSingleton<NavigationVisitor>();
 
         return hostApplicationBuilder.Build();
@@ -45,10 +45,10 @@ internal class Program
             RecursiveTriggers = true,
             Pooling = true,
         };
-        using SqliteConnection dbConnection = new(connectionStringBuilder.ConnectionString);
-        dbConnection.Open();
+        using SqliteConnection connection = new(connectionStringBuilder.ConnectionString);
+        connection.Open();
 
-        using SQLiteCDB sqliteCDB = new(dbConnection);
+        using SQLiteCDB sqliteCDB = new(connection);
 
         string cdbName = "CDB";
         sqliteCDB.InsertIntoCDB(cdbName);
@@ -66,16 +66,16 @@ internal class Program
         }
         // GTModel
         {
-            GTModelVisitor gtModelVisitor = host.Services.GetRequiredService<GTModelVisitor>();
+            GeotypicalModelVisitor gtModelVisitor = host.Services.GetRequiredService<GeotypicalModelVisitor>();
 
             gtModelVisitor.VisitGeotypicalModels(cdbRoot,
-                (geometry, file) =>
+                (geotypicalModel, file) =>
                 {
-                    int rowsAffected = sqliteCDB.InsertIntoGTModel(cdbName, geometry, File.ReadAllBytes(file.FullName));
+                    int rowsAffected = sqliteCDB.InsertIntoGeotypicalModel(cdbName, geotypicalModel, File.ReadAllBytes(file.FullName));
                 },
-                (geometryLod, file) =>
+                (geotypicalModelLod, file) =>
                 {
-                    int rowsAffected = sqliteCDB.InsertIntoGeotypicalModelLod(cdbName, geometryLod, File.ReadAllBytes(file.FullName));
+                    int rowsAffected = sqliteCDB.InsertIntoGeotypicalModelLod(cdbName, geotypicalModelLod, File.ReadAllBytes(file.FullName));
                 },
                 (texture, file) =>
                 {
@@ -91,13 +91,13 @@ internal class Program
             MovingModelVisitor movingModelVisitor = host.Services.GetRequiredService<MovingModelVisitor>();
 
             movingModelVisitor.VisitMovingModels(cdbRoot,
-                (movingModelGeometry, file) =>
+                (movingModel, file) =>
                 {
-                    int rowsAffected = sqliteCDB.InsertIntoMovingModel(cdbName, movingModelGeometry, File.ReadAllBytes(file.FullName));
+                    int rowsAffected = sqliteCDB.InsertIntoMovingModel(cdbName, movingModel, File.ReadAllBytes(file.FullName));
                 },
-                (movingModelGeometryLod, file) =>
+                (movingModelLod, file) =>
                 {
-                    int rowsAffected = sqliteCDB.InsertIntoMovingModelLod(cdbName, movingModelGeometryLod, File.ReadAllBytes(file.FullName));
+                    int rowsAffected = sqliteCDB.InsertIntoMovingModelLod(cdbName, movingModelLod, File.ReadAllBytes(file.FullName));
                 },
                 (texture, file) =>
                 {
@@ -110,7 +110,7 @@ internal class Program
         }
         // Tiles
         {
-            TiledDatasetVisitor tiledDatasetVisitor = host.Services.GetRequiredService<TiledDatasetVisitor>();
+            TileVisitor tiledDatasetVisitor = host.Services.GetRequiredService<TileVisitor>();
 
             tiledDatasetVisitor.VisitTiles(cdbRoot, (tile, file) =>
             {
@@ -198,6 +198,6 @@ internal class Program
             });
         }
 
-        dbConnection.Close();
+        connection.Close();
     }
 }

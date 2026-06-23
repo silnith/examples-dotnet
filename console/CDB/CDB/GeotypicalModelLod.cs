@@ -13,16 +13,16 @@ namespace Silnith.CDB;
 /// <param name="LevelOfDetail">The level of detail.</param>
 /// <param name="FeatureCode">The feature code.</param>
 /// <param name="FeatureSubcode">The feature subcode.</param>
-/// <param name="ModelName">The name of the model.</param>
+/// <param name="Name">The name of the model.</param>
 /// <param name="FileType">The file type.</param>
-public record GTModelGeometryLod(
+public record GeotypicalModelLod(
         Dataset Dataset,
         [property: Range(0, 999)] int ComponentSelector1,
         [property: Range(0, 999)] int ComponentSelector2,
         LevelOfDetail LevelOfDetail,
         FeatureCode FeatureCode,
         [property: Range(0, 999)] int FeatureSubcode,
-        string ModelName,
+        string Name,
         string FileType)
 {
     /// <summary>
@@ -56,7 +56,7 @@ public record GTModelGeometryLod(
     /// </summary>
     /// <param name="match">A successful match against <see cref="FilenamePattern"/>.</param>
     /// <returns>The Geotypical Model Geometry Level of Detail.</returns>
-    public static GTModelGeometryLod FromFilenameMatch(Match match)
+    public static GeotypicalModelLod FromFilenameMatch(Match match)
     {
         return new(
             new Dataset(int.Parse(match.Groups["dataset"].Value, CultureInfo.InvariantCulture)),
