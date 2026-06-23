@@ -45,7 +45,7 @@ public class MetadataVisitor : VisitorBase
         this.logger = logger;
     }
 
-    public delegate void MetadataFileVisitor(string name, string extension, FileInfo file);
+    public delegate void MetadataFileVisitor(Metadata metadata, FileInfo file);
 
     /// <summary>
     /// Walks the Metadata directory and visits all files.
@@ -66,13 +66,14 @@ public class MetadataVisitor : VisitorBase
         {
             string name = file.Name.Remove(file.Name.Length - file.Extension.Length);
             string extension = file.Extension.Substring(1);
+            Metadata metadata = new(name, extension);
 
             if (!recognizedMetadata.Contains(name))
             {
-                logger.LogInformation("Unrecognized Metadata {File}", name);
+                logger.LogInformation("Unrecognized Metadata {Metadata}", metadata);
             }
 
-            visitMetadataFile(name, extension, file);
+            visitMetadataFile(metadata, file);
         }
     }
 }

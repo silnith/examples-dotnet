@@ -505,10 +505,10 @@ internal class Program
                 insertIntoMetadataCommand.Parameters[cdbParamName].Value = cdbName;
             }
 
-            metadataVisitor.VisitMetadata(cdbRoot, (name, ext, file) =>
+            metadataVisitor.VisitMetadata(cdbRoot, (metadata, file) =>
             {
-                insertIntoMetadataCommand.Parameters[nameParamName].Value = name;
-                insertIntoMetadataCommand.Parameters[fileTypeParamName].Value = ext;
+                insertIntoMetadataCommand.Parameters[nameParamName].Value = metadata.Name;
+                insertIntoMetadataCommand.Parameters[fileTypeParamName].Value = metadata.FileType;
                 insertIntoMetadataCommand.Parameters[contentParamName].Value = File.ReadAllBytes(file.FullName);
 
                 logger.LogInformation("Inserting Metadata file {File}", file);
