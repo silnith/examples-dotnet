@@ -1,4 +1,5 @@
 using Microsoft.Data.Sqlite;
+using Silnith.CDB.SQLite;
 using System.Data.Common;
 
 namespace Silnith.CDB.Service;
@@ -35,6 +36,7 @@ public class Program
             sqliteConnection.Open();
             return sqliteConnection;
         });
+        builder.Services.AddTransient<SQLiteCDB>();
 
         var app = builder.Build();
 

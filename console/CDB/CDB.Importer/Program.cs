@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Silnith.CDB.SQLite;
 using Silnith.CDB.Visitor;
 using System.Globalization;
 using System.IO.Compression;

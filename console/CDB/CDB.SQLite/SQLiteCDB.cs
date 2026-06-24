@@ -3,7 +3,7 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Silnith.CDB.Importer;
+namespace Silnith.CDB.SQLite;
 
 public class SQLiteCDB : IDisposable
 {
@@ -1123,26 +1123,26 @@ public class SQLiteCDB : IDisposable
 
         this.dbConnection = dbConnection;
         CreateSqliteSchema(this.dbConnection);
-        this.insertIntoCDB = CreateInsertIntoCDBCommand(this.dbConnection);
-        this.selectFromCDB = CreateSelectFromCDBCommand(this.dbConnection);
-        this.insertIntoMetadata = CreateInsertIntoMetadataCommand(this.dbConnection);
-        this.selectFromMetadata = CreateSelectFromMetadataCommand(this.dbConnection);
-        this.insertIntoTexture = CreateInsertIntoTextureCommand(this.dbConnection);
-        this.selectFromTexture = CreateSelectFromTextureCommand(this.dbConnection);
-        this.insertIntoTextureLod = CreateInsertIntoTextureLodCommand(this.dbConnection);
-        this.selectFromTextureLod = CreateSelectFromTextureLodCommand(this.dbConnection);
-        this.insertIntoGeotypicalModel = CreateInsertIntoGeotypicalModelCommand(this.dbConnection);
-        this.selectFromGeotypicalModel = CreateSelectFromGeotypicalModelCommand(this.dbConnection);
-        this.insertIntoGeotypicalModelLod = CreateInsertIntoGeotypicalModelLodCommand(this.dbConnection);
-        this.selectFromGeotypicalModelLod = CreateSelectFromGeotypicalModelLodCommand(this.dbConnection);
-        this.insertIntoMovingModel = CreateInsertIntoMovingModelCommand(this.dbConnection);
-        this.selectFromMovingModel = CreateSelectFromMovingModelCommand(this.dbConnection);
-        this.insertIntoMovingModelLod = CreateInsertIntoMovingModelLodCommand(this.dbConnection);
-        this.selectFromMovingModelLod = CreateSelectFromMovingModelLodCommand(this.dbConnection);
-        this.insertIntoTile = CreateInsertIntoTileCommand(this.dbConnection);
-        this.selectFromTile = CreateSelectFromTileCommand(this.dbConnection);
-        this.insertIntoNavigation = CreateInsertIntoNavigationCommand(this.dbConnection);
-        this.selectFromNavigation = CreateSelectFromNavigationCommand(this.dbConnection);
+        insertIntoCDB = CreateInsertIntoCDBCommand(this.dbConnection);
+        selectFromCDB = CreateSelectFromCDBCommand(this.dbConnection);
+        insertIntoMetadata = CreateInsertIntoMetadataCommand(this.dbConnection);
+        selectFromMetadata = CreateSelectFromMetadataCommand(this.dbConnection);
+        insertIntoTexture = CreateInsertIntoTextureCommand(this.dbConnection);
+        selectFromTexture = CreateSelectFromTextureCommand(this.dbConnection);
+        insertIntoTextureLod = CreateInsertIntoTextureLodCommand(this.dbConnection);
+        selectFromTextureLod = CreateSelectFromTextureLodCommand(this.dbConnection);
+        insertIntoGeotypicalModel = CreateInsertIntoGeotypicalModelCommand(this.dbConnection);
+        selectFromGeotypicalModel = CreateSelectFromGeotypicalModelCommand(this.dbConnection);
+        insertIntoGeotypicalModelLod = CreateInsertIntoGeotypicalModelLodCommand(this.dbConnection);
+        selectFromGeotypicalModelLod = CreateSelectFromGeotypicalModelLodCommand(this.dbConnection);
+        insertIntoMovingModel = CreateInsertIntoMovingModelCommand(this.dbConnection);
+        selectFromMovingModel = CreateSelectFromMovingModelCommand(this.dbConnection);
+        insertIntoMovingModelLod = CreateInsertIntoMovingModelLodCommand(this.dbConnection);
+        selectFromMovingModelLod = CreateSelectFromMovingModelLodCommand(this.dbConnection);
+        insertIntoTile = CreateInsertIntoTileCommand(this.dbConnection);
+        selectFromTile = CreateSelectFromTileCommand(this.dbConnection);
+        insertIntoNavigation = CreateInsertIntoNavigationCommand(this.dbConnection);
+        selectFromNavigation = CreateSelectFromNavigationCommand(this.dbConnection);
     }
 
     public int InsertIntoCDB(string cdbName)
