@@ -164,6 +164,8 @@ public class SQLiteCDB : IDisposable
          * 
          * If not, the driver will return the entire blob as a MemoryStream,
          * which is fully buffered in memory.
+         * 
+         * https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/blob-io
          */
         const string selectFromMetadata = $"""
             select
