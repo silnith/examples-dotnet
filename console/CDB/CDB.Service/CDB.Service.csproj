@@ -14,6 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\CDB.FileSystem\CDB.FileSystem.csproj" />
         <ProjectReference Include="..\CDB.SQLite\CDB.SQLite.csproj" />
         <ProjectReference Include="..\CDB\CDB.csproj" />
     </ItemGroup>

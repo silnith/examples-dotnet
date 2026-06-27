@@ -5,6 +5,10 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Silnith.CDB.SQLite;
 
+/// <summary>
+/// An encapsulated SQLite database that uses a schema designed for storing
+/// files from a CDB data store.
+/// </summary>
 public class SQLiteCDB : IDisposable
 {
     private static void CreateAndAttachParameter(DbCommand dbCommand, string dbParameterName, DbType dbType)
@@ -66,11 +70,15 @@ public class SQLiteCDB : IDisposable
 
     #endregion
 
+    const string nameColumnName = "name";
+    const string contentColumnName = "content";
+    const string rowidColumnName = "rowid";
+
     #region CDB
 
-    private const string createTableCDB = """
+    private const string createTableCDB = $"""
         create table if not exists CDB (
-            name text primary key
+            {nameColumnName} text primary key
         )
         """;
 
@@ -78,7 +86,7 @@ public class SQLiteCDB : IDisposable
     {
         const string insertIntoCDB = $"""
             insert into CDB (
-                name
+                {nameColumnName}
             ) values (
                 {nameParamName}
             )
@@ -94,7 +102,7 @@ public class SQLiteCDB : IDisposable
     private static DbCommand CreateSelectFromCDBCommand(DbConnection dbConnection)
     {
         const string selectFromCDB = $"""
-            select name
+            select {nameColumnName}
             from CDB
             """;
         DbCommand dbCommand = dbConnection.CreateCommand();
@@ -107,12 +115,12 @@ public class SQLiteCDB : IDisposable
 
     #region Metadata
 
-    private const string createTableMetadata = """
+    private const string createTableMetadata = $"""
         create table if not exists Metadata (
-            cdb text not null references CDB(name),
+            cdb text not null references CDB({nameColumnName}) on delete cascade on update cascade,
             name text not null,
             file_type text not null,
-            content blob not null,
+            {contentColumnName} blob not null,
             primary key(
                 cdb,
                 name,
@@ -128,7 +136,7 @@ public class SQLiteCDB : IDisposable
                 cdb,
                 name,
                 file_type,
-                content
+                {contentColumnName}
             ) values (
                 {cdbParamName},
                 {nameParamName},
@@ -149,8 +157,18 @@ public class SQLiteCDB : IDisposable
 
     private static DbCommand CreateSelectFromMetadataCommand(DbConnection dbConnection)
     {
+        /*
+         * If a select statement for a column of type blob also includes the
+         * implicit rowid column, then the SQLite driver will return the blob
+         * column as type SqliteBlob, which supports streaming the blob contents.
+         * 
+         * If not, the driver will return the entire blob as a MemoryStream,
+         * which is fully buffered in memory.
+         */
         const string selectFromMetadata = $"""
-            select content
+            select
+                {contentColumnName},
+                {rowidColumnName}
             from Metadata
             where cdb = {cdbParamName}
                 and name = {nameParamName}
@@ -170,15 +188,15 @@ public class SQLiteCDB : IDisposable
 
     #region Texture
 
-    private const string createTableTexture = """
+    private const string createTableTexture = $"""
         create table if not exists Texture (
-            cdb text not null references CDB(name),
+            cdb text not null references CDB({nameColumnName}) on delete cascade on update cascade,
             dataset integer not null,
             component_selector_1 integer not null,
             component_selector_2 integer not null,
             texture_name text not null,
             file_type text not null,
-            content blob not null,
+            {contentColumnName} blob not null,
             primary key(
                 cdb,
                 dataset,
@@ -200,7 +218,7 @@ public class SQLiteCDB : IDisposable
                 component_selector_2,
                 texture_name,
                 file_type,
-                content
+                {contentColumnName}
             ) values (
                 {cdbParamName},
                 {datasetParamName},
@@ -228,7 +246,9 @@ public class SQLiteCDB : IDisposable
     private static DbCommand CreateSelectFromTextureCommand(DbConnection dbConnection)
     {
         const string selectFromTexture = $"""
-            select content
+            select
+                {contentColumnName},
+                {rowidColumnName}
             from Texture
             where cdb = {cdbParamName}
                 and dataset = {datasetParamName}
@@ -254,16 +274,16 @@ public class SQLiteCDB : IDisposable
 
     #region Texture LOD
 
-    private const string createTableTextureLod = """
+    private const string createTableTextureLod = $"""
         create table if not exists TextureLod (
-            cdb text not null references CDB(name),
+            cdb text not null references CDB({nameColumnName}) on delete cascade on update cascade,
             dataset integer not null,
             component_selector_1 integer not null,
             component_selector_2 integer not null,
             lod integer not null,
             texture_name text not null,
             file_type text not null,
-            content blob not null,
+            {contentColumnName} blob not null,
             primary key(
                 cdb,
                 dataset,
@@ -287,7 +307,7 @@ public class SQLiteCDB : IDisposable
                 lod,
                 texture_name,
                 file_type,
-                content
+                {contentColumnName}
             ) values (
                 {cdbParamName},
                 {datasetParamName},
@@ -317,7 +337,9 @@ public class SQLiteCDB : IDisposable
     private static DbCommand CreateSelectFromTextureLodCommand(DbConnection dbConnection)
     {
         const string selectFromTextureLod = $"""
-            select content
+            select
+                {contentColumnName},
+                {rowidColumnName}
             from TextureLod
             where cdb = {cdbParamName}
                 and dataset = {datasetParamName}
@@ -345,9 +367,9 @@ public class SQLiteCDB : IDisposable
 
     #region Geotypical Model
 
-    private const string createTableGeotypicalModel = """
+    private const string createTableGeotypicalModel = $"""
         create table if not exists GeotypicalModel (
-            cdb text not null references CDB(name),
+            cdb text not null references CDB({nameColumnName}) on delete cascade on update cascade,
             dataset integer not null,
             component_selector_1 integer not null,
             component_selector_2 integer not null,
@@ -357,7 +379,7 @@ public class SQLiteCDB : IDisposable
             feature_subcode integer not null,
             model_name text not null,
             file_type text not null,
-            content blob not null,
+            {contentColumnName} blob not null,
             primary key(
                 cdb,
                 dataset,
@@ -387,7 +409,7 @@ public class SQLiteCDB : IDisposable
                 feature_subcode,
                 model_name,
                 file_type,
-                content
+                {contentColumnName}
             ) values (
                 {cdbParamName},
                 {datasetParamName},
@@ -423,7 +445,9 @@ public class SQLiteCDB : IDisposable
     private static DbCommand CreateSelectFromGeotypicalModelCommand(DbConnection dbConnection)
     {
         const string selectFromGeotypicalModel = $"""
-            select content
+            select
+                {contentColumnName},
+                {rowidColumnName}
             from GeotypicalModel
             where cdb = {cdbParamName}
                 and dataset = {datasetParamName}
@@ -455,11 +479,11 @@ public class SQLiteCDB : IDisposable
 
     #endregion
 
-    #region Geotypical Model Lod
+    #region Geotypical Model LOD
 
-    private const string createTableGeotypicalModelLod = """
+    private const string createTableGeotypicalModelLod = $"""
         create table if not exists GeotypicalModelLod (
-            cdb text not null references CDB(name),
+            cdb text not null references CDB({nameColumnName}) on delete cascade on update cascade,
             dataset integer not null,
             component_selector_1 integer not null,
             component_selector_2 integer not null,
@@ -470,7 +494,7 @@ public class SQLiteCDB : IDisposable
             feature_subcode integer not null,
             model_name text not null,
             file_type text not null,
-            content blob not null,
+            {contentColumnName} blob not null,
             primary key(
                 cdb,
                 dataset,
@@ -502,7 +526,7 @@ public class SQLiteCDB : IDisposable
                 feature_subcode,
                 model_name,
                 file_type,
-                content
+                {contentColumnName}
             ) values (
                 {cdbParamName},
                 {datasetParamName},
@@ -540,7 +564,9 @@ public class SQLiteCDB : IDisposable
     private static DbCommand CreateSelectFromGeotypicalModelLodCommand(DbConnection dbConnection)
     {
         const string selectFromGeotypicalModelLod = $"""
-            select content
+            select
+                {contentColumnName},
+                {rowidColumnName}
             from GeotypicalModelLod
             where cdb = {cdbParamName}
                 and dataset = {datasetParamName}
@@ -576,9 +602,9 @@ public class SQLiteCDB : IDisposable
 
     #region Moving Model
 
-    private const string createTableMovingModel = """
+    private const string createTableMovingModel = $"""
         create table if not exists MovingModel (
-            cdb text not null references CDB(name),
+            cdb text not null references CDB({nameColumnName}) on delete cascade on update cascade,
             dataset integer not null,
             component_selector_1 integer not null,
             component_selector_2 integer not null,
@@ -590,7 +616,7 @@ public class SQLiteCDB : IDisposable
             specific integer not null,
             extra integer not null,
             file_type text not null,
-            content blob not null,
+            {contentColumnName} blob not null,
             primary key(
                 cdb,
                 dataset,
@@ -624,7 +650,7 @@ public class SQLiteCDB : IDisposable
                 specific,
                 extra,
                 file_type,
-                content
+                {contentColumnName}
             ) values (
                 {cdbParamName},
                 {datasetParamName},
@@ -664,7 +690,9 @@ public class SQLiteCDB : IDisposable
     private static DbCommand CreateSelectFromMovingModelCommand(DbConnection dbConnection)
     {
         const string selectFromMovingModel = $"""
-            select content
+            select
+                {contentColumnName},
+                {rowidColumnName}
             from MovingModel
             where cdb = {cdbParamName}
                 and dataset = {datasetParamName}
@@ -702,9 +730,9 @@ public class SQLiteCDB : IDisposable
 
     #region Moving Model LOD
 
-    private const string createTableMovingModelLod = """
+    private const string createTableMovingModelLod = $"""
         create table if not exists MovingModelLod (
-            cdb text not null references CDB(name),
+            cdb text not null references CDB({nameColumnName}) on delete cascade on update cascade,
             dataset integer not null,
             component_selector_1 integer not null,
             component_selector_2 integer not null,
@@ -717,7 +745,7 @@ public class SQLiteCDB : IDisposable
             specific integer not null,
             extra integer not null,
             file_type text not null,
-            content blob not null,
+            {contentColumnName} blob not null,
             primary key(
                 cdb,
                 dataset,
@@ -753,7 +781,7 @@ public class SQLiteCDB : IDisposable
                 specific,
                 extra,
                 file_type,
-                content
+                {contentColumnName}
             ) values (
                 {cdbParamName},
                 {datasetParamName},
@@ -795,7 +823,9 @@ public class SQLiteCDB : IDisposable
     private static DbCommand CreateSelectFromMovingModelLodCommand(DbConnection dbConnection)
     {
         const string selectFromMovingModelLod = $"""
-            select content
+            select
+                {contentColumnName},
+                {rowidColumnName}
             from MovingModelLod
             where cdb = {cdbParamName}
                 and dataset = {datasetParamName}
@@ -835,9 +865,9 @@ public class SQLiteCDB : IDisposable
 
     #region Tile
 
-    private const string CreateTableTile = """
+    private const string CreateTableTile = $"""
         create table if not exists Tile (
-            cdb text not null references CDB(name),
+            cdb text not null references CDB({nameColumnName}) on delete cascade on update cascade,
             latitude integer not null,
             longitude integer not null,
             dataset integer not null,
@@ -847,7 +877,7 @@ public class SQLiteCDB : IDisposable
             up integer not null,
             right integer not null,
             file_type text not null,
-            content blob not null,
+            {contentColumnName} blob not null,
             primary key(
                 cdb,
                 latitude,
@@ -877,7 +907,7 @@ public class SQLiteCDB : IDisposable
                 up,
                 right,
                 file_type,
-                content
+                {contentColumnName}
             ) values (
                 {cdbParamName},
                 {latitudeParamName},
@@ -913,7 +943,9 @@ public class SQLiteCDB : IDisposable
     private static DbCommand CreateSelectFromTileCommand(DbConnection dbConnection)
     {
         const string selectFromTile = $"""
-            select content
+            select
+                {contentColumnName},
+                {rowidColumnName}
             from Tile
             where cdb = {cdbParamName}
                 and latitude = {latitudeParamName}
@@ -947,14 +979,14 @@ public class SQLiteCDB : IDisposable
 
     #region Navigation
 
-    private const string createTableNavigation = """
+    private const string createTableNavigation = $"""
         create table if not exists Navigation (
-            cdb text not null references CDB(name),
+            cdb text not null references CDB({nameColumnName}) on delete cascade on update cascade,
             dataset integer not null,
             component_selector_1 integer not null,
             component_selector_2 integer not null,
             file_type text not null,
-            content blob not null,
+            {contentColumnName} blob not null,
             primary key(
                 cdb,
                 dataset,
@@ -974,7 +1006,7 @@ public class SQLiteCDB : IDisposable
                 component_selector_1,
                 component_selector_2,
                 file_type,
-                content
+                {contentColumnName}
             ) values (
                 {cdbParamName},
                 {datasetParamName},
@@ -1000,7 +1032,9 @@ public class SQLiteCDB : IDisposable
     private static DbCommand CreateSelectFromNavigationCommand(DbConnection dbConnection)
     {
         const string selectFromNavigation = $"""
-            select content
+            select
+                {contentColumnName},
+                {rowidColumnName}
             from Navigation
             where cdb = {cdbParamName}
                 and dataset = {datasetParamName}
@@ -1022,7 +1056,7 @@ public class SQLiteCDB : IDisposable
 
     #endregion
 
-    private static void CreateSqliteSchema(DbConnection dbConnection)
+    private static void CreateSchema(DbConnection dbConnection)
     {
         int rowsAffected;
         using DbTransaction dbTransaction = dbConnection.BeginTransaction(IsolationLevel.Serializable);
@@ -1073,7 +1107,9 @@ public class SQLiteCDB : IDisposable
         dbTransaction.Commit();
     }
 
-    private readonly SqliteConnection dbConnection;
+    private readonly DbConnection dbConnection;
+
+    #region Prepared Statement Data Members
 
     private readonly DbCommand insertIntoCDB;
 
@@ -1115,42 +1151,67 @@ public class SQLiteCDB : IDisposable
 
     private readonly DbCommand selectFromNavigation;
 
-    private bool disposedValue;
+    #endregion
 
-    public SQLiteCDB(SqliteConnection dbConnection)
+    /// <summary>
+    /// Creates a new CDB storage backend using the provided SQLite connection
+    /// string.
+    /// </summary>
+    /// <param name="connectionString">The connection string.</param>
+    /// <seealso cref="SqliteConnectionStringBuilder"/>
+    public SQLiteCDB(string connectionString)
     {
-        ArgumentNullException.ThrowIfNull(dbConnection);
+        ArgumentNullException.ThrowIfNull(connectionString);
 
-        this.dbConnection = dbConnection;
-        CreateSqliteSchema(this.dbConnection);
-        insertIntoCDB = CreateInsertIntoCDBCommand(this.dbConnection);
-        selectFromCDB = CreateSelectFromCDBCommand(this.dbConnection);
-        insertIntoMetadata = CreateInsertIntoMetadataCommand(this.dbConnection);
-        selectFromMetadata = CreateSelectFromMetadataCommand(this.dbConnection);
-        insertIntoTexture = CreateInsertIntoTextureCommand(this.dbConnection);
-        selectFromTexture = CreateSelectFromTextureCommand(this.dbConnection);
-        insertIntoTextureLod = CreateInsertIntoTextureLodCommand(this.dbConnection);
-        selectFromTextureLod = CreateSelectFromTextureLodCommand(this.dbConnection);
-        insertIntoGeotypicalModel = CreateInsertIntoGeotypicalModelCommand(this.dbConnection);
-        selectFromGeotypicalModel = CreateSelectFromGeotypicalModelCommand(this.dbConnection);
-        insertIntoGeotypicalModelLod = CreateInsertIntoGeotypicalModelLodCommand(this.dbConnection);
-        selectFromGeotypicalModelLod = CreateSelectFromGeotypicalModelLodCommand(this.dbConnection);
-        insertIntoMovingModel = CreateInsertIntoMovingModelCommand(this.dbConnection);
-        selectFromMovingModel = CreateSelectFromMovingModelCommand(this.dbConnection);
-        insertIntoMovingModelLod = CreateInsertIntoMovingModelLodCommand(this.dbConnection);
-        selectFromMovingModelLod = CreateSelectFromMovingModelLodCommand(this.dbConnection);
-        insertIntoTile = CreateInsertIntoTileCommand(this.dbConnection);
-        selectFromTile = CreateSelectFromTileCommand(this.dbConnection);
-        insertIntoNavigation = CreateInsertIntoNavigationCommand(this.dbConnection);
-        selectFromNavigation = CreateSelectFromNavigationCommand(this.dbConnection);
+        dbConnection = new SqliteConnection(connectionString);
+        dbConnection.Open();
+        CreateSchema(dbConnection);
+        insertIntoCDB = CreateInsertIntoCDBCommand(dbConnection);
+        selectFromCDB = CreateSelectFromCDBCommand(dbConnection);
+        insertIntoMetadata = CreateInsertIntoMetadataCommand(dbConnection);
+        selectFromMetadata = CreateSelectFromMetadataCommand(dbConnection);
+        insertIntoTexture = CreateInsertIntoTextureCommand(dbConnection);
+        selectFromTexture = CreateSelectFromTextureCommand(dbConnection);
+        insertIntoTextureLod = CreateInsertIntoTextureLodCommand(dbConnection);
+        selectFromTextureLod = CreateSelectFromTextureLodCommand(dbConnection);
+        insertIntoGeotypicalModel = CreateInsertIntoGeotypicalModelCommand(dbConnection);
+        selectFromGeotypicalModel = CreateSelectFromGeotypicalModelCommand(dbConnection);
+        insertIntoGeotypicalModelLod = CreateInsertIntoGeotypicalModelLodCommand(dbConnection);
+        selectFromGeotypicalModelLod = CreateSelectFromGeotypicalModelLodCommand(dbConnection);
+        insertIntoMovingModel = CreateInsertIntoMovingModelCommand(dbConnection);
+        selectFromMovingModel = CreateSelectFromMovingModelCommand(dbConnection);
+        insertIntoMovingModelLod = CreateInsertIntoMovingModelLodCommand(dbConnection);
+        selectFromMovingModelLod = CreateSelectFromMovingModelLodCommand(dbConnection);
+        insertIntoTile = CreateInsertIntoTileCommand(dbConnection);
+        selectFromTile = CreateSelectFromTileCommand(dbConnection);
+        insertIntoNavigation = CreateInsertIntoNavigationCommand(dbConnection);
+        selectFromNavigation = CreateSelectFromNavigationCommand(dbConnection);
     }
 
+    #region CDB
+
+    /// <summary>
+    /// Inserts a name into the table identifying all the unique data stores
+    /// contained in the SQLite database.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// An <see cref="SQLiteCDB"/> is capable of holding multiple CDB data stores.
+    /// Each distinct data store is identified by a name.
+    /// </para>
+    /// </remarks>
+    /// <param name="cdbName">The name of a new CDB data store.</param>
+    /// <returns>The number of database rows affected.</returns>
     public int InsertIntoCDB(string cdbName)
     {
         insertIntoCDB.Parameters[nameParamName].Value = cdbName;
         return insertIntoCDB.ExecuteNonQuery();
     }
 
+    /// <summary>
+    /// Returns all CDB data store names in the database.
+    /// </summary>
+    /// <returns>All the names of the distinct CDB data stores in the database.</returns>
     public IEnumerable<string> SelectFromCDB()
     {
         List<string> names = new();
@@ -1159,13 +1220,24 @@ public class SQLiteCDB : IDisposable
         {
             while (dbDataReader.Read())
             {
-                string name = dbDataReader.GetString("name");
+                string name = dbDataReader.GetString(nameColumnName);
                 names.Add(name);
             }
         } while (dbDataReader.NextResult());
         return names;
     }
 
+    #endregion
+
+    #region Metadata
+
+    /// <summary>
+    /// Inserts a metadata file into the CDB data store.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store to insert the file into.</param>
+    /// <param name="metadata">The metadata identifier.</param>
+    /// <param name="content">The file contents.</param>
+    /// <returns>The number of rows affected.</returns>
     public int InsertIntoMetadata(string cdbName, Metadata metadata, byte[] content)
     {
         insertIntoMetadata.Parameters[cdbParamName].Value = cdbName;
@@ -1176,7 +1248,33 @@ public class SQLiteCDB : IDisposable
         return insertIntoMetadata.ExecuteNonQuery();
     }
 
+    /// <summary>
+    /// Tries to find and return a metadata file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="content"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="metadata">The metadata identifier.</param>
+    /// <param name="content">An output variable that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
     public bool TrySelectFromMetadata(string cdbName, Metadata metadata, [NotNullWhen(true)] out byte[] content)
+    {
+        using MemoryStream memoryStream = new();
+        bool succeeded = TrySelectFromMetadata(cdbName, metadata, memoryStream);
+        content = memoryStream.ToArray();
+        return succeeded;
+    }
+
+    /// <summary>
+    /// Tries to find and return a metadata file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="output"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="metadata">The metadata identifier.</param>
+    /// <param name="output">A stream that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
+    public bool TrySelectFromMetadata(string cdbName, Metadata metadata, Stream output)
     {
         selectFromMetadata.Parameters[cdbParamName].Value = cdbName;
         selectFromMetadata.Parameters[nameParamName].Value = metadata.Name;
@@ -1187,17 +1285,25 @@ public class SQLiteCDB : IDisposable
         {
             while (dbDataReader.Read())
             {
-                using MemoryStream memoryStream = new();
-                using Stream stream = dbDataReader.GetStream("content");
-                stream.CopyTo(memoryStream);
-                content = memoryStream.GetBuffer();
+                using Stream stream = dbDataReader.GetStream(contentColumnName);
+                stream.CopyTo(output);
                 return true;
             }
         } while (dbDataReader.NextResult());
-        content = Array.Empty<byte>();
         return false;
     }
 
+    #endregion
+
+    #region Texture
+
+    /// <summary>
+    /// Inserts a texture file into the CDB data store.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store to insert the file into.</param>
+    /// <param name="texture">The texture identifier.</param>
+    /// <param name="content">The file contents.</param>
+    /// <returns>The number of rows affected.</returns>
     public int InsertIntoTexture(string cdbName, Texture texture, byte[] content)
     {
         insertIntoTexture.Parameters[cdbParamName].Value = cdbName;
@@ -1211,7 +1317,33 @@ public class SQLiteCDB : IDisposable
         return insertIntoTexture.ExecuteNonQuery();
     }
 
+    /// <summary>
+    /// Tries to find and return a texture file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="content"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="texture">The texture identifier.</param>
+    /// <param name="content">An output variable that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
     public bool TrySelectFromTexture(string cdbName, Texture texture, [NotNullWhen(true)] out byte[] content)
+    {
+        using MemoryStream memoryStream = new();
+        bool succeeded = TrySelectFromTexture(cdbName, texture, memoryStream);
+        content = memoryStream.ToArray();
+        return succeeded;
+    }
+
+    /// <summary>
+    /// Tries to find and return a texture file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="output"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="texture">The texture identifier.</param>
+    /// <param name="output">A stream that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
+    public bool TrySelectFromTexture(string cdbName, Texture texture, Stream output)
     {
         selectFromTexture.Parameters[cdbParamName].Value = cdbName;
         selectFromTexture.Parameters[datasetParamName].Value = texture.Dataset.Value;
@@ -1225,17 +1357,25 @@ public class SQLiteCDB : IDisposable
         {
             while (dbDataReader.Read())
             {
-                using MemoryStream memoryStream = new();
-                using Stream stream = dbDataReader.GetStream("content");
-                stream.CopyTo(memoryStream);
-                content = memoryStream.GetBuffer();
+                using Stream stream = dbDataReader.GetStream(contentColumnName);
+                stream.CopyTo(output);
                 return true;
             }
         } while (dbDataReader.NextResult());
-        content = Array.Empty<byte>();
         return false;
     }
 
+    #endregion
+
+    #region Texture LOD
+
+    /// <summary>
+    /// Inserts a texture mipmap file into the CDB data store.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store to insert the file into.</param>
+    /// <param name="textureLod">The texture mipmap identifier.</param>
+    /// <param name="content">The file contents.</param>
+    /// <returns>The number of rows affected.</returns>
     public int InsertIntoTextureLod(string cdbName, TextureLod textureLod, byte[] content)
     {
         insertIntoTextureLod.Parameters[cdbParamName].Value = cdbName;
@@ -1250,7 +1390,33 @@ public class SQLiteCDB : IDisposable
         return insertIntoTextureLod.ExecuteNonQuery();
     }
 
+    /// <summary>
+    /// Tries to find and return a texture mipmap file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="content"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="textureLod">The texture mipmap identifier.</param>
+    /// <param name="content">An output variable that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
     public bool TrySelectFromTextureLod(string cdbName, TextureLod textureLod, [NotNullWhen(true)] out byte[] content)
+    {
+        using MemoryStream memoryStream = new();
+        bool succeeded = TrySelectFromTextureLod(cdbName, textureLod, memoryStream);
+        content = memoryStream.ToArray();
+        return succeeded;
+    }
+
+    /// <summary>
+    /// Tries to find and return a texture mipmap file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="output"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="textureLod">The texture mipmap identifier.</param>
+    /// <param name="output">A stream that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
+    public bool TrySelectFromTextureLod(string cdbName, TextureLod textureLod, Stream output)
     {
         selectFromTextureLod.Parameters[cdbParamName].Value = cdbName;
         selectFromTextureLod.Parameters[datasetParamName].Value = textureLod.Dataset.Value;
@@ -1265,17 +1431,25 @@ public class SQLiteCDB : IDisposable
         {
             while (dbDataReader.Read())
             {
-                using MemoryStream memoryStream = new();
-                using Stream stream = dbDataReader.GetStream("content");
-                stream.CopyTo(memoryStream);
-                content = memoryStream.GetBuffer();
+                using Stream stream = dbDataReader.GetStream(contentColumnName);
+                stream.CopyTo(output);
                 return true;
             }
         } while (dbDataReader.NextResult());
-        content = Array.Empty<byte>();
         return false;
     }
 
+    #endregion
+
+    #region Geotypical Model
+
+    /// <summary>
+    /// Inserts a geotypical model file into the CDB data store.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store to insert the file into.</param>
+    /// <param name="geotypicalModel">The geotypical model identifier.</param>
+    /// <param name="content">The file contents.</param>
+    /// <returns>The number of rows affected.</returns>
     public int InsertIntoGeotypicalModel(string cdbName, GeotypicalModel geotypicalModel, byte[] content)
     {
         insertIntoGeotypicalModel.Parameters[cdbParamName].Value = cdbName;
@@ -1293,7 +1467,33 @@ public class SQLiteCDB : IDisposable
         return insertIntoGeotypicalModel.ExecuteNonQuery();
     }
 
+    /// <summary>
+    /// Tries to find and return a geotypical model file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="content"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="geotypicalModel">The geotypical model identifier.</param>
+    /// <param name="content">An output variable that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
     public bool TrySelectFromGeotypicalModel(string cdbName, GeotypicalModel geotypicalModel, [NotNullWhen(true)] out byte[] content)
+    {
+        using MemoryStream memoryStream = new();
+        bool succeeded = TrySelectFromGeotypicalModel(cdbName, geotypicalModel, memoryStream);
+        content = memoryStream.ToArray();
+        return succeeded;
+    }
+
+    /// <summary>
+    /// Tries to find and return a geotypical model file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="output"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="geotypicalModel">The geotypical model identifier.</param>
+    /// <param name="output">A stream that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
+    public bool TrySelectFromGeotypicalModel(string cdbName, GeotypicalModel geotypicalModel, Stream output)
     {
         selectFromGeotypicalModel.Parameters[cdbParamName].Value = cdbName;
         selectFromGeotypicalModel.Parameters[datasetParamName].Value = geotypicalModel.Dataset.Value;
@@ -1311,17 +1511,25 @@ public class SQLiteCDB : IDisposable
         {
             while (dbDataReader.Read())
             {
-                using MemoryStream memoryStream = new();
-                using Stream stream = dbDataReader.GetStream("content");
-                stream.CopyTo(memoryStream);
-                content = memoryStream.GetBuffer();
+                using Stream stream = dbDataReader.GetStream(contentColumnName);
+                stream.CopyTo(output);
                 return true;
             }
         } while (dbDataReader.NextResult());
-        content = Array.Empty<byte>();
         return false;
     }
 
+    #endregion
+
+    #region Geotypical Model LOD
+
+    /// <summary>
+    /// Inserts a geotypical model level of detail file into the CDB data store.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store to insert the file into.</param>
+    /// <param name="geotypicalModelLod">The geotypical model level of detail identifier.</param>
+    /// <param name="content">The file contents.</param>
+    /// <returns>The number of rows affected.</returns>
     public int InsertIntoGeotypicalModelLod(string cdbName, GeotypicalModelLod geotypicalModelLod, byte[] content)
     {
         insertIntoGeotypicalModelLod.Parameters[cdbParamName].Value = cdbName;
@@ -1340,7 +1548,33 @@ public class SQLiteCDB : IDisposable
         return insertIntoGeotypicalModelLod.ExecuteNonQuery();
     }
 
+    /// <summary>
+    /// Tries to find and return a geotypical model level of detail file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="content"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="geotypicalModelLod">The geotypical model level of detail identifier.</param>
+    /// <param name="content">An output variable that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
     public bool TrySelectFromGeotypicalModelLod(string cdbName, GeotypicalModelLod geotypicalModelLod, [NotNullWhen(true)] out byte[] content)
+    {
+        using MemoryStream memoryStream = new();
+        bool succeeded = TrySelectFromGeotypicalModelLod(cdbName, geotypicalModelLod, memoryStream);
+        content = memoryStream.ToArray();
+        return succeeded;
+    }
+
+    /// <summary>
+    /// Tries to find and return a geotypical model level of detail file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="output"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="geotypicalModelLod">The geotypical model level of detail identifier.</param>
+    /// <param name="output">A stream that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
+    public bool TrySelectFromGeotypicalModelLod(string cdbName, GeotypicalModelLod geotypicalModelLod, Stream output)
     {
         selectFromGeotypicalModelLod.Parameters[cdbParamName].Value = cdbName;
         selectFromGeotypicalModelLod.Parameters[datasetParamName].Value = geotypicalModelLod.Dataset.Value;
@@ -1359,17 +1593,25 @@ public class SQLiteCDB : IDisposable
         {
             while (dbDataReader.Read())
             {
-                using MemoryStream memoryStream = new();
-                using Stream stream = dbDataReader.GetStream("content");
-                stream.CopyTo(memoryStream);
-                content = memoryStream.GetBuffer();
+                using Stream stream = dbDataReader.GetStream(contentColumnName);
+                stream.CopyTo(output);
                 return true;
             }
         } while (dbDataReader.NextResult());
-        content = Array.Empty<byte>();
         return false;
     }
 
+    #endregion
+
+    #region Moving Model
+
+    /// <summary>
+    /// Inserts a moving model file into the CDB data store.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store to insert the file into.</param>
+    /// <param name="movingModel">The moving model identifier.</param>
+    /// <param name="content">The file contents.</param>
+    /// <returns>The number of rows affected.</returns>
     public int InsertIntoMovingModel(string cdbName, MovingModel movingModel, byte[] content)
     {
         insertIntoMovingModel.Parameters[cdbParamName].Value = cdbName;
@@ -1389,7 +1631,33 @@ public class SQLiteCDB : IDisposable
         return insertIntoMovingModel.ExecuteNonQuery();
     }
 
+    /// <summary>
+    /// Tries to find and return a moving model file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="content"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="movingModel">The moving model identifier.</param>
+    /// <param name="content">An output variable that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
     public bool TrySelectFromMovingModel(string cdbName, MovingModel movingModel, [NotNullWhen(true)] out byte[] content)
+    {
+        using MemoryStream memoryStream = new();
+        bool succeeded = TrySelectFromMovingModel(cdbName, movingModel, memoryStream);
+        content = memoryStream.ToArray();
+        return succeeded;
+    }
+
+    /// <summary>
+    /// Tries to find and return a moving model file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="output"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="movingModel">The moving model identifier.</param>
+    /// <param name="output">A stream that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
+    public bool TrySelectFromMovingModel(string cdbName, MovingModel movingModel, Stream output)
     {
         selectFromMovingModel.Parameters[cdbParamName].Value = cdbName;
         selectFromMovingModel.Parameters[datasetParamName].Value = movingModel.Dataset.Value;
@@ -1409,17 +1677,25 @@ public class SQLiteCDB : IDisposable
         {
             while (dbDataReader.Read())
             {
-                using MemoryStream memoryStream = new();
-                using Stream stream = dbDataReader.GetStream("content");
-                stream.CopyTo(memoryStream);
-                content = memoryStream.GetBuffer();
+                using Stream stream = dbDataReader.GetStream(contentColumnName);
+                stream.CopyTo(output);
                 return true;
             }
         } while (dbDataReader.NextResult());
-        content = Array.Empty<byte>();
         return false;
     }
 
+    #endregion
+
+    #region Moving Model LOD
+
+    /// <summary>
+    /// Inserts a moving model level of detail file into the CDB data store.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store to insert the file into.</param>
+    /// <param name="movingModelLod">The moving model level of detail identifier.</param>
+    /// <param name="content">The file contents.</param>
+    /// <returns>The number of rows affected.</returns>
     public int InsertIntoMovingModelLod(string cdbName, MovingModelLod movingModelLod, byte[] content)
     {
         insertIntoMovingModelLod.Parameters[cdbParamName].Value = cdbName;
@@ -1440,7 +1716,33 @@ public class SQLiteCDB : IDisposable
         return insertIntoMovingModelLod.ExecuteNonQuery();
     }
 
+    /// <summary>
+    /// Tries to find and return a moving model level of detail file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="content"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="movingModelLod">The moving model level of detail identifier.</param>
+    /// <param name="content">An output variable that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
     public bool TrySelectFromMovingModelLod(string cdbName, MovingModelLod movingModelLod, [NotNullWhen(true)] out byte[] content)
+    {
+        using MemoryStream memoryStream = new();
+        bool succeeded = TrySelectFromMovingModelLod(cdbName, movingModelLod, memoryStream);
+        content = memoryStream.ToArray();
+        return succeeded;
+    }
+
+    /// <summary>
+    /// Tries to find and return a moving model level of detail file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="output"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="movingModelLod">The moving model level of detail identifier.</param>
+    /// <param name="output">A stream that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
+    public bool TrySelectFromMovingModelLod(string cdbName, MovingModelLod movingModelLod, Stream output)
     {
         selectFromMovingModelLod.Parameters[cdbParamName].Value = cdbName;
         selectFromMovingModelLod.Parameters[datasetParamName].Value = movingModelLod.Dataset.Value;
@@ -1461,17 +1763,25 @@ public class SQLiteCDB : IDisposable
         {
             while (dbDataReader.Read())
             {
-                using MemoryStream memoryStream = new();
-                using Stream stream = dbDataReader.GetStream("content");
-                stream.CopyTo(memoryStream);
-                content = memoryStream.GetBuffer();
+                using Stream stream = dbDataReader.GetStream(contentColumnName);
+                stream.CopyTo(output);
                 return true;
             }
         } while (dbDataReader.NextResult());
-        content = Array.Empty<byte>();
         return false;
     }
 
+    #endregion
+
+    #region Tile
+
+    /// <summary>
+    /// Inserts a tiled dataset file into the CDB data store.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store to insert the file into.</param>
+    /// <param name="tile">The tile identifier.</param>
+    /// <param name="content">The file contents.</param>
+    /// <returns>The number of rows affected.</returns>
     public int InsertIntoTile(string cdbName, Tile tile, byte[] content)
     {
         insertIntoTile.Parameters[cdbParamName].Value = cdbName;
@@ -1489,7 +1799,33 @@ public class SQLiteCDB : IDisposable
         return insertIntoTile.ExecuteNonQuery();
     }
 
+    /// <summary>
+    /// Tries to find and return a tiled dataset file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="content"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="tile">The tile identifier.</param>
+    /// <param name="content">An output variable that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
     public bool TrySelectFromTile(string cdbName, Tile tile, [NotNullWhen(true)] out byte[] content)
+    {
+        using MemoryStream memoryStream = new();
+        bool succeeded = TrySelectFromTile(cdbName, tile, memoryStream);
+        content = memoryStream.ToArray();
+        return succeeded;
+    }
+
+    /// <summary>
+    /// Tries to find and return a tiled dataset file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="output"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="tile">The tile identifier.</param>
+    /// <param name="output">A stream that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
+    public bool TrySelectFromTile(string cdbName, Tile tile, Stream output)
     {
         selectFromTile.Parameters[cdbParamName].Value = cdbName;
         selectFromTile.Parameters[latitudeParamName].Value = tile.LatitudeValue.Value;
@@ -1507,30 +1843,64 @@ public class SQLiteCDB : IDisposable
         {
             while (dbDataReader.Read())
             {
-                using MemoryStream memoryStream = new();
-                using Stream stream = dbDataReader.GetStream("content");
-                stream.CopyTo(memoryStream);
-                content = memoryStream.GetBuffer();
+                using Stream stream = dbDataReader.GetStream(contentColumnName);
+                stream.CopyTo(output);
                 return true;
             }
         } while (dbDataReader.NextResult());
-        content = Array.Empty<byte>();
         return false;
     }
 
-    public int InsertIntoNavigation(string cdbName, Navigation navigation, byte[] contents)
+    #endregion
+
+    #region Navigation
+
+    /// <summary>
+    /// Inserts a navigation file into the CDB data store.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store to insert the file into.</param>
+    /// <param name="navigation">The navigation identifier.</param>
+    /// <param name="content">The file contents.</param>
+    /// <returns>The number of rows affected.</returns>
+    public int InsertIntoNavigation(string cdbName, Navigation navigation, byte[] content)
     {
         insertIntoNavigation.Parameters[cdbParamName].Value = cdbName;
         insertIntoNavigation.Parameters[datasetParamName].Value = navigation.Dataset.Value;
         insertIntoNavigation.Parameters[cs1ParamName].Value = navigation.ComponentSelector1;
         insertIntoNavigation.Parameters[cs2ParamName].Value = navigation.ComponentSelector2;
         insertIntoNavigation.Parameters[fileTypeParamName].Value = navigation.FileType;
-        insertIntoNavigation.Parameters[contentParamName].Value = contents;
+        insertIntoNavigation.Parameters[contentParamName].Value = content;
 
         return insertIntoNavigation.ExecuteNonQuery();
     }
 
+    /// <summary>
+    /// Tries to find and return a navigation file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="content"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="navigation">The navigation identifier.</param>
+    /// <param name="content">An output variable that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
     public bool TrySelectFromNavigation(string cdbName, Navigation navigation, [NotNullWhen(true)] out byte[] content)
+    {
+        using MemoryStream memoryStream = new();
+        bool succeeded = TrySelectFromNavigation(cdbName, navigation, memoryStream);
+        content = memoryStream.ToArray();
+        return succeeded;
+    }
+
+    /// <summary>
+    /// Tries to find and return a navigation file from a CDB data store.
+    /// Returns <see langword="true"/> if the file was found, and writes the
+    /// file contents to the <paramref name="output"/> parameter.
+    /// </summary>
+    /// <param name="cdbName">The name of the CDB data store.</param>
+    /// <param name="navigation">The navigation identifier.</param>
+    /// <param name="output">A stream that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and returned.</returns>
+    public bool TrySelectFromNavigation(string cdbName, Navigation navigation, Stream output)
     {
         selectFromNavigation.Parameters[cdbParamName].Value = cdbName;
         selectFromNavigation.Parameters[datasetParamName].Value = navigation.Dataset.Value;
@@ -1543,16 +1913,19 @@ public class SQLiteCDB : IDisposable
         {
             while (dbDataReader.Read())
             {
-                using MemoryStream memoryStream = new();
-                using Stream stream = dbDataReader.GetStream("content");
-                stream.CopyTo(memoryStream);
-                content = memoryStream.GetBuffer();
+                using Stream stream = dbDataReader.GetStream(contentColumnName);
+                stream.CopyTo(output);
                 return true;
             }
         } while (dbDataReader.NextResult());
-        content = Array.Empty<byte>();
         return false;
     }
+
+    #endregion
+
+    #region Dispose Pattern
+
+    private bool disposedValue;
 
     protected virtual void Dispose(bool disposing)
     {
@@ -1593,4 +1966,7 @@ public class SQLiteCDB : IDisposable
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
+
+    #endregion
+
 }

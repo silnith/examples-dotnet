@@ -39,17 +39,14 @@ internal class Program
 
         SqliteConnectionStringBuilder connectionStringBuilder = new()
         {
-            DataSource = ":memory:",
+            DataSource = "CDB.db",
             Mode = SqliteOpenMode.ReadWriteCreate,
             Cache = SqliteCacheMode.Default,
             ForeignKeys = true,
             RecursiveTriggers = true,
             Pooling = true,
         };
-        using SqliteConnection connection = new(connectionStringBuilder.ConnectionString);
-        connection.Open();
-
-        using SQLiteCDB sqliteCDB = new(connection);
+        using SQLiteCDB sqliteCDB = new(connectionStringBuilder.ConnectionString);
 
         string cdbName = "CDB";
         sqliteCDB.InsertIntoCDB(cdbName);
@@ -61,7 +58,7 @@ internal class Program
 
             metadataVisitor.VisitMetadata(cdbRoot, (metadata, file) =>
             {
-                logger.LogInformation("Inserting Metadata file {File}", file);
+                logger.LogInformation("Inserting Metadata {File}", file);
                 int rowsAffected = sqliteCDB.InsertIntoMetadata(cdbName, metadata, File.ReadAllBytes(file.FullName));
             });
         }
@@ -72,18 +69,22 @@ internal class Program
             gtModelVisitor.VisitGeotypicalModels(cdbRoot,
                 (geotypicalModel, file) =>
                 {
+                    logger.LogInformation("Inserting Geotypical Model {File}", file);
                     int rowsAffected = sqliteCDB.InsertIntoGeotypicalModel(cdbName, geotypicalModel, File.ReadAllBytes(file.FullName));
                 },
                 (geotypicalModelLod, file) =>
                 {
+                    logger.LogInformation("Inserting Geotypical Model LOD {File}", file);
                     int rowsAffected = sqliteCDB.InsertIntoGeotypicalModelLod(cdbName, geotypicalModelLod, File.ReadAllBytes(file.FullName));
                 },
                 (texture, file) =>
                 {
+                    logger.LogInformation("Inserting Texture {File}", file);
                     int rowsAffected = sqliteCDB.InsertIntoTexture(cdbName, texture, File.ReadAllBytes(file.FullName));
                 },
                 (textureLod, file) =>
                 {
+                    logger.LogInformation("Inserting Texture LOD {File}", file);
                     int rowsAffected = sqliteCDB.InsertIntoTextureLod(cdbName, textureLod, File.ReadAllBytes(file.FullName));
                 });
         }
@@ -94,18 +95,22 @@ internal class Program
             movingModelVisitor.VisitMovingModels(cdbRoot,
                 (movingModel, file) =>
                 {
+                    logger.LogInformation("Inserting Moving Model {File}", file);
                     int rowsAffected = sqliteCDB.InsertIntoMovingModel(cdbName, movingModel, File.ReadAllBytes(file.FullName));
                 },
                 (movingModelLod, file) =>
                 {
+                    logger.LogInformation("Inserting Moving Model LOD {File}", file);
                     int rowsAffected = sqliteCDB.InsertIntoMovingModelLod(cdbName, movingModelLod, File.ReadAllBytes(file.FullName));
                 },
                 (texture, file) =>
                 {
+                    logger.LogInformation("Inserting Texture {File}", file);
                     int rowsAffected = sqliteCDB.InsertIntoTexture(cdbName, texture, File.ReadAllBytes(file.FullName));
                 },
                 (textureLod, file) =>
                 {
+                    logger.LogInformation("Inserting Texture LOD {File}", file);
                     int rowsAffected = sqliteCDB.InsertIntoTextureLod(cdbName, textureLod, File.ReadAllBytes(file.FullName));
                 });
         }
@@ -115,6 +120,7 @@ internal class Program
 
             tiledDatasetVisitor.VisitTiles(cdbRoot, (tile, file) =>
             {
+                logger.LogInformation("Inserting Tile {File}", file);
                 int rowsAffected = sqliteCDB.InsertIntoTile(cdbName, tile, File.ReadAllBytes(file.FullName));
 
                 Regex zippedTiledDatasetFilenamePatternFeature = new(
@@ -195,10 +201,9 @@ internal class Program
             NavigationVisitor navigationVisitor = host.Services.GetRequiredService<NavigationVisitor>();
             navigationVisitor.VisitNavigationDatasets(cdbRoot, (navigation, file) =>
             {
+                logger.LogInformation("Inserting Navigation {File}", file);
                 int rowsAffected = sqliteCDB.InsertIntoNavigation(cdbName, navigation, File.ReadAllBytes(file.FullName));
             });
         }
-
-        connection.Close();
     }
 }

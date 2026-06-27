@@ -16,27 +16,21 @@ public class Program
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
-        builder.Services.AddSingleton<DbConnectionStringBuilder, SqliteConnectionStringBuilder>(serviceProvider =>
+        //builder.Services.AddSingleton<IDataStore, FileSystemDataStore>(provider => null);
+        builder.Services.AddSingleton<IDataStore, SQLiteDataStore>(provider =>
         {
-            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-            return new()
+            provider.GetRequiredService<IConfiguration>();
+            SqliteConnectionStringBuilder sqliteConnectionStringBuilder = new()
             {
-                DataSource = ":memory:",
-                Mode = SqliteOpenMode.ReadOnly,
-                Cache = SqliteCacheMode.Private,
+                Cache = SqliteCacheMode.Default,
+                DataSource = "CDB.db",
                 ForeignKeys = true,
-                RecursiveTriggers = true,
+                Mode = SqliteOpenMode.ReadWriteCreate,
                 Pooling = true,
+                RecursiveTriggers = true
             };
+            return new("CDB", new DirectoryInfo("."), sqliteConnectionStringBuilder);
         });
-        builder.Services.AddTransient<DbConnection, SqliteConnection>(serviceProvider =>
-        {
-            DbConnectionStringBuilder dbConnectionStringBuilder = serviceProvider.GetRequiredService<DbConnectionStringBuilder>();
-            SqliteConnection sqliteConnection = new(dbConnectionStringBuilder.ConnectionString);
-            sqliteConnection.Open();
-            return sqliteConnection;
-        });
-        builder.Services.AddTransient<SQLiteCDB>();
 
         var app = builder.Build();
 

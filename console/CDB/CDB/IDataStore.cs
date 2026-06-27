@@ -18,11 +18,18 @@ namespace Silnith.CDB;
 /// this interface.
 /// </para>
 /// </remarks>
-public interface IDataStore
+public interface IDataStore : IDisposable
 {
     /// <summary>
-    /// A simple name for the CDB data store.
+    /// A simple identifier for the CDB data store.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Some implementations of the interface may use this value programatically,
+    /// so it should remain stable and consistent for a data store once set.
+    /// Each distinct data store should have a unique value.
+    /// </para>
+    /// </remarks>
     public string Name
     {
         get;
@@ -31,31 +38,18 @@ public interface IDataStore
     /// <summary>
     /// The root directory of the CDB data store.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Consumers of the data store cannot assume that the files in the CDB
+    /// are directly accessible inside of this directory.  Clients must use
+    /// the public API to access files.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="TryReadFile(string, out byte[])"/>
     public DirectoryInfo CdbRoot
     {
         get;
     }
-
-    /// <summary>
-    /// Reads a file out of the CDB and returns its contents.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// The <paramref name="filePathAndName"/> should always begin with one of
-    /// the known root directories.  These are:
-    /// </para>
-    /// <list type="bullet">
-    /// <item><term><c>/Metadata/</c></term></item>
-    /// <item><term><c>/GTModel/</c></term></item>
-    /// <item><term><c>/MModel/</c></term></item>
-    /// <item><term><c>/Tiles/</c></term></item>
-    /// <item><term><c>/Navigation/</c></term></item>
-    /// </list>
-    /// </remarks>
-    /// <param name="filePathAndName">The relative path and filename of the file to read.
-    /// The path should be relative to the CDB root.</param>
-    /// <returns>The file contents, or an empty array.</returns>
-    public byte[] ReadFile(string filePathAndName);
 
     /// <summary>
     /// Tries to read a file out of the CDB and return its contents.
@@ -75,7 +69,29 @@ public interface IDataStore
     /// </remarks>
     /// <param name="filePathAndName">The relative path and filename of the file to read.
     /// The path should be relative to the CDB root.</param>
-    /// <param name="content">The file contents.</param>
+    /// <param name="content">An output variable that will receive the file contents.</param>
     /// <returns><see langword="true"/> if the file was found and its contents returned.</returns>
     public bool TryReadFile(string filePathAndName, [NotNullWhen(true)] out byte[] content);
+
+    /// <summary>
+    /// Tries to read a file out of the CDB and return its contents.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The <paramref name="filePathAndName"/> should always begin with one of
+    /// the known root directories.  These are:
+    /// </para>
+    /// <list type="bullet">
+    /// <item><term><c>/Metadata/</c></term></item>
+    /// <item><term><c>/GTModel/</c></term></item>
+    /// <item><term><c>/MModel/</c></term></item>
+    /// <item><term><c>/Tiles/</c></term></item>
+    /// <item><term><c>/Navigation/</c></term></item>
+    /// </list>
+    /// </remarks>
+    /// <param name="filePathAndName">The relative path and filename of the file to read.
+    /// The path should be relative to the CDB root.</param>
+    /// <param name="output">A stream that will receive the file contents.</param>
+    /// <returns><see langword="true"/> if the file was found and its contents returned.</returns>
+    public bool TryReadFile(string filePathAndName, Stream output);
 }
