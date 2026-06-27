@@ -117,7 +117,7 @@ public class TileVisitor : VisitorBase
                                     upDir);
                                 continue;
                             }
-                            int upFromDirectory = int.Parse(upMatch.Groups[""].Value, CultureInfo.InvariantCulture);
+                            int upFromDirectory = int.Parse(upMatch.Groups["up"].Value, CultureInfo.InvariantCulture);
 
                             foreach (FileInfo file in upDir.EnumerateFiles("*", enumerationOptions))
                             {
