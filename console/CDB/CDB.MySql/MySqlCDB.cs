@@ -1,89 +1,89 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using MySql.Data.MySqlClient;
 using Silnith.CDB.SQL;
 
-namespace Silnith.CDB.SQLite;
+namespace Silnith.CDB.MySql;
 
 /// <summary>
-/// An encapsulated SQLite database that uses a schema designed for storing
+/// A client for a MySql database that uses a schema designed for storing
 /// files from a CDB data store.
 /// </summary>
-public class SQLiteCDB : SQLCDB
+public class MySqlCDB : SQLCDB
 {
 
     #region SQL Parameters
 
     #region Universal Parameters
 
-    private const string cdbParamName = "$cdb";
+    private const string cdbParamName = "@cdb";
 
     /// <inheritdoc/>
     protected override string CdbParamName => cdbParamName;
 
-    private const string datasetParamName = "$dataset";
+    private const string datasetParamName = "@dataset";
 
     /// <inheritdoc/>
     protected override string DatasetParamName => datasetParamName;
 
-    private const string cs1ParamName = "$component_selector_1";
+    private const string cs1ParamName = "@component_selector_1";
 
     /// <inheritdoc/>
     protected override string ComponentSelector1ParamName => cs1ParamName;
 
-    private const string cs2ParamName = "$component_selector_2";
+    private const string cs2ParamName = "@component_selector_2";
 
     /// <inheritdoc/>
     protected override string ComponentSelector2ParamName => cs2ParamName;
 
-    private const string lodParamName = "$level_of_detail";
+    private const string lodParamName = "@level_of_detail";
 
     /// <inheritdoc/>
     protected override string LevelOfDetailParamName => lodParamName;
 
-    private const string fileTypeParamName = "$file_type";
+    private const string fileTypeParamName = "@file_type";
 
     /// <inheritdoc/>
     protected override string FileTypeParamName => fileTypeParamName;
 
-    private const string contentParamName = "$content";
+    private const string contentParamName = "@content";
 
     /// <inheritdoc/>
     protected override string ContentParamName => contentParamName;
 
     #endregion
 
-    private const string metadataNameParamName = "$metadata_name";
+    private const string metadataNameParamName = "@metadata_name";
 
     /// <inheritdoc/>
     protected override string MetadataNameParamName => metadataNameParamName;
 
-    private const string textureNameParamName = "$texture_name";
+    private const string textureNameParamName = "@texture_name";
 
     /// <inheritdoc/>
     protected override string TextureNameParamName => textureNameParamName;
 
-    private const string modelNameParamName = "$model_name";
+    private const string modelNameParamName = "@model_name";
 
     /// <inheritdoc/>
     protected override string ModelNameParamName => modelNameParamName;
 
     #region Feature Code Parameters
 
-    private const string featureCategoryParamName = "$feature_category";
+    private const string featureCategoryParamName = "@feature_category";
 
     /// <inheritdoc/>
     protected override string FeatureCategoryParamName => featureCategoryParamName;
 
-    private const string featureSubcategoryParamName = "$feature_subcategory";
+    private const string featureSubcategoryParamName = "@feature_subcategory";
 
     /// <inheritdoc/>
     protected override string FeatureSubcategoryParamName => featureSubcategoryParamName;
 
-    private const string featureTypeParamName = "$feature_type";
+    private const string featureTypeParamName = "@feature_type";
 
     /// <inheritdoc/>
     protected override string FeatureTypeParamName => featureTypeParamName;
 
-    private const string featureSubcodeParamName = "$feature_subcode";
+    private const string featureSubcodeParamName = "@feature_subcode";
 
     /// <inheritdoc/>
     protected override string FeatureSubcodeParamName => featureSubcodeParamName;
@@ -92,37 +92,37 @@ public class SQLiteCDB : SQLCDB
 
     #region DIS Code Parameters
 
-    private const string kindParamName = "$dis_kind";
+    private const string kindParamName = "@dis_kind";
 
     /// <inheritdoc/>
     protected override string KindParamName => kindParamName;
 
-    private const string domainParamName = "$dis_domain";
+    private const string domainParamName = "@dis_domain";
 
     /// <inheritdoc/>
     protected override string DomainParamName => domainParamName;
 
-    private const string countryParamName = "$dis_country";
+    private const string countryParamName = "@dis_country";
 
     /// <inheritdoc/>
     protected override string CountryParamName => countryParamName;
 
-    private const string categoryParamName = "$dis_category";
+    private const string categoryParamName = "@dis_category";
 
     /// <inheritdoc/>
     protected override string CategoryParamName => categoryParamName;
 
-    private const string subcategoryParamName = "$dis_subcategory";
+    private const string subcategoryParamName = "@dis_subcategory";
 
     /// <inheritdoc/>
     protected override string SubcategoryParamName => subcategoryParamName;
 
-    private const string specificParamName = "$dis_specific";
+    private const string specificParamName = "@dis_specific";
 
     /// <inheritdoc/>
     protected override string SpecificParamName => specificParamName;
 
-    private const string extraParamName = "$dis_extra";
+    private const string extraParamName = "@dis_extra";
 
     /// <inheritdoc/>
     protected override string ExtraParamName => extraParamName;
@@ -131,22 +131,22 @@ public class SQLiteCDB : SQLCDB
 
     #region Tile Parameters
 
-    private const string latitudeParamName = "$latitude";
+    private const string latitudeParamName = "@latitude";
 
     /// <inheritdoc/>
     protected override string LatitudeParamName => latitudeParamName;
 
-    private const string longitudeParamName = "$longitude";
+    private const string longitudeParamName = "@longitude";
 
     /// <inheritdoc/>
     protected override string LongitudeParamName => longitudeParamName;
 
-    private const string upParamName = "$up";
+    private const string upParamName = "@up";
 
     /// <inheritdoc/>
     protected override string UpParamName => upParamName;
 
-    private const string rightParamName = "$right";
+    private const string rightParamName = "@right";
 
     /// <inheritdoc/>
     protected override string RightParamName => rightParamName;
@@ -171,7 +171,7 @@ public class SQLiteCDB : SQLCDB
 
     private const string createTableCDB = $"""
         create table if not exists CDB (
-            {cdbNameColumnName} text primary key
+            {cdbNameColumnName} national character varying primary key
         )
         """;
 
@@ -203,10 +203,10 @@ public class SQLiteCDB : SQLCDB
 
     private const string createTableMetadata = $"""
         create table if not exists Metadata (
-            cdb text not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            name text not null,
-            file_type text not null,
-            {contentColumnName} blob not null,
+            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            name national character varying not null,
+            file_type national character varying not null,
+            {contentColumnName} longblob not null,
             primary key(
                 cdb,
                 name,
@@ -235,21 +235,9 @@ public class SQLiteCDB : SQLCDB
     /// <inheritdoc/>
     protected override string InsertIntoMetadataStatement => insertIntoMetadata;
 
-    /*
-     * If a select statement for a column of type blob also includes the
-     * implicit rowid column, then the SQLite driver will return the blob
-     * column as type SqliteBlob, which supports streaming the blob contents.
-     * 
-     * If not, the driver will return the entire blob as a MemoryStream,
-     * which is fully buffered in memory.
-     * 
-     * https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/blob-io
-     */
-
     private const string selectFromMetadata = $"""
         select
-            {contentColumnName},
-            {rowidColumnName}
+            {contentColumnName}
         from Metadata
         where cdb = {cdbParamName}
             and name = {metadataNameParamName}
@@ -265,13 +253,13 @@ public class SQLiteCDB : SQLCDB
 
     private const string createTableTexture = $"""
         create table if not exists Texture (
-            cdb text not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset integer not null,
+            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            dataset numeric(3,0) not null,
             component_selector_1 integer not null,
             component_selector_2 integer not null,
-            texture_name text not null,
-            file_type text not null,
-            {contentColumnName} blob not null,
+            texture_name national character varying not null,
+            file_type national character varying not null,
+            {contentColumnName} longblob not null,
             primary key(
                 cdb,
                 dataset,
@@ -311,8 +299,7 @@ public class SQLiteCDB : SQLCDB
 
     private const string selectFromTexture = $"""
         select
-            {contentColumnName},
-            {rowidColumnName}
+            {contentColumnName}
         from Texture
         where cdb = {cdbParamName}
             and dataset = {datasetParamName}
@@ -331,14 +318,14 @@ public class SQLiteCDB : SQLCDB
 
     private const string createTableTextureLod = $"""
         create table if not exists TextureLod (
-            cdb text not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
             dataset integer not null,
             component_selector_1 integer not null,
             component_selector_2 integer not null,
             lod integer not null,
-            texture_name text not null,
-            file_type text not null,
-            {contentColumnName} blob not null,
+            texture_name national character varying not null,
+            file_type national character varying not null,
+            {contentColumnName} longblob not null,
             primary key(
                 cdb,
                 dataset,
@@ -381,8 +368,7 @@ public class SQLiteCDB : SQLCDB
 
     private const string selectFromTextureLod = $"""
         select
-            {contentColumnName},
-            {rowidColumnName}
+            {contentColumnName}
         from TextureLod
         where cdb = {cdbParamName}
             and dataset = {datasetParamName}
@@ -402,17 +388,17 @@ public class SQLiteCDB : SQLCDB
 
     private const string createTableGeotypicalModel = $"""
         create table if not exists GeotypicalModel (
-            cdb text not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
             dataset integer not null,
             component_selector_1 integer not null,
             component_selector_2 integer not null,
-            feature_category text not null,
-            feature_subcategory text not null,
+            feature_category national character(1) not null,
+            feature_subcategory national character(1) not null,
             feature_type integer not null,
             feature_subcode integer not null,
-            model_name text not null,
-            file_type text not null,
-            {contentColumnName} blob not null,
+            model_name national character varying not null,
+            file_type national character varying not null,
+            {contentColumnName} longblob not null,
             primary key(
                 cdb,
                 dataset,
@@ -464,8 +450,7 @@ public class SQLiteCDB : SQLCDB
 
     private const string selectFromGeotypicalModel = $"""
         select
-            {contentColumnName},
-            {rowidColumnName}
+            {contentColumnName}
         from GeotypicalModel
         where cdb = {cdbParamName}
             and dataset = {datasetParamName}
@@ -488,18 +473,18 @@ public class SQLiteCDB : SQLCDB
 
     private const string createTableGeotypicalModelLod = $"""
         create table if not exists GeotypicalModelLod (
-            cdb text not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
             dataset integer not null,
             component_selector_1 integer not null,
             component_selector_2 integer not null,
             lod integer not null,
-            feature_category text not null,
-            feature_subcategory text not null,
+            feature_category national character(1) not null,
+            feature_subcategory national character(1) not null,
             feature_type integer not null,
             feature_subcode integer not null,
-            model_name text not null,
-            file_type text not null,
-            {contentColumnName} blob not null,
+            model_name national character varying not null,
+            file_type national character varying not null,
+            {contentColumnName} longblob not null,
             primary key(
                 cdb,
                 dataset,
@@ -554,8 +539,7 @@ public class SQLiteCDB : SQLCDB
 
     private const string selectFromGeotypicalModelLod = $"""
         select
-            {contentColumnName},
-            {rowidColumnName}
+            {contentColumnName}
         from GeotypicalModelLod
         where cdb = {cdbParamName}
             and dataset = {datasetParamName}
@@ -579,7 +563,7 @@ public class SQLiteCDB : SQLCDB
 
     private const string createTableMovingModel = $"""
         create table if not exists MovingModel (
-            cdb text not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
             dataset integer not null,
             component_selector_1 integer not null,
             component_selector_2 integer not null,
@@ -590,8 +574,8 @@ public class SQLiteCDB : SQLCDB
             subcategory integer not null,
             specific integer not null,
             extra integer not null,
-            file_type text not null,
-            {contentColumnName} blob not null,
+            file_type national character varying not null,
+            {contentColumnName} longblob not null,
             primary key(
                 cdb,
                 dataset,
@@ -649,8 +633,7 @@ public class SQLiteCDB : SQLCDB
 
     private const string selectFromMovingModel = $"""
         select
-            {contentColumnName},
-            {rowidColumnName}
+            {contentColumnName}
         from MovingModel
         where cdb = {cdbParamName}
             and dataset = {datasetParamName}
@@ -675,7 +658,7 @@ public class SQLiteCDB : SQLCDB
 
     private const string createTableMovingModelLod = $"""
         create table if not exists MovingModelLod (
-            cdb text not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
             dataset integer not null,
             component_selector_1 integer not null,
             component_selector_2 integer not null,
@@ -687,8 +670,8 @@ public class SQLiteCDB : SQLCDB
             subcategory integer not null,
             specific integer not null,
             extra integer not null,
-            file_type text not null,
-            {contentColumnName} blob not null,
+            file_type national character varying not null,
+            {contentColumnName} longblob not null,
             primary key(
                 cdb,
                 dataset,
@@ -749,8 +732,7 @@ public class SQLiteCDB : SQLCDB
 
     private const string selectFromMovingModelLod = $"""
         select
-            {contentColumnName},
-            {rowidColumnName}
+            {contentColumnName}
         from MovingModelLod
         where cdb = {cdbParamName}
             and dataset = {datasetParamName}
@@ -776,7 +758,7 @@ public class SQLiteCDB : SQLCDB
 
     private const string createTableTile = $"""
         create table if not exists Tile (
-            cdb text not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
             latitude integer not null,
             longitude integer not null,
             dataset integer not null,
@@ -785,8 +767,8 @@ public class SQLiteCDB : SQLCDB
             lod integer not null,
             up integer not null,
             right integer not null,
-            file_type text not null,
-            {contentColumnName} blob not null,
+            file_type national character varying not null,
+            {contentColumnName} longblob not null,
             primary key(
                 cdb,
                 latitude,
@@ -838,8 +820,7 @@ public class SQLiteCDB : SQLCDB
 
     private const string selectFromTile = $"""
         select
-            {contentColumnName},
-            {rowidColumnName}
+            {contentColumnName}
         from Tile
         where cdb = {cdbParamName}
             and latitude = {latitudeParamName}
@@ -862,7 +843,7 @@ public class SQLiteCDB : SQLCDB
 
     private const string createTableTileArchivedFeature = $"""
         create table if not exists TileArchivedFeature (
-            cdb text not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
             latitude integer not null,
             longitude integer not null,
             dataset integer not null,
@@ -871,13 +852,13 @@ public class SQLiteCDB : SQLCDB
             lod integer not null,
             up integer not null,
             right integer not null,
-            feature_category text not null,
-            feature_subcategory text not null,
+            feature_category national character(1) not null,
+            feature_subcategory national character(1) not null,
             feature_type integer not null,
             feature_subcode integer not null,
-            model_name text not null,
-            file_type text not null,
-            {contentColumnName} blob not null,
+            model_name national character varying not null,
+            file_type national character varying not null,
+            {contentColumnName} longblob not null,
             primary key(
                 cdb,
                 latitude,
@@ -944,8 +925,7 @@ public class SQLiteCDB : SQLCDB
 
     private const string selectFromTileArchivedFeature = $"""
         select
-            {contentColumnName},
-            {rowidColumnName}
+            {contentColumnName}
         from TileArchivedFeature
         where cdb = {cdbParamName}
             and latitude = {latitudeParamName}
@@ -973,7 +953,7 @@ public class SQLiteCDB : SQLCDB
 
     private const string createTableTileArchivedTexture = $"""
         create table if not exists TileArchivedTexture (
-            cdb text not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
             latitude integer not null,
             longitude integer not null,
             dataset integer not null,
@@ -982,9 +962,9 @@ public class SQLiteCDB : SQLCDB
             lod integer not null,
             up integer not null,
             right integer not null,
-            texture_name text not null,
-            file_type text not null,
-            {contentColumnName} blob not null,
+            texture_name national character varying not null,
+            file_type national character varying not null,
+            {contentColumnName} longblob not null,
             primary key(
                 cdb,
                 latitude,
@@ -1039,8 +1019,7 @@ public class SQLiteCDB : SQLCDB
 
     private const string selectFromTileArchivedTexture = $"""
         select
-            {contentColumnName},
-            {rowidColumnName}
+            {contentColumnName}
         from TileArchivedTexture
         where cdb = {cdbParamName}
             and latitude = {latitudeParamName}
@@ -1064,12 +1043,12 @@ public class SQLiteCDB : SQLCDB
 
     private const string createTableNavigation = $"""
         create table if not exists Navigation (
-            cdb text not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
             dataset integer not null,
             component_selector_1 integer not null,
             component_selector_2 integer not null,
-            file_type text not null,
-            {contentColumnName} blob not null,
+            file_type national character varying not null,
+            {contentColumnName} longblob not null,
             primary key(
                 cdb,
                 dataset,
@@ -1106,8 +1085,7 @@ public class SQLiteCDB : SQLCDB
 
     private const string selectFromNavigation = $"""
         select
-            {contentColumnName},
-            {rowidColumnName}
+            {contentColumnName}
         from Navigation
         where cdb = {cdbParamName}
             and dataset = {datasetParamName}
@@ -1121,7 +1099,7 @@ public class SQLiteCDB : SQLCDB
 
     #endregion
 
-    public SQLiteCDB(SqliteConnection sqliteConnection, bool createSchema = false) : base(sqliteConnection, createSchema)
+    public MySqlCDB(MySqlConnection mysqlConnection, bool createSchema = false) : base(mysqlConnection, createSchema)
     {
     }
 

@@ -8,7 +8,7 @@ using System.Globalization;
 using System.IO.Compression;
 using System.Text.RegularExpressions;
 
-namespace Silnith.CDB.SQLite;
+namespace Silnith.CDB.SQL;
 
 /// <summary>
 /// An encapsulated SQLite database that uses a schema designed for storing

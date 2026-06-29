@@ -15,6 +15,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDB.FileSystem", "CDB.FileS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDB.SQL", "CDB.SQL\CDB.SQL.csproj", "{E0DD60D4-FDE4-4B17-93FE-63396CC856BD}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDB.MySql", "CDB.MySql\CDB.MySql.csproj", "{0D582ABF-5637-4CBC-A713-024D4E46A216}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDB.PostgreSQL", "CDB.PostgreSQL\CDB.PostgreSQL.csproj", "{B1F5F41E-8B53-4552-A5A3-855DB79FE051}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +49,14 @@ Global
 		{E0DD60D4-FDE4-4B17-93FE-63396CC856BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E0DD60D4-FDE4-4B17-93FE-63396CC856BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E0DD60D4-FDE4-4B17-93FE-63396CC856BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D582ABF-5637-4CBC-A713-024D4E46A216}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D582ABF-5637-4CBC-A713-024D4E46A216}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D582ABF-5637-4CBC-A713-024D4E46A216}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D582ABF-5637-4CBC-A713-024D4E46A216}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1F5F41E-8B53-4552-A5A3-855DB79FE051}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1F5F41E-8B53-4552-A5A3-855DB79FE051}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1F5F41E-8B53-4552-A5A3-855DB79FE051}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1F5F41E-8B53-4552-A5A3-855DB79FE051}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

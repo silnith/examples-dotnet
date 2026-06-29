@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <AssemblyName>Silnith.CDB.PostgreSQL</AssemblyName>
+        <RootNamespace>Silnith.CDB.PostgreSQL</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Npgsql" Version="9.0.5" />
+      <PackageReference Include="Npgsql.DependencyInjection" Version="9.0.5" />
+      <PackageReference Include="Npgsql.OpenTelemetry" Version="9.0.5" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\CDB.SQL\CDB.SQL.csproj" />
+      <ProjectReference Include="..\CDB\CDB.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
-namespace Silnith.CDB.SQLite;
+namespace Silnith.CDB.SQL;
 
 /// <summary>
 /// A CDB data store that uses SQL as the backing store.
