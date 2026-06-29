@@ -1,6 +1,5 @@
 using Microsoft.Data.Sqlite;
 using Silnith.CDB.SQLite;
-using System.Data.Common;
 
 namespace Silnith.CDB.Service;
 
@@ -17,9 +16,9 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         //builder.Services.AddSingleton<IDataStore, FileSystemDataStore>(provider => null);
-        builder.Services.AddSingleton<IDataStore, SQLiteDataStore>(provider =>
+        builder.Services.AddSingleton(provider =>
         {
-            provider.GetRequiredService<IConfiguration>();
+            IConfiguration configuration = provider.GetRequiredService<IConfiguration>();
             SqliteConnectionStringBuilder sqliteConnectionStringBuilder = new()
             {
                 Cache = SqliteCacheMode.Default,
@@ -29,7 +28,19 @@ public class Program
                 Pooling = true,
                 RecursiveTriggers = true
             };
-            return new("CDB", new DirectoryInfo("."), sqliteConnectionStringBuilder);
+            SqliteConnection sqliteConnection = new(sqliteConnectionStringBuilder.ConnectionString);
+            sqliteConnection.Open();
+            return sqliteConnection;
+        });
+        builder.Services.AddSingleton<SQLCDB, SQLiteCDB>(provider =>
+        {
+            SqliteConnection sqliteConnection = provider.GetRequiredService<SqliteConnection>();
+            return new(sqliteConnection, false);
+        });
+        builder.Services.AddSingleton<IDataStore, SQLDataStore>(provider =>
+        {
+            SQLCDB sqlCDB = provider.GetRequiredService<SQLCDB>();
+            return new("CDB", new DirectoryInfo("."), sqlCDB);
         });
 
         var app = builder.Build();

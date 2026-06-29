@@ -15,6 +15,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\CDB.SQLite\CDB.SQLite.csproj" />
+      <ProjectReference Include="..\CDB.SQL\CDB.SQL.csproj" />
       <ProjectReference Include="..\CDB\CDB.csproj" />
     </ItemGroup>
 

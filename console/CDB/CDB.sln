@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDB.Importer", "CDB.Importe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDB.Service", "CDB.Service\CDB.Service.csproj", "{DD3E48DD-5699-4871-812D-3F165A05B279}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CDB.FileSystem", "CDB.FileSystem\CDB.FileSystem.csproj", "{295839B9-51D1-4285-B114-35F4DFD87D2A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDB.FileSystem", "CDB.FileSystem\CDB.FileSystem.csproj", "{295839B9-51D1-4285-B114-35F4DFD87D2A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDB.SQL", "CDB.SQL\CDB.SQL.csproj", "{E0DD60D4-FDE4-4B17-93FE-63396CC856BD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{295839B9-51D1-4285-B114-35F4DFD87D2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{295839B9-51D1-4285-B114-35F4DFD87D2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{295839B9-51D1-4285-B114-35F4DFD87D2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0DD60D4-FDE4-4B17-93FE-63396CC856BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0DD60D4-FDE4-4B17-93FE-63396CC856BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0DD60D4-FDE4-4B17-93FE-63396CC856BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0DD60D4-FDE4-4B17-93FE-63396CC856BD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

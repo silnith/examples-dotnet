@@ -1,20 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net7.0</TargetFrameworks>
-        <AssemblyName>Silnith.CDB.SQLite</AssemblyName>
-        <RootNamespace>Silnith.CDB.SQLite</RootNamespace>
+        <TargetFramework>net7.0</TargetFramework>
+        <AssemblyName>Silnith.CDB.SQL</AssemblyName>
+        <RootNamespace>Silnith.CDB.SQL</RootNamespace>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Data.Sqlite" Version="7.0.20" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\CDB.SQL\CDB.SQL.csproj" />
         <ProjectReference Include="..\CDB\CDB.csproj" />
     </ItemGroup>
 

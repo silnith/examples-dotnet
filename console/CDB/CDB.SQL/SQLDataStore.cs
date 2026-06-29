@@ -1,28 +1,26 @@
-﻿using Microsoft.Data.Sqlite;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
 namespace Silnith.CDB.SQLite;
 
 /// <summary>
-/// A CDB data store that uses SQLite as the backing store.
+/// A CDB data store that uses SQL as the backing store.
 /// </summary>
-public class SQLiteDataStore : IDataStore
+public class SQLDataStore : IDataStore
 {
-    private readonly SQLiteCDB sqliteCDB;
+    private readonly SQLCDB sqlCDB;
 
     /// <summary>
-    /// Creates a new CDB data store that reads from the specified SQLite database file.
+    /// Creates a new CDB data store that reads from the specified SQL database.
     /// </summary>
     /// <param name="cdbName">The name of the CDB.  This must be the value of
     /// the "name" column in one of the rows of the "CDB" table.</param>
     /// <param name="directory">A directory that this data store pretends to
     /// serve files from.  This directory is not actually used.</param>
-    /// <param name="sqliteConnectionStringBuilder">The connection string builder for the database.</param>
-    /// 
-    public SQLiteDataStore(string cdbName, DirectoryInfo directory, SqliteConnectionStringBuilder sqliteConnectionStringBuilder)
+    /// <param name="sqlCDB"></param>
+    public SQLDataStore(string cdbName, DirectoryInfo directory, SQLCDB sqlCDB)
     {
-        sqliteCDB = new SQLiteCDB(sqliteConnectionStringBuilder.ConnectionString);
+        this.sqlCDB = sqlCDB;
         Name = cdbName;
         CdbRoot = directory;
     }
@@ -39,10 +37,6 @@ public class SQLiteDataStore : IDataStore
         get;
     }
 
-    private static readonly Regex PathPrefixPattern = new(
-        "^/?(?<directory>Metadata|GTModel|MModel|Tiles|Navigation)/",
-        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
-
     /// <inheritdoc/>
     public bool TryReadFile(string filePathAndName, [NotNullWhen(true)] out byte[] content)
     {
@@ -51,6 +45,10 @@ public class SQLiteDataStore : IDataStore
         content = memoryStream.ToArray();
         return succeeded;
     }
+
+    private static readonly Regex PathPrefixPattern = new(
+        "^/?(?<directory>Metadata|GTModel|MModel|Tiles|Navigation)/",
+        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking);
 
     /// <inheritdoc/>
     public bool TryReadFile(string filePathAndName, Stream output)
@@ -80,7 +78,7 @@ public class SQLiteDataStore : IDataStore
         Metadata metadata = new(
             Path.GetFileNameWithoutExtension(filePathAndName),
             Path.GetExtension(filePathAndName).Substring(1));
-        return sqliteCDB.TrySelectFromMetadata(Name, metadata, output);
+        return sqlCDB.TrySelectFromMetadata(Name, metadata, output);
     }
 
     private bool TryReadGeotypicalModel(string filePathAndName, Stream output)
@@ -90,25 +88,25 @@ public class SQLiteDataStore : IDataStore
         if (geotypicalModelLodMatch.Success)
         {
             GeotypicalModelLod geotypicalModelLod = GeotypicalModelLod.FromFilenameMatch(geotypicalModelLodMatch);
-            return sqliteCDB.TrySelectFromGeotypicalModelLod(Name, geotypicalModelLod, output);
+            return sqlCDB.TrySelectFromGeotypicalModelLod(Name, geotypicalModelLod, output);
         }
         Match geotypicalModelMatch = GeotypicalModel.FilenamePattern.Match(filename);
         if (geotypicalModelMatch.Success)
         {
             GeotypicalModel geotypicalModel = GeotypicalModel.FromFilenameMatch(geotypicalModelMatch);
-            return sqliteCDB.TrySelectFromGeotypicalModel(Name, geotypicalModel, output);
+            return sqlCDB.TrySelectFromGeotypicalModel(Name, geotypicalModel, output);
         }
         Match textureLodMatch = TextureLod.FilenamePattern.Match(filename);
         if (textureLodMatch.Success)
         {
             TextureLod textureLod = TextureLod.FromFilenameMatch(textureLodMatch);
-            return sqliteCDB.TrySelectFromTextureLod(Name, textureLod, output);
+            return sqlCDB.TrySelectFromTextureLod(Name, textureLod, output);
         }
         Match textureMatch = Texture.FilenamePattern.Match(filename);
         if (textureMatch.Success)
         {
             Texture texture = Texture.FromFilenameMatch(textureMatch);
-            return sqliteCDB.TrySelectFromTexture(Name, texture, output);
+            return sqlCDB.TrySelectFromTexture(Name, texture, output);
         }
         return false;
     }
@@ -120,25 +118,25 @@ public class SQLiteDataStore : IDataStore
         if (movingModelLodMatch.Success)
         {
             MovingModelLod movingModelLod = MovingModelLod.FromFilenameMatch(movingModelLodMatch);
-            return sqliteCDB.TrySelectFromMovingModelLod(Name, movingModelLod, output);
+            return sqlCDB.TrySelectFromMovingModelLod(Name, movingModelLod, output);
         }
         Match movingModelMatch = MovingModel.FilenamePattern.Match(filename);
         if (movingModelMatch.Success)
         {
             MovingModel movingModel = MovingModel.FromFilenameMatch(movingModelMatch);
-            return sqliteCDB.TrySelectFromMovingModel(Name, movingModel, output);
+            return sqlCDB.TrySelectFromMovingModel(Name, movingModel, output);
         }
         Match textureLodMatch = TextureLod.FilenamePattern.Match(filename);
         if (textureLodMatch.Success)
         {
             TextureLod textureLod = TextureLod.FromFilenameMatch(textureLodMatch);
-            return sqliteCDB.TrySelectFromTextureLod(Name, textureLod, output);
+            return sqlCDB.TrySelectFromTextureLod(Name, textureLod, output);
         }
         Match textureMatch = Texture.FilenamePattern.Match(filename);
         if (textureMatch.Success)
         {
             Texture texture = Texture.FromFilenameMatch(textureMatch);
-            return sqliteCDB.TrySelectFromTexture(Name, texture, output);
+            return sqlCDB.TrySelectFromTexture(Name, texture, output);
         }
         return false;
     }
@@ -150,7 +148,7 @@ public class SQLiteDataStore : IDataStore
         if (tileMatch.Success)
         {
             Tile tile = Tile.FromTiledDatasetFilenameMatch(tileMatch);
-            return sqliteCDB.TrySelectFromTile(Name, tile, output);
+            return sqlCDB.TrySelectFromTile(Name, tile, output);
         }
         else
         {
@@ -165,7 +163,7 @@ public class SQLiteDataStore : IDataStore
         if (navigationMatch.Success)
         {
             Navigation navigation = Navigation.FromFilenameMatch(navigationMatch);
-            return sqliteCDB.TrySelectFromNavigation(Name, navigation, output);
+            return sqlCDB.TrySelectFromNavigation(Name, navigation, output);
         }
         else
         {
@@ -183,7 +181,7 @@ public class SQLiteDataStore : IDataStore
         {
             if (disposing)
             {
-                sqliteCDB.Dispose();
+                sqlCDB.Dispose();
             }
 
             disposedValue = true;
