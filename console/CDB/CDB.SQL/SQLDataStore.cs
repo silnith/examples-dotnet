@@ -824,6 +824,12 @@ public abstract class SQLDataStore : IDisposable
         return dbCommand;
     }
 
+    private void SetMetadataParameters(DbCommand dbCommand, Metadata metadata)
+    {
+        dbCommand.Parameters[MetadataNameParamName].Value = metadata.Name;
+        dbCommand.Parameters[FileTypeParamName].Value = metadata.FileType;
+    }
+
     /// <summary>
     /// Inserts a metadata file into the CDB data store.
     /// </summary>
@@ -834,8 +840,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoMetadata(string cdbName, Metadata metadata, byte[] content)
     {
         insertIntoMetadataCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoMetadataCommand.Parameters[MetadataNameParamName].Value = metadata.Name;
-        insertIntoMetadataCommand.Parameters[FileTypeParamName].Value = metadata.FileType;
+        SetMetadataParameters(insertIntoMetadataCommand, metadata);
         insertIntoMetadataCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoMetadataCommand.ExecuteNonQuery();
@@ -851,8 +856,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoMetadata(string cdbName, Metadata metadata, Stream content)
     {
         insertIntoMetadataCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoMetadataCommand.Parameters[MetadataNameParamName].Value = metadata.Name;
-        insertIntoMetadataCommand.Parameters[FileTypeParamName].Value = metadata.FileType;
+        SetMetadataParameters(insertIntoMetadataCommand, metadata);
         insertIntoMetadataCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoMetadataCommand.ExecuteNonQuery();
@@ -869,8 +873,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoMetadataAsync(string cdbName, Metadata metadata, byte[] content, CancellationToken cancellationToken = default)
     {
         insertIntoMetadataCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoMetadataCommand.Parameters[MetadataNameParamName].Value = metadata.Name;
-        insertIntoMetadataCommand.Parameters[FileTypeParamName].Value = metadata.FileType;
+        SetMetadataParameters(insertIntoMetadataCommand, metadata);
         insertIntoMetadataCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoMetadataCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -887,8 +890,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoMetadataAsync(string cdbName, Metadata metadata, Stream content, CancellationToken cancellationToken = default)
     {
         insertIntoMetadataCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoMetadataCommand.Parameters[MetadataNameParamName].Value = metadata.Name;
-        insertIntoMetadataCommand.Parameters[FileTypeParamName].Value = metadata.FileType;
+        SetMetadataParameters(insertIntoMetadataCommand, metadata);
         insertIntoMetadataCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoMetadataCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -948,8 +950,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual bool TrySelectFromMetadata(string cdbName, Metadata metadata, Stream output)
     {
         selectFromMetadataCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromMetadataCommand.Parameters[MetadataNameParamName].Value = metadata.Name;
-        selectFromMetadataCommand.Parameters[FileTypeParamName].Value = metadata.FileType;
+        SetMetadataParameters(selectFromMetadataCommand, metadata);
 
         using DbDataReader dbDataReader = selectFromMetadataCommand.ExecuteReader(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
@@ -978,8 +979,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual async Task<bool> TrySelectFromMetadataAsync(string cdbName, Metadata metadata, Stream output, CancellationToken cancellationToken = default)
     {
         selectFromMetadataCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromMetadataCommand.Parameters[MetadataNameParamName].Value = metadata.Name;
-        selectFromMetadataCommand.Parameters[FileTypeParamName].Value = metadata.FileType;
+        SetMetadataParameters(selectFromMetadataCommand, metadata);
 
         await using DbDataReader dbDataReader = await selectFromMetadataCommand.ExecuteReaderAsync(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow, cancellationToken);
@@ -1068,6 +1068,15 @@ public abstract class SQLDataStore : IDisposable
         return dbCommand;
     }
 
+    private void SetTextureParameters(DbCommand dbCommand, Texture texture)
+    {
+        dbCommand.Parameters[DatasetParamName].Value = texture.Dataset.Value;
+        dbCommand.Parameters[ComponentSelector1ParamName].Value = texture.ComponentSelector1;
+        dbCommand.Parameters[ComponentSelector2ParamName].Value = texture.ComponentSelector2;
+        dbCommand.Parameters[TextureNameParamName].Value = texture.Name;
+        dbCommand.Parameters[FileTypeParamName].Value = texture.FileType;
+    }
+
     /// <summary>
     /// Inserts a texture file into the CDB data store.
     /// </summary>
@@ -1078,11 +1087,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoTexture(string cdbName, Texture texture, byte[] content)
     {
         insertIntoTextureCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTextureCommand.Parameters[DatasetParamName].Value = texture.Dataset.Value;
-        insertIntoTextureCommand.Parameters[ComponentSelector1ParamName].Value = texture.ComponentSelector1;
-        insertIntoTextureCommand.Parameters[ComponentSelector2ParamName].Value = texture.ComponentSelector2;
-        insertIntoTextureCommand.Parameters[TextureNameParamName].Value = texture.Name;
-        insertIntoTextureCommand.Parameters[FileTypeParamName].Value = texture.FileType;
+        SetTextureParameters(insertIntoTextureCommand, texture);
         insertIntoTextureCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTextureCommand.ExecuteNonQuery();
@@ -1098,11 +1103,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoTexture(string cdbName, Texture texture, Stream content)
     {
         insertIntoTextureCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTextureCommand.Parameters[DatasetParamName].Value = texture.Dataset.Value;
-        insertIntoTextureCommand.Parameters[ComponentSelector1ParamName].Value = texture.ComponentSelector1;
-        insertIntoTextureCommand.Parameters[ComponentSelector2ParamName].Value = texture.ComponentSelector2;
-        insertIntoTextureCommand.Parameters[TextureNameParamName].Value = texture.Name;
-        insertIntoTextureCommand.Parameters[FileTypeParamName].Value = texture.FileType;
+        SetTextureParameters(insertIntoTextureCommand, texture);
         insertIntoTextureCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTextureCommand.ExecuteNonQuery();
@@ -1119,11 +1120,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoTextureAsync(string cdbName, Texture texture, byte[] content, CancellationToken cancellationToken = default)
     {
         insertIntoTextureCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTextureCommand.Parameters[DatasetParamName].Value = texture.Dataset.Value;
-        insertIntoTextureCommand.Parameters[ComponentSelector1ParamName].Value = texture.ComponentSelector1;
-        insertIntoTextureCommand.Parameters[ComponentSelector2ParamName].Value = texture.ComponentSelector2;
-        insertIntoTextureCommand.Parameters[TextureNameParamName].Value = texture.Name;
-        insertIntoTextureCommand.Parameters[FileTypeParamName].Value = texture.FileType;
+        SetTextureParameters(insertIntoTextureCommand, texture);
         insertIntoTextureCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTextureCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -1140,11 +1137,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoTextureAsync(string cdbName, Texture texture, Stream content, CancellationToken cancellationToken = default)
     {
         insertIntoTextureCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTextureCommand.Parameters[DatasetParamName].Value = texture.Dataset.Value;
-        insertIntoTextureCommand.Parameters[ComponentSelector1ParamName].Value = texture.ComponentSelector1;
-        insertIntoTextureCommand.Parameters[ComponentSelector2ParamName].Value = texture.ComponentSelector2;
-        insertIntoTextureCommand.Parameters[TextureNameParamName].Value = texture.Name;
-        insertIntoTextureCommand.Parameters[FileTypeParamName].Value = texture.FileType;
+        SetTextureParameters(insertIntoTextureCommand, texture);
         insertIntoTextureCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTextureCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -1210,11 +1203,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual bool TrySelectFromTexture(string cdbName, Texture texture, Stream output)
     {
         selectFromTextureCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromTextureCommand.Parameters[DatasetParamName].Value = texture.Dataset.Value;
-        selectFromTextureCommand.Parameters[ComponentSelector1ParamName].Value = texture.ComponentSelector1;
-        selectFromTextureCommand.Parameters[ComponentSelector2ParamName].Value = texture.ComponentSelector2;
-        selectFromTextureCommand.Parameters[TextureNameParamName].Value = texture.Name;
-        selectFromTextureCommand.Parameters[FileTypeParamName].Value = texture.FileType;
+        SetTextureParameters(selectFromTextureCommand, texture);
 
         using DbDataReader dbDataReader = selectFromTextureCommand.ExecuteReader(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
@@ -1243,11 +1232,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual async Task<bool> TrySelectFromTextureAsync(string cdbName, Texture texture, Stream output, CancellationToken cancellationToken = default)
     {
         selectFromTextureCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromTextureCommand.Parameters[DatasetParamName].Value = texture.Dataset.Value;
-        selectFromTextureCommand.Parameters[ComponentSelector1ParamName].Value = texture.ComponentSelector1;
-        selectFromTextureCommand.Parameters[ComponentSelector2ParamName].Value = texture.ComponentSelector2;
-        selectFromTextureCommand.Parameters[TextureNameParamName].Value = texture.Name;
-        selectFromTextureCommand.Parameters[FileTypeParamName].Value = texture.FileType;
+        SetTextureParameters(selectFromTextureCommand, texture);
 
         await using DbDataReader dbDataReader = await selectFromTextureCommand.ExecuteReaderAsync(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow, cancellationToken);
@@ -1329,6 +1314,16 @@ public abstract class SQLDataStore : IDisposable
         return dbCommand;
     }
 
+    private void SetTextureLodParameters(DbCommand dbCommand, TextureLod textureLod)
+    {
+        dbCommand.Parameters[DatasetParamName].Value = textureLod.Dataset.Value;
+        dbCommand.Parameters[ComponentSelector1ParamName].Value = textureLod.ComponentSelector1;
+        dbCommand.Parameters[ComponentSelector2ParamName].Value = textureLod.ComponentSelector2;
+        dbCommand.Parameters[LevelOfDetailParamName].Value = textureLod.LevelOfDetail.Value;
+        dbCommand.Parameters[TextureNameParamName].Value = textureLod.Name;
+        dbCommand.Parameters[FileTypeParamName].Value = textureLod.FileType;
+    }
+
     /// <summary>
     /// Inserts a texture mipmap file into the CDB data store.
     /// </summary>
@@ -1339,12 +1334,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoTextureLod(string cdbName, TextureLod textureLod, byte[] content)
     {
         insertIntoTextureLodCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTextureLodCommand.Parameters[DatasetParamName].Value = textureLod.Dataset.Value;
-        insertIntoTextureLodCommand.Parameters[ComponentSelector1ParamName].Value = textureLod.ComponentSelector1;
-        insertIntoTextureLodCommand.Parameters[ComponentSelector2ParamName].Value = textureLod.ComponentSelector2;
-        insertIntoTextureLodCommand.Parameters[LevelOfDetailParamName].Value = textureLod.LevelOfDetail.Value;
-        insertIntoTextureLodCommand.Parameters[TextureNameParamName].Value = textureLod.Name;
-        insertIntoTextureLodCommand.Parameters[FileTypeParamName].Value = textureLod.FileType;
+        SetTextureLodParameters(insertIntoTextureLodCommand, textureLod);
         insertIntoTextureLodCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTextureLodCommand.ExecuteNonQuery();
@@ -1360,12 +1350,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoTextureLod(string cdbName, TextureLod textureLod, Stream content)
     {
         insertIntoTextureLodCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTextureLodCommand.Parameters[DatasetParamName].Value = textureLod.Dataset.Value;
-        insertIntoTextureLodCommand.Parameters[ComponentSelector1ParamName].Value = textureLod.ComponentSelector1;
-        insertIntoTextureLodCommand.Parameters[ComponentSelector2ParamName].Value = textureLod.ComponentSelector2;
-        insertIntoTextureLodCommand.Parameters[LevelOfDetailParamName].Value = textureLod.LevelOfDetail.Value;
-        insertIntoTextureLodCommand.Parameters[TextureNameParamName].Value = textureLod.Name;
-        insertIntoTextureLodCommand.Parameters[FileTypeParamName].Value = textureLod.FileType;
+        SetTextureLodParameters(insertIntoTextureLodCommand, textureLod);
         insertIntoTextureLodCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTextureLodCommand.ExecuteNonQuery();
@@ -1382,12 +1367,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoTextureLodAsync(string cdbName, TextureLod textureLod, byte[] content, CancellationToken cancellationToken = default)
     {
         insertIntoTextureLodCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTextureLodCommand.Parameters[DatasetParamName].Value = textureLod.Dataset.Value;
-        insertIntoTextureLodCommand.Parameters[ComponentSelector1ParamName].Value = textureLod.ComponentSelector1;
-        insertIntoTextureLodCommand.Parameters[ComponentSelector2ParamName].Value = textureLod.ComponentSelector2;
-        insertIntoTextureLodCommand.Parameters[LevelOfDetailParamName].Value = textureLod.LevelOfDetail.Value;
-        insertIntoTextureLodCommand.Parameters[TextureNameParamName].Value = textureLod.Name;
-        insertIntoTextureLodCommand.Parameters[FileTypeParamName].Value = textureLod.FileType;
+        SetTextureLodParameters(insertIntoTextureLodCommand, textureLod);
         insertIntoTextureLodCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTextureLodCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -1404,12 +1384,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoTextureLodAsync(string cdbName, TextureLod textureLod, Stream content, CancellationToken cancellationToken = default)
     {
         insertIntoTextureLodCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTextureLodCommand.Parameters[DatasetParamName].Value = textureLod.Dataset.Value;
-        insertIntoTextureLodCommand.Parameters[ComponentSelector1ParamName].Value = textureLod.ComponentSelector1;
-        insertIntoTextureLodCommand.Parameters[ComponentSelector2ParamName].Value = textureLod.ComponentSelector2;
-        insertIntoTextureLodCommand.Parameters[LevelOfDetailParamName].Value = textureLod.LevelOfDetail.Value;
-        insertIntoTextureLodCommand.Parameters[TextureNameParamName].Value = textureLod.Name;
-        insertIntoTextureLodCommand.Parameters[FileTypeParamName].Value = textureLod.FileType;
+        SetTextureLodParameters(insertIntoTextureLodCommand, textureLod);
         insertIntoTextureLodCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTextureLodCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -1477,12 +1452,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual bool TrySelectFromTextureLod(string cdbName, TextureLod textureLod, Stream output)
     {
         selectFromTextureLodCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromTextureLodCommand.Parameters[DatasetParamName].Value = textureLod.Dataset.Value;
-        selectFromTextureLodCommand.Parameters[ComponentSelector1ParamName].Value = textureLod.ComponentSelector1;
-        selectFromTextureLodCommand.Parameters[ComponentSelector2ParamName].Value = textureLod.ComponentSelector2;
-        selectFromTextureLodCommand.Parameters[LevelOfDetailParamName].Value = textureLod.LevelOfDetail.Value;
-        selectFromTextureLodCommand.Parameters[TextureNameParamName].Value = textureLod.Name;
-        selectFromTextureLodCommand.Parameters[FileTypeParamName].Value = textureLod.FileType;
+        SetTextureLodParameters(selectFromTextureLodCommand, textureLod);
 
         using DbDataReader dbDataReader = selectFromTextureLodCommand.ExecuteReader(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
@@ -1511,12 +1481,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual async Task<bool> TrySelectFromTextureLodAsync(string cdbName, TextureLod textureLod, Stream output, CancellationToken cancellationToken = default)
     {
         selectFromTextureLodCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromTextureLodCommand.Parameters[DatasetParamName].Value = textureLod.Dataset.Value;
-        selectFromTextureLodCommand.Parameters[ComponentSelector1ParamName].Value = textureLod.ComponentSelector1;
-        selectFromTextureLodCommand.Parameters[ComponentSelector2ParamName].Value = textureLod.ComponentSelector2;
-        selectFromTextureLodCommand.Parameters[LevelOfDetailParamName].Value = textureLod.LevelOfDetail.Value;
-        selectFromTextureLodCommand.Parameters[TextureNameParamName].Value = textureLod.Name;
-        selectFromTextureLodCommand.Parameters[FileTypeParamName].Value = textureLod.FileType;
+        SetTextureLodParameters(selectFromTextureLodCommand, textureLod);
 
         await using DbDataReader dbDataReader = await selectFromTextureLodCommand.ExecuteReaderAsync(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow, cancellationToken);
@@ -1653,6 +1618,19 @@ public abstract class SQLDataStore : IDisposable
         return dbCommand;
     }
 
+    private void SetGeotypicalModelParameters(DbCommand dbCommand, GeotypicalModel geotypicalModel)
+    {
+        dbCommand.Parameters[DatasetParamName].Value = geotypicalModel.Dataset.Value;
+        dbCommand.Parameters[ComponentSelector1ParamName].Value = geotypicalModel.ComponentSelector1;
+        dbCommand.Parameters[ComponentSelector2ParamName].Value = geotypicalModel.ComponentSelector2;
+        dbCommand.Parameters[FeatureCategoryParamName].Value = geotypicalModel.FeatureCode.Category;
+        dbCommand.Parameters[FeatureSubcategoryParamName].Value = geotypicalModel.FeatureCode.Subcategory;
+        dbCommand.Parameters[FeatureTypeParamName].Value = geotypicalModel.FeatureCode.Type;
+        dbCommand.Parameters[FeatureSubcodeParamName].Value = geotypicalModel.FeatureSubcode;
+        dbCommand.Parameters[ModelNameParamName].Value = geotypicalModel.Name;
+        dbCommand.Parameters[FileTypeParamName].Value = geotypicalModel.FileType;
+    }
+
     /// <summary>
     /// Inserts a geotypical model file into the CDB data store.
     /// </summary>
@@ -1663,15 +1641,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoGeotypicalModel(string cdbName, GeotypicalModel geotypicalModel, byte[] content)
     {
         insertIntoGeotypicalModelCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoGeotypicalModelCommand.Parameters[DatasetParamName].Value = geotypicalModel.Dataset.Value;
-        insertIntoGeotypicalModelCommand.Parameters[ComponentSelector1ParamName].Value = geotypicalModel.ComponentSelector1;
-        insertIntoGeotypicalModelCommand.Parameters[ComponentSelector2ParamName].Value = geotypicalModel.ComponentSelector2;
-        insertIntoGeotypicalModelCommand.Parameters[FeatureCategoryParamName].Value = geotypicalModel.FeatureCode.Category;
-        insertIntoGeotypicalModelCommand.Parameters[FeatureSubcategoryParamName].Value = geotypicalModel.FeatureCode.Subcategory;
-        insertIntoGeotypicalModelCommand.Parameters[FeatureTypeParamName].Value = geotypicalModel.FeatureCode.Type;
-        insertIntoGeotypicalModelCommand.Parameters[FeatureSubcodeParamName].Value = geotypicalModel.FeatureSubcode;
-        insertIntoGeotypicalModelCommand.Parameters[ModelNameParamName].Value = geotypicalModel.Name;
-        insertIntoGeotypicalModelCommand.Parameters[FileTypeParamName].Value = geotypicalModel.FileType;
+        SetGeotypicalModelParameters(insertIntoGeotypicalModelCommand, geotypicalModel);
         insertIntoGeotypicalModelCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoGeotypicalModelCommand.ExecuteNonQuery();
@@ -1687,15 +1657,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoGeotypicalModel(string cdbName, GeotypicalModel geotypicalModel, Stream content)
     {
         insertIntoGeotypicalModelCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoGeotypicalModelCommand.Parameters[DatasetParamName].Value = geotypicalModel.Dataset.Value;
-        insertIntoGeotypicalModelCommand.Parameters[ComponentSelector1ParamName].Value = geotypicalModel.ComponentSelector1;
-        insertIntoGeotypicalModelCommand.Parameters[ComponentSelector2ParamName].Value = geotypicalModel.ComponentSelector2;
-        insertIntoGeotypicalModelCommand.Parameters[FeatureCategoryParamName].Value = geotypicalModel.FeatureCode.Category;
-        insertIntoGeotypicalModelCommand.Parameters[FeatureSubcategoryParamName].Value = geotypicalModel.FeatureCode.Subcategory;
-        insertIntoGeotypicalModelCommand.Parameters[FeatureTypeParamName].Value = geotypicalModel.FeatureCode.Type;
-        insertIntoGeotypicalModelCommand.Parameters[FeatureSubcodeParamName].Value = geotypicalModel.FeatureSubcode;
-        insertIntoGeotypicalModelCommand.Parameters[ModelNameParamName].Value = geotypicalModel.Name;
-        insertIntoGeotypicalModelCommand.Parameters[FileTypeParamName].Value = geotypicalModel.FileType;
+        SetGeotypicalModelParameters(insertIntoGeotypicalModelCommand, geotypicalModel);
         insertIntoGeotypicalModelCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoGeotypicalModelCommand.ExecuteNonQuery();
@@ -1712,15 +1674,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoGeotypicalModelAsync(string cdbName, GeotypicalModel geotypicalModel, byte[] content, CancellationToken cancellationToken = default)
     {
         insertIntoGeotypicalModelCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoGeotypicalModelCommand.Parameters[DatasetParamName].Value = geotypicalModel.Dataset.Value;
-        insertIntoGeotypicalModelCommand.Parameters[ComponentSelector1ParamName].Value = geotypicalModel.ComponentSelector1;
-        insertIntoGeotypicalModelCommand.Parameters[ComponentSelector2ParamName].Value = geotypicalModel.ComponentSelector2;
-        insertIntoGeotypicalModelCommand.Parameters[FeatureCategoryParamName].Value = geotypicalModel.FeatureCode.Category;
-        insertIntoGeotypicalModelCommand.Parameters[FeatureSubcategoryParamName].Value = geotypicalModel.FeatureCode.Subcategory;
-        insertIntoGeotypicalModelCommand.Parameters[FeatureTypeParamName].Value = geotypicalModel.FeatureCode.Type;
-        insertIntoGeotypicalModelCommand.Parameters[FeatureSubcodeParamName].Value = geotypicalModel.FeatureSubcode;
-        insertIntoGeotypicalModelCommand.Parameters[ModelNameParamName].Value = geotypicalModel.Name;
-        insertIntoGeotypicalModelCommand.Parameters[FileTypeParamName].Value = geotypicalModel.FileType;
+        SetGeotypicalModelParameters(insertIntoGeotypicalModelCommand, geotypicalModel);
         insertIntoGeotypicalModelCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoGeotypicalModelCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -1737,15 +1691,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoGeotypicalModelAsync(string cdbName, GeotypicalModel geotypicalModel, Stream content, CancellationToken cancellationToken = default)
     {
         insertIntoGeotypicalModelCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoGeotypicalModelCommand.Parameters[DatasetParamName].Value = geotypicalModel.Dataset.Value;
-        insertIntoGeotypicalModelCommand.Parameters[ComponentSelector1ParamName].Value = geotypicalModel.ComponentSelector1;
-        insertIntoGeotypicalModelCommand.Parameters[ComponentSelector2ParamName].Value = geotypicalModel.ComponentSelector2;
-        insertIntoGeotypicalModelCommand.Parameters[FeatureCategoryParamName].Value = geotypicalModel.FeatureCode.Category;
-        insertIntoGeotypicalModelCommand.Parameters[FeatureSubcategoryParamName].Value = geotypicalModel.FeatureCode.Subcategory;
-        insertIntoGeotypicalModelCommand.Parameters[FeatureTypeParamName].Value = geotypicalModel.FeatureCode.Type;
-        insertIntoGeotypicalModelCommand.Parameters[FeatureSubcodeParamName].Value = geotypicalModel.FeatureSubcode;
-        insertIntoGeotypicalModelCommand.Parameters[ModelNameParamName].Value = geotypicalModel.Name;
-        insertIntoGeotypicalModelCommand.Parameters[FileTypeParamName].Value = geotypicalModel.FileType;
+        SetGeotypicalModelParameters(insertIntoGeotypicalModelCommand, geotypicalModel);
         insertIntoGeotypicalModelCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoGeotypicalModelCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -1819,15 +1765,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual bool TrySelectFromGeotypicalModel(string cdbName, GeotypicalModel geotypicalModel, Stream output)
     {
         selectFromGeotypicalModelCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromGeotypicalModelCommand.Parameters[DatasetParamName].Value = geotypicalModel.Dataset.Value;
-        selectFromGeotypicalModelCommand.Parameters[ComponentSelector1ParamName].Value = geotypicalModel.ComponentSelector1;
-        selectFromGeotypicalModelCommand.Parameters[ComponentSelector2ParamName].Value = geotypicalModel.ComponentSelector2;
-        selectFromGeotypicalModelCommand.Parameters[FeatureCategoryParamName].Value = geotypicalModel.FeatureCode.Category;
-        selectFromGeotypicalModelCommand.Parameters[FeatureSubcategoryParamName].Value = geotypicalModel.FeatureCode.Subcategory;
-        selectFromGeotypicalModelCommand.Parameters[FeatureTypeParamName].Value = geotypicalModel.FeatureCode.Type;
-        selectFromGeotypicalModelCommand.Parameters[FeatureSubcodeParamName].Value = geotypicalModel.FeatureSubcode;
-        selectFromGeotypicalModelCommand.Parameters[ModelNameParamName].Value = geotypicalModel.Name;
-        selectFromGeotypicalModelCommand.Parameters[FileTypeParamName].Value = geotypicalModel.FileType;
+        SetGeotypicalModelParameters(selectFromGeotypicalModelCommand, geotypicalModel);
 
         using DbDataReader dbDataReader = selectFromGeotypicalModelCommand.ExecuteReader(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
@@ -1856,15 +1794,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual async Task<bool> TrySelectFromGeotypicalModelAsync(string cdbName, GeotypicalModel geotypicalModel, Stream output, CancellationToken cancellationToken = default)
     {
         selectFromGeotypicalModelCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromGeotypicalModelCommand.Parameters[DatasetParamName].Value = geotypicalModel.Dataset.Value;
-        selectFromGeotypicalModelCommand.Parameters[ComponentSelector1ParamName].Value = geotypicalModel.ComponentSelector1;
-        selectFromGeotypicalModelCommand.Parameters[ComponentSelector2ParamName].Value = geotypicalModel.ComponentSelector2;
-        selectFromGeotypicalModelCommand.Parameters[FeatureCategoryParamName].Value = geotypicalModel.FeatureCode.Category;
-        selectFromGeotypicalModelCommand.Parameters[FeatureSubcategoryParamName].Value = geotypicalModel.FeatureCode.Subcategory;
-        selectFromGeotypicalModelCommand.Parameters[FeatureTypeParamName].Value = geotypicalModel.FeatureCode.Type;
-        selectFromGeotypicalModelCommand.Parameters[FeatureSubcodeParamName].Value = geotypicalModel.FeatureSubcode;
-        selectFromGeotypicalModelCommand.Parameters[ModelNameParamName].Value = geotypicalModel.Name;
-        selectFromGeotypicalModelCommand.Parameters[FileTypeParamName].Value = geotypicalModel.FileType;
+        SetGeotypicalModelParameters(selectFromGeotypicalModelCommand, geotypicalModel);
 
         await using DbDataReader dbDataReader = await selectFromGeotypicalModelCommand.ExecuteReaderAsync(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow, cancellationToken);
@@ -1954,6 +1884,20 @@ public abstract class SQLDataStore : IDisposable
         return dbCommand;
     }
 
+    private void SetGeotypicalModelLodParameters(DbCommand dbCommand, GeotypicalModelLod geotypicalModelLod)
+    {
+        dbCommand.Parameters[DatasetParamName].Value = geotypicalModelLod.Dataset.Value;
+        dbCommand.Parameters[ComponentSelector1ParamName].Value = geotypicalModelLod.ComponentSelector1;
+        dbCommand.Parameters[ComponentSelector2ParamName].Value = geotypicalModelLod.ComponentSelector2;
+        dbCommand.Parameters[LevelOfDetailParamName].Value = geotypicalModelLod.LevelOfDetail.Value;
+        dbCommand.Parameters[FeatureCategoryParamName].Value = geotypicalModelLod.FeatureCode.Category;
+        dbCommand.Parameters[FeatureSubcategoryParamName].Value = geotypicalModelLod.FeatureCode.Subcategory;
+        dbCommand.Parameters[FeatureTypeParamName].Value = geotypicalModelLod.FeatureCode.Type;
+        dbCommand.Parameters[FeatureSubcodeParamName].Value = geotypicalModelLod.FeatureSubcode;
+        dbCommand.Parameters[ModelNameParamName].Value = geotypicalModelLod.Name;
+        dbCommand.Parameters[FileTypeParamName].Value = geotypicalModelLod.FileType;
+    }
+
     /// <summary>
     /// Inserts a geotypical model level of detail file into the CDB data store.
     /// </summary>
@@ -1964,16 +1908,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoGeotypicalModelLod(string cdbName, GeotypicalModelLod geotypicalModelLod, byte[] content)
     {
         insertIntoGeotypicalModelLodCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoGeotypicalModelLodCommand.Parameters[DatasetParamName].Value = geotypicalModelLod.Dataset.Value;
-        insertIntoGeotypicalModelLodCommand.Parameters[ComponentSelector1ParamName].Value = geotypicalModelLod.ComponentSelector1;
-        insertIntoGeotypicalModelLodCommand.Parameters[ComponentSelector2ParamName].Value = geotypicalModelLod.ComponentSelector2;
-        insertIntoGeotypicalModelLodCommand.Parameters[LevelOfDetailParamName].Value = geotypicalModelLod.LevelOfDetail.Value;
-        insertIntoGeotypicalModelLodCommand.Parameters[FeatureCategoryParamName].Value = geotypicalModelLod.FeatureCode.Category;
-        insertIntoGeotypicalModelLodCommand.Parameters[FeatureSubcategoryParamName].Value = geotypicalModelLod.FeatureCode.Subcategory;
-        insertIntoGeotypicalModelLodCommand.Parameters[FeatureTypeParamName].Value = geotypicalModelLod.FeatureCode.Type;
-        insertIntoGeotypicalModelLodCommand.Parameters[FeatureSubcodeParamName].Value = geotypicalModelLod.FeatureSubcode;
-        insertIntoGeotypicalModelLodCommand.Parameters[ModelNameParamName].Value = geotypicalModelLod.Name;
-        insertIntoGeotypicalModelLodCommand.Parameters[FileTypeParamName].Value = geotypicalModelLod.FileType;
+        SetGeotypicalModelLodParameters(insertIntoGeotypicalModelLodCommand, geotypicalModelLod);
         insertIntoGeotypicalModelLodCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoGeotypicalModelLodCommand.ExecuteNonQuery();
@@ -1989,16 +1924,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoGeotypicalModelLod(string cdbName, GeotypicalModelLod geotypicalModelLod, Stream content)
     {
         insertIntoGeotypicalModelLodCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoGeotypicalModelLodCommand.Parameters[DatasetParamName].Value = geotypicalModelLod.Dataset.Value;
-        insertIntoGeotypicalModelLodCommand.Parameters[ComponentSelector1ParamName].Value = geotypicalModelLod.ComponentSelector1;
-        insertIntoGeotypicalModelLodCommand.Parameters[ComponentSelector2ParamName].Value = geotypicalModelLod.ComponentSelector2;
-        insertIntoGeotypicalModelLodCommand.Parameters[LevelOfDetailParamName].Value = geotypicalModelLod.LevelOfDetail.Value;
-        insertIntoGeotypicalModelLodCommand.Parameters[FeatureCategoryParamName].Value = geotypicalModelLod.FeatureCode.Category;
-        insertIntoGeotypicalModelLodCommand.Parameters[FeatureSubcategoryParamName].Value = geotypicalModelLod.FeatureCode.Subcategory;
-        insertIntoGeotypicalModelLodCommand.Parameters[FeatureTypeParamName].Value = geotypicalModelLod.FeatureCode.Type;
-        insertIntoGeotypicalModelLodCommand.Parameters[FeatureSubcodeParamName].Value = geotypicalModelLod.FeatureSubcode;
-        insertIntoGeotypicalModelLodCommand.Parameters[ModelNameParamName].Value = geotypicalModelLod.Name;
-        insertIntoGeotypicalModelLodCommand.Parameters[FileTypeParamName].Value = geotypicalModelLod.FileType;
+        SetGeotypicalModelLodParameters(insertIntoGeotypicalModelLodCommand, geotypicalModelLod);
         insertIntoGeotypicalModelLodCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoGeotypicalModelLodCommand.ExecuteNonQuery();
@@ -2015,16 +1941,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoGeotypicalModelLodAsync(string cdbName, GeotypicalModelLod geotypicalModelLod, byte[] content, CancellationToken cancellationToken = default)
     {
         insertIntoGeotypicalModelLodCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoGeotypicalModelLodCommand.Parameters[DatasetParamName].Value = geotypicalModelLod.Dataset.Value;
-        insertIntoGeotypicalModelLodCommand.Parameters[ComponentSelector1ParamName].Value = geotypicalModelLod.ComponentSelector1;
-        insertIntoGeotypicalModelLodCommand.Parameters[ComponentSelector2ParamName].Value = geotypicalModelLod.ComponentSelector2;
-        insertIntoGeotypicalModelLodCommand.Parameters[LevelOfDetailParamName].Value = geotypicalModelLod.LevelOfDetail.Value;
-        insertIntoGeotypicalModelLodCommand.Parameters[FeatureCategoryParamName].Value = geotypicalModelLod.FeatureCode.Category;
-        insertIntoGeotypicalModelLodCommand.Parameters[FeatureSubcategoryParamName].Value = geotypicalModelLod.FeatureCode.Subcategory;
-        insertIntoGeotypicalModelLodCommand.Parameters[FeatureTypeParamName].Value = geotypicalModelLod.FeatureCode.Type;
-        insertIntoGeotypicalModelLodCommand.Parameters[FeatureSubcodeParamName].Value = geotypicalModelLod.FeatureSubcode;
-        insertIntoGeotypicalModelLodCommand.Parameters[ModelNameParamName].Value = geotypicalModelLod.Name;
-        insertIntoGeotypicalModelLodCommand.Parameters[FileTypeParamName].Value = geotypicalModelLod.FileType;
+        SetGeotypicalModelLodParameters(insertIntoGeotypicalModelLodCommand, geotypicalModelLod);
         insertIntoGeotypicalModelLodCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoGeotypicalModelLodCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -2041,16 +1958,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoGeotypicalModelLodAsync(string cdbName, GeotypicalModelLod geotypicalModelLod, Stream content, CancellationToken cancellationToken = default)
     {
         insertIntoGeotypicalModelLodCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoGeotypicalModelLodCommand.Parameters[DatasetParamName].Value = geotypicalModelLod.Dataset.Value;
-        insertIntoGeotypicalModelLodCommand.Parameters[ComponentSelector1ParamName].Value = geotypicalModelLod.ComponentSelector1;
-        insertIntoGeotypicalModelLodCommand.Parameters[ComponentSelector2ParamName].Value = geotypicalModelLod.ComponentSelector2;
-        insertIntoGeotypicalModelLodCommand.Parameters[LevelOfDetailParamName].Value = geotypicalModelLod.LevelOfDetail.Value;
-        insertIntoGeotypicalModelLodCommand.Parameters[FeatureCategoryParamName].Value = geotypicalModelLod.FeatureCode.Category;
-        insertIntoGeotypicalModelLodCommand.Parameters[FeatureSubcategoryParamName].Value = geotypicalModelLod.FeatureCode.Subcategory;
-        insertIntoGeotypicalModelLodCommand.Parameters[FeatureTypeParamName].Value = geotypicalModelLod.FeatureCode.Type;
-        insertIntoGeotypicalModelLodCommand.Parameters[FeatureSubcodeParamName].Value = geotypicalModelLod.FeatureSubcode;
-        insertIntoGeotypicalModelLodCommand.Parameters[ModelNameParamName].Value = geotypicalModelLod.Name;
-        insertIntoGeotypicalModelLodCommand.Parameters[FileTypeParamName].Value = geotypicalModelLod.FileType;
+        SetGeotypicalModelLodParameters(insertIntoGeotypicalModelLodCommand, geotypicalModelLod);
         insertIntoGeotypicalModelLodCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoGeotypicalModelLodCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -2126,16 +2034,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual bool TrySelectFromGeotypicalModelLod(string cdbName, GeotypicalModelLod geotypicalModelLod, Stream output)
     {
         selectFromGeotypicalModelLodCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromGeotypicalModelLodCommand.Parameters[DatasetParamName].Value = geotypicalModelLod.Dataset.Value;
-        selectFromGeotypicalModelLodCommand.Parameters[ComponentSelector1ParamName].Value = geotypicalModelLod.ComponentSelector1;
-        selectFromGeotypicalModelLodCommand.Parameters[ComponentSelector2ParamName].Value = geotypicalModelLod.ComponentSelector2;
-        selectFromGeotypicalModelLodCommand.Parameters[LevelOfDetailParamName].Value = geotypicalModelLod.LevelOfDetail.Value;
-        selectFromGeotypicalModelLodCommand.Parameters[FeatureCategoryParamName].Value = geotypicalModelLod.FeatureCode.Category;
-        selectFromGeotypicalModelLodCommand.Parameters[FeatureSubcategoryParamName].Value = geotypicalModelLod.FeatureCode.Subcategory;
-        selectFromGeotypicalModelLodCommand.Parameters[FeatureTypeParamName].Value = geotypicalModelLod.FeatureCode.Type;
-        selectFromGeotypicalModelLodCommand.Parameters[FeatureSubcodeParamName].Value = geotypicalModelLod.FeatureSubcode;
-        selectFromGeotypicalModelLodCommand.Parameters[ModelNameParamName].Value = geotypicalModelLod.Name;
-        selectFromGeotypicalModelLodCommand.Parameters[FileTypeParamName].Value = geotypicalModelLod.FileType;
+        SetGeotypicalModelLodParameters(selectFromGeotypicalModelLodCommand, geotypicalModelLod);
 
         using DbDataReader dbDataReader = selectFromGeotypicalModelLodCommand.ExecuteReader(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
@@ -2164,16 +2063,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual async Task<bool> TrySelectFromGeotypicalModelLodAsync(string cdbName, GeotypicalModelLod geotypicalModelLod, Stream output, CancellationToken cancellationToken = default)
     {
         selectFromGeotypicalModelLodCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromGeotypicalModelLodCommand.Parameters[DatasetParamName].Value = geotypicalModelLod.Dataset.Value;
-        selectFromGeotypicalModelLodCommand.Parameters[ComponentSelector1ParamName].Value = geotypicalModelLod.ComponentSelector1;
-        selectFromGeotypicalModelLodCommand.Parameters[ComponentSelector2ParamName].Value = geotypicalModelLod.ComponentSelector2;
-        selectFromGeotypicalModelLodCommand.Parameters[LevelOfDetailParamName].Value = geotypicalModelLod.LevelOfDetail.Value;
-        selectFromGeotypicalModelLodCommand.Parameters[FeatureCategoryParamName].Value = geotypicalModelLod.FeatureCode.Category;
-        selectFromGeotypicalModelLodCommand.Parameters[FeatureSubcategoryParamName].Value = geotypicalModelLod.FeatureCode.Subcategory;
-        selectFromGeotypicalModelLodCommand.Parameters[FeatureTypeParamName].Value = geotypicalModelLod.FeatureCode.Type;
-        selectFromGeotypicalModelLodCommand.Parameters[FeatureSubcodeParamName].Value = geotypicalModelLod.FeatureSubcode;
-        selectFromGeotypicalModelLodCommand.Parameters[ModelNameParamName].Value = geotypicalModelLod.Name;
-        selectFromGeotypicalModelLodCommand.Parameters[FileTypeParamName].Value = geotypicalModelLod.FileType;
+        SetGeotypicalModelLodParameters(selectFromGeotypicalModelLodCommand, geotypicalModelLod);
 
         await using DbDataReader dbDataReader = await selectFromGeotypicalModelLodCommand.ExecuteReaderAsync(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow, cancellationToken);
@@ -2332,6 +2222,21 @@ public abstract class SQLDataStore : IDisposable
         return dbCommand;
     }
 
+    private void SetMovingModelParameters(DbCommand dbCommand, MovingModel movingModel)
+    {
+        dbCommand.Parameters[DatasetParamName].Value = movingModel.Dataset.Value;
+        dbCommand.Parameters[ComponentSelector1ParamName].Value = movingModel.ComponentSelector1;
+        dbCommand.Parameters[ComponentSelector2ParamName].Value = movingModel.ComponentSelector2;
+        dbCommand.Parameters[KindParamName].Value = movingModel.MMDC.Kind;
+        dbCommand.Parameters[DomainParamName].Value = movingModel.MMDC.Domain;
+        dbCommand.Parameters[CountryParamName].Value = movingModel.MMDC.Country;
+        dbCommand.Parameters[CategoryParamName].Value = movingModel.MMDC.Category;
+        dbCommand.Parameters[SubcategoryParamName].Value = movingModel.MMDC.Subcategory;
+        dbCommand.Parameters[SpecificParamName].Value = movingModel.MMDC.Specific;
+        dbCommand.Parameters[ExtraParamName].Value = movingModel.MMDC.Extra;
+        dbCommand.Parameters[FileTypeParamName].Value = movingModel.FileType;
+    }
+
     /// <summary>
     /// Inserts a moving model file into the CDB data store.
     /// </summary>
@@ -2342,17 +2247,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoMovingModel(string cdbName, MovingModel movingModel, byte[] content)
     {
         insertIntoMovingModelCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoMovingModelCommand.Parameters[DatasetParamName].Value = movingModel.Dataset.Value;
-        insertIntoMovingModelCommand.Parameters[ComponentSelector1ParamName].Value = movingModel.ComponentSelector1;
-        insertIntoMovingModelCommand.Parameters[ComponentSelector2ParamName].Value = movingModel.ComponentSelector2;
-        insertIntoMovingModelCommand.Parameters[KindParamName].Value = movingModel.MMDC.Kind;
-        insertIntoMovingModelCommand.Parameters[DomainParamName].Value = movingModel.MMDC.Domain;
-        insertIntoMovingModelCommand.Parameters[CountryParamName].Value = movingModel.MMDC.Country;
-        insertIntoMovingModelCommand.Parameters[CategoryParamName].Value = movingModel.MMDC.Category;
-        insertIntoMovingModelCommand.Parameters[SubcategoryParamName].Value = movingModel.MMDC.Subcategory;
-        insertIntoMovingModelCommand.Parameters[SpecificParamName].Value = movingModel.MMDC.Specific;
-        insertIntoMovingModelCommand.Parameters[ExtraParamName].Value = movingModel.MMDC.Extra;
-        insertIntoMovingModelCommand.Parameters[FileTypeParamName].Value = movingModel.FileType;
+        SetMovingModelParameters(insertIntoMovingModelCommand, movingModel);
         insertIntoMovingModelCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoMovingModelCommand.ExecuteNonQuery();
@@ -2368,17 +2263,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoMovingModel(string cdbName, MovingModel movingModel, Stream content)
     {
         insertIntoMovingModelCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoMovingModelCommand.Parameters[DatasetParamName].Value = movingModel.Dataset.Value;
-        insertIntoMovingModelCommand.Parameters[ComponentSelector1ParamName].Value = movingModel.ComponentSelector1;
-        insertIntoMovingModelCommand.Parameters[ComponentSelector2ParamName].Value = movingModel.ComponentSelector2;
-        insertIntoMovingModelCommand.Parameters[KindParamName].Value = movingModel.MMDC.Kind;
-        insertIntoMovingModelCommand.Parameters[DomainParamName].Value = movingModel.MMDC.Domain;
-        insertIntoMovingModelCommand.Parameters[CountryParamName].Value = movingModel.MMDC.Country;
-        insertIntoMovingModelCommand.Parameters[CategoryParamName].Value = movingModel.MMDC.Category;
-        insertIntoMovingModelCommand.Parameters[SubcategoryParamName].Value = movingModel.MMDC.Subcategory;
-        insertIntoMovingModelCommand.Parameters[SpecificParamName].Value = movingModel.MMDC.Specific;
-        insertIntoMovingModelCommand.Parameters[ExtraParamName].Value = movingModel.MMDC.Extra;
-        insertIntoMovingModelCommand.Parameters[FileTypeParamName].Value = movingModel.FileType;
+        SetMovingModelParameters(insertIntoMovingModelCommand, movingModel);
         insertIntoMovingModelCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoMovingModelCommand.ExecuteNonQuery();
@@ -2395,17 +2280,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoMovingModelAsync(string cdbName, MovingModel movingModel, byte[] content, CancellationToken cancellationToken = default)
     {
         insertIntoMovingModelCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoMovingModelCommand.Parameters[DatasetParamName].Value = movingModel.Dataset.Value;
-        insertIntoMovingModelCommand.Parameters[ComponentSelector1ParamName].Value = movingModel.ComponentSelector1;
-        insertIntoMovingModelCommand.Parameters[ComponentSelector2ParamName].Value = movingModel.ComponentSelector2;
-        insertIntoMovingModelCommand.Parameters[KindParamName].Value = movingModel.MMDC.Kind;
-        insertIntoMovingModelCommand.Parameters[DomainParamName].Value = movingModel.MMDC.Domain;
-        insertIntoMovingModelCommand.Parameters[CountryParamName].Value = movingModel.MMDC.Country;
-        insertIntoMovingModelCommand.Parameters[CategoryParamName].Value = movingModel.MMDC.Category;
-        insertIntoMovingModelCommand.Parameters[SubcategoryParamName].Value = movingModel.MMDC.Subcategory;
-        insertIntoMovingModelCommand.Parameters[SpecificParamName].Value = movingModel.MMDC.Specific;
-        insertIntoMovingModelCommand.Parameters[ExtraParamName].Value = movingModel.MMDC.Extra;
-        insertIntoMovingModelCommand.Parameters[FileTypeParamName].Value = movingModel.FileType;
+        SetMovingModelParameters(insertIntoMovingModelCommand, movingModel);
         insertIntoMovingModelCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoMovingModelCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -2422,17 +2297,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoMovingModelAsync(string cdbName, MovingModel movingModel, Stream content, CancellationToken cancellationToken = default)
     {
         insertIntoMovingModelCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoMovingModelCommand.Parameters[DatasetParamName].Value = movingModel.Dataset.Value;
-        insertIntoMovingModelCommand.Parameters[ComponentSelector1ParamName].Value = movingModel.ComponentSelector1;
-        insertIntoMovingModelCommand.Parameters[ComponentSelector2ParamName].Value = movingModel.ComponentSelector2;
-        insertIntoMovingModelCommand.Parameters[KindParamName].Value = movingModel.MMDC.Kind;
-        insertIntoMovingModelCommand.Parameters[DomainParamName].Value = movingModel.MMDC.Domain;
-        insertIntoMovingModelCommand.Parameters[CountryParamName].Value = movingModel.MMDC.Country;
-        insertIntoMovingModelCommand.Parameters[CategoryParamName].Value = movingModel.MMDC.Category;
-        insertIntoMovingModelCommand.Parameters[SubcategoryParamName].Value = movingModel.MMDC.Subcategory;
-        insertIntoMovingModelCommand.Parameters[SpecificParamName].Value = movingModel.MMDC.Specific;
-        insertIntoMovingModelCommand.Parameters[ExtraParamName].Value = movingModel.MMDC.Extra;
-        insertIntoMovingModelCommand.Parameters[FileTypeParamName].Value = movingModel.FileType;
+        SetMovingModelParameters(insertIntoMovingModelCommand, movingModel);
         insertIntoMovingModelCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoMovingModelCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -2510,17 +2375,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual bool TrySelectFromMovingModel(string cdbName, MovingModel movingModel, Stream output)
     {
         selectFromMovingModelCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromMovingModelCommand.Parameters[DatasetParamName].Value = movingModel.Dataset.Value;
-        selectFromMovingModelCommand.Parameters[ComponentSelector1ParamName].Value = movingModel.ComponentSelector1;
-        selectFromMovingModelCommand.Parameters[ComponentSelector2ParamName].Value = movingModel.ComponentSelector2;
-        selectFromMovingModelCommand.Parameters[KindParamName].Value = movingModel.MMDC.Kind;
-        selectFromMovingModelCommand.Parameters[DomainParamName].Value = movingModel.MMDC.Domain;
-        selectFromMovingModelCommand.Parameters[CountryParamName].Value = movingModel.MMDC.Country;
-        selectFromMovingModelCommand.Parameters[CategoryParamName].Value = movingModel.MMDC.Category;
-        selectFromMovingModelCommand.Parameters[SubcategoryParamName].Value = movingModel.MMDC.Subcategory;
-        selectFromMovingModelCommand.Parameters[SpecificParamName].Value = movingModel.MMDC.Specific;
-        selectFromMovingModelCommand.Parameters[ExtraParamName].Value = movingModel.MMDC.Extra;
-        selectFromMovingModelCommand.Parameters[FileTypeParamName].Value = movingModel.FileType;
+        SetMovingModelParameters(selectFromMovingModelCommand, movingModel);
 
         using DbDataReader dbDataReader = selectFromMovingModelCommand.ExecuteReader(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
@@ -2549,17 +2404,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual async Task<bool> TrySelectFromMovingModelAsync(string cdbName, MovingModel movingModel, Stream output, CancellationToken cancellationToken = default)
     {
         selectFromMovingModelCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromMovingModelCommand.Parameters[DatasetParamName].Value = movingModel.Dataset.Value;
-        selectFromMovingModelCommand.Parameters[ComponentSelector1ParamName].Value = movingModel.ComponentSelector1;
-        selectFromMovingModelCommand.Parameters[ComponentSelector2ParamName].Value = movingModel.ComponentSelector2;
-        selectFromMovingModelCommand.Parameters[KindParamName].Value = movingModel.MMDC.Kind;
-        selectFromMovingModelCommand.Parameters[DomainParamName].Value = movingModel.MMDC.Domain;
-        selectFromMovingModelCommand.Parameters[CountryParamName].Value = movingModel.MMDC.Country;
-        selectFromMovingModelCommand.Parameters[CategoryParamName].Value = movingModel.MMDC.Category;
-        selectFromMovingModelCommand.Parameters[SubcategoryParamName].Value = movingModel.MMDC.Subcategory;
-        selectFromMovingModelCommand.Parameters[SpecificParamName].Value = movingModel.MMDC.Specific;
-        selectFromMovingModelCommand.Parameters[ExtraParamName].Value = movingModel.MMDC.Extra;
-        selectFromMovingModelCommand.Parameters[FileTypeParamName].Value = movingModel.FileType;
+        SetMovingModelParameters(selectFromMovingModelCommand, movingModel);
 
         await using DbDataReader dbDataReader = await selectFromMovingModelCommand.ExecuteReaderAsync(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow, cancellationToken);
@@ -2653,6 +2498,22 @@ public abstract class SQLDataStore : IDisposable
         return dbCommand;
     }
 
+    private void SetMovingModelLodParameters(DbCommand dbCommand, MovingModelLod movingModelLod)
+    {
+        dbCommand.Parameters[DatasetParamName].Value = movingModelLod.Dataset.Value;
+        dbCommand.Parameters[ComponentSelector1ParamName].Value = movingModelLod.ComponentSelector1;
+        dbCommand.Parameters[ComponentSelector2ParamName].Value = movingModelLod.ComponentSelector2;
+        dbCommand.Parameters[LevelOfDetailParamName].Value = movingModelLod.LevelOfDetail.Value;
+        dbCommand.Parameters[KindParamName].Value = movingModelLod.MMDC.Kind;
+        dbCommand.Parameters[DomainParamName].Value = movingModelLod.MMDC.Domain;
+        dbCommand.Parameters[CountryParamName].Value = movingModelLod.MMDC.Country;
+        dbCommand.Parameters[CategoryParamName].Value = movingModelLod.MMDC.Category;
+        dbCommand.Parameters[SubcategoryParamName].Value = movingModelLod.MMDC.Subcategory;
+        dbCommand.Parameters[SpecificParamName].Value = movingModelLod.MMDC.Specific;
+        dbCommand.Parameters[ExtraParamName].Value = movingModelLod.MMDC.Extra;
+        dbCommand.Parameters[FileTypeParamName].Value = movingModelLod.FileType;
+    }
+
     /// <summary>
     /// Inserts a moving model level of detail file into the CDB data store.
     /// </summary>
@@ -2663,18 +2524,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoMovingModelLod(string cdbName, MovingModelLod movingModelLod, byte[] content)
     {
         insertIntoMovingModelLodCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoMovingModelLodCommand.Parameters[DatasetParamName].Value = movingModelLod.Dataset.Value;
-        insertIntoMovingModelLodCommand.Parameters[ComponentSelector1ParamName].Value = movingModelLod.ComponentSelector1;
-        insertIntoMovingModelLodCommand.Parameters[ComponentSelector2ParamName].Value = movingModelLod.ComponentSelector2;
-        insertIntoMovingModelLodCommand.Parameters[LevelOfDetailParamName].Value = movingModelLod.LevelOfDetail.Value;
-        insertIntoMovingModelLodCommand.Parameters[KindParamName].Value = movingModelLod.MMDC.Kind;
-        insertIntoMovingModelLodCommand.Parameters[DomainParamName].Value = movingModelLod.MMDC.Domain;
-        insertIntoMovingModelLodCommand.Parameters[CountryParamName].Value = movingModelLod.MMDC.Country;
-        insertIntoMovingModelLodCommand.Parameters[CategoryParamName].Value = movingModelLod.MMDC.Category;
-        insertIntoMovingModelLodCommand.Parameters[SubcategoryParamName].Value = movingModelLod.MMDC.Subcategory;
-        insertIntoMovingModelLodCommand.Parameters[SpecificParamName].Value = movingModelLod.MMDC.Specific;
-        insertIntoMovingModelLodCommand.Parameters[ExtraParamName].Value = movingModelLod.MMDC.Extra;
-        insertIntoMovingModelLodCommand.Parameters[FileTypeParamName].Value = movingModelLod.FileType;
+        SetMovingModelLodParameters(insertIntoMovingModelLodCommand, movingModelLod);
         insertIntoMovingModelLodCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoMovingModelLodCommand.ExecuteNonQuery();
@@ -2690,18 +2540,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoMovingModelLod(string cdbName, MovingModelLod movingModelLod, Stream content)
     {
         insertIntoMovingModelLodCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoMovingModelLodCommand.Parameters[DatasetParamName].Value = movingModelLod.Dataset.Value;
-        insertIntoMovingModelLodCommand.Parameters[ComponentSelector1ParamName].Value = movingModelLod.ComponentSelector1;
-        insertIntoMovingModelLodCommand.Parameters[ComponentSelector2ParamName].Value = movingModelLod.ComponentSelector2;
-        insertIntoMovingModelLodCommand.Parameters[LevelOfDetailParamName].Value = movingModelLod.LevelOfDetail.Value;
-        insertIntoMovingModelLodCommand.Parameters[KindParamName].Value = movingModelLod.MMDC.Kind;
-        insertIntoMovingModelLodCommand.Parameters[DomainParamName].Value = movingModelLod.MMDC.Domain;
-        insertIntoMovingModelLodCommand.Parameters[CountryParamName].Value = movingModelLod.MMDC.Country;
-        insertIntoMovingModelLodCommand.Parameters[CategoryParamName].Value = movingModelLod.MMDC.Category;
-        insertIntoMovingModelLodCommand.Parameters[SubcategoryParamName].Value = movingModelLod.MMDC.Subcategory;
-        insertIntoMovingModelLodCommand.Parameters[SpecificParamName].Value = movingModelLod.MMDC.Specific;
-        insertIntoMovingModelLodCommand.Parameters[ExtraParamName].Value = movingModelLod.MMDC.Extra;
-        insertIntoMovingModelLodCommand.Parameters[FileTypeParamName].Value = movingModelLod.FileType;
+        SetMovingModelLodParameters(insertIntoMovingModelLodCommand, movingModelLod);
         insertIntoMovingModelLodCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoMovingModelLodCommand.ExecuteNonQuery();
@@ -2718,18 +2557,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoMovingModelLodAsync(string cdbName, MovingModelLod movingModelLod, byte[] content, CancellationToken cancellationToken = default)
     {
         insertIntoMovingModelLodCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoMovingModelLodCommand.Parameters[DatasetParamName].Value = movingModelLod.Dataset.Value;
-        insertIntoMovingModelLodCommand.Parameters[ComponentSelector1ParamName].Value = movingModelLod.ComponentSelector1;
-        insertIntoMovingModelLodCommand.Parameters[ComponentSelector2ParamName].Value = movingModelLod.ComponentSelector2;
-        insertIntoMovingModelLodCommand.Parameters[LevelOfDetailParamName].Value = movingModelLod.LevelOfDetail.Value;
-        insertIntoMovingModelLodCommand.Parameters[KindParamName].Value = movingModelLod.MMDC.Kind;
-        insertIntoMovingModelLodCommand.Parameters[DomainParamName].Value = movingModelLod.MMDC.Domain;
-        insertIntoMovingModelLodCommand.Parameters[CountryParamName].Value = movingModelLod.MMDC.Country;
-        insertIntoMovingModelLodCommand.Parameters[CategoryParamName].Value = movingModelLod.MMDC.Category;
-        insertIntoMovingModelLodCommand.Parameters[SubcategoryParamName].Value = movingModelLod.MMDC.Subcategory;
-        insertIntoMovingModelLodCommand.Parameters[SpecificParamName].Value = movingModelLod.MMDC.Specific;
-        insertIntoMovingModelLodCommand.Parameters[ExtraParamName].Value = movingModelLod.MMDC.Extra;
-        insertIntoMovingModelLodCommand.Parameters[FileTypeParamName].Value = movingModelLod.FileType;
+        SetMovingModelLodParameters(insertIntoMovingModelLodCommand, movingModelLod);
         insertIntoMovingModelLodCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoMovingModelLodCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -2746,18 +2574,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoMovingModelLodAsync(string cdbName, MovingModelLod movingModelLod, Stream content, CancellationToken cancellationToken = default)
     {
         insertIntoMovingModelLodCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoMovingModelLodCommand.Parameters[DatasetParamName].Value = movingModelLod.Dataset.Value;
-        insertIntoMovingModelLodCommand.Parameters[ComponentSelector1ParamName].Value = movingModelLod.ComponentSelector1;
-        insertIntoMovingModelLodCommand.Parameters[ComponentSelector2ParamName].Value = movingModelLod.ComponentSelector2;
-        insertIntoMovingModelLodCommand.Parameters[LevelOfDetailParamName].Value = movingModelLod.LevelOfDetail.Value;
-        insertIntoMovingModelLodCommand.Parameters[KindParamName].Value = movingModelLod.MMDC.Kind;
-        insertIntoMovingModelLodCommand.Parameters[DomainParamName].Value = movingModelLod.MMDC.Domain;
-        insertIntoMovingModelLodCommand.Parameters[CountryParamName].Value = movingModelLod.MMDC.Country;
-        insertIntoMovingModelLodCommand.Parameters[CategoryParamName].Value = movingModelLod.MMDC.Category;
-        insertIntoMovingModelLodCommand.Parameters[SubcategoryParamName].Value = movingModelLod.MMDC.Subcategory;
-        insertIntoMovingModelLodCommand.Parameters[SpecificParamName].Value = movingModelLod.MMDC.Specific;
-        insertIntoMovingModelLodCommand.Parameters[ExtraParamName].Value = movingModelLod.MMDC.Extra;
-        insertIntoMovingModelLodCommand.Parameters[FileTypeParamName].Value = movingModelLod.FileType;
+        SetMovingModelLodParameters(insertIntoMovingModelLodCommand, movingModelLod);
         insertIntoMovingModelLodCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoMovingModelLodCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -2837,18 +2654,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual bool TrySelectFromMovingModelLod(string cdbName, MovingModelLod movingModelLod, Stream output)
     {
         selectFromMovingModelLodCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromMovingModelLodCommand.Parameters[DatasetParamName].Value = movingModelLod.Dataset.Value;
-        selectFromMovingModelLodCommand.Parameters[ComponentSelector1ParamName].Value = movingModelLod.ComponentSelector1;
-        selectFromMovingModelLodCommand.Parameters[ComponentSelector2ParamName].Value = movingModelLod.ComponentSelector2;
-        selectFromMovingModelLodCommand.Parameters[LevelOfDetailParamName].Value = movingModelLod.LevelOfDetail.Value;
-        selectFromMovingModelLodCommand.Parameters[KindParamName].Value = movingModelLod.MMDC.Kind;
-        selectFromMovingModelLodCommand.Parameters[DomainParamName].Value = movingModelLod.MMDC.Domain;
-        selectFromMovingModelLodCommand.Parameters[CountryParamName].Value = movingModelLod.MMDC.Country;
-        selectFromMovingModelLodCommand.Parameters[CategoryParamName].Value = movingModelLod.MMDC.Category;
-        selectFromMovingModelLodCommand.Parameters[SubcategoryParamName].Value = movingModelLod.MMDC.Subcategory;
-        selectFromMovingModelLodCommand.Parameters[SpecificParamName].Value = movingModelLod.MMDC.Specific;
-        selectFromMovingModelLodCommand.Parameters[ExtraParamName].Value = movingModelLod.MMDC.Extra;
-        selectFromMovingModelLodCommand.Parameters[FileTypeParamName].Value = movingModelLod.FileType;
+        SetMovingModelLodParameters(selectFromMovingModelLodCommand, movingModelLod);
 
         using DbDataReader dbDataReader = selectFromMovingModelLodCommand.ExecuteReader(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
@@ -2877,18 +2683,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual async Task<bool> TrySelectFromMovingModelLodAsync(string cdbName, MovingModelLod movingModelLod, Stream output, CancellationToken cancellationToken = default)
     {
         selectFromMovingModelLodCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromMovingModelLodCommand.Parameters[DatasetParamName].Value = movingModelLod.Dataset.Value;
-        selectFromMovingModelLodCommand.Parameters[ComponentSelector1ParamName].Value = movingModelLod.ComponentSelector1;
-        selectFromMovingModelLodCommand.Parameters[ComponentSelector2ParamName].Value = movingModelLod.ComponentSelector2;
-        selectFromMovingModelLodCommand.Parameters[LevelOfDetailParamName].Value = movingModelLod.LevelOfDetail.Value;
-        selectFromMovingModelLodCommand.Parameters[KindParamName].Value = movingModelLod.MMDC.Kind;
-        selectFromMovingModelLodCommand.Parameters[DomainParamName].Value = movingModelLod.MMDC.Domain;
-        selectFromMovingModelLodCommand.Parameters[CountryParamName].Value = movingModelLod.MMDC.Country;
-        selectFromMovingModelLodCommand.Parameters[CategoryParamName].Value = movingModelLod.MMDC.Category;
-        selectFromMovingModelLodCommand.Parameters[SubcategoryParamName].Value = movingModelLod.MMDC.Subcategory;
-        selectFromMovingModelLodCommand.Parameters[SpecificParamName].Value = movingModelLod.MMDC.Specific;
-        selectFromMovingModelLodCommand.Parameters[ExtraParamName].Value = movingModelLod.MMDC.Extra;
-        selectFromMovingModelLodCommand.Parameters[FileTypeParamName].Value = movingModelLod.FileType;
+        SetMovingModelLodParameters(selectFromMovingModelLodCommand, movingModelLod);
 
         await using DbDataReader dbDataReader = await selectFromMovingModelLodCommand.ExecuteReaderAsync(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow, cancellationToken);
@@ -3012,6 +2807,19 @@ public abstract class SQLDataStore : IDisposable
         return dbCommand;
     }
 
+    private void SetTileParameters(DbCommand dbCommand, Tile tile)
+    {
+        dbCommand.Parameters[LatitudeParamName].Value = tile.LatitudeValue.Value;
+        dbCommand.Parameters[LongitudeParamName].Value = tile.LongitudeValue.Value;
+        dbCommand.Parameters[DatasetParamName].Value = tile.DatasetValue.Value;
+        dbCommand.Parameters[ComponentSelector1ParamName].Value = tile.ComponentSelector1;
+        dbCommand.Parameters[ComponentSelector2ParamName].Value = tile.ComponentSelector2;
+        dbCommand.Parameters[LevelOfDetailParamName].Value = tile.Level.Value;
+        dbCommand.Parameters[UpParamName].Value = tile.Up;
+        dbCommand.Parameters[RightParamName].Value = tile.Right;
+        dbCommand.Parameters[FileTypeParamName].Value = tile.FileType;
+    }
+
     /// <summary>
     /// Inserts a tiled dataset file into the CDB data store.
     /// </summary>
@@ -3022,15 +2830,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoTile(string cdbName, Tile tile, byte[] content)
     {
         insertIntoTileCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTileCommand.Parameters[LatitudeParamName].Value = tile.LatitudeValue.Value;
-        insertIntoTileCommand.Parameters[LongitudeParamName].Value = tile.LongitudeValue.Value;
-        insertIntoTileCommand.Parameters[DatasetParamName].Value = tile.DatasetValue.Value;
-        insertIntoTileCommand.Parameters[ComponentSelector1ParamName].Value = tile.ComponentSelector1;
-        insertIntoTileCommand.Parameters[ComponentSelector2ParamName].Value = tile.ComponentSelector2;
-        insertIntoTileCommand.Parameters[LevelOfDetailParamName].Value = tile.Level.Value;
-        insertIntoTileCommand.Parameters[UpParamName].Value = tile.Up;
-        insertIntoTileCommand.Parameters[RightParamName].Value = tile.Right;
-        insertIntoTileCommand.Parameters[FileTypeParamName].Value = tile.FileType;
+        SetTileParameters(insertIntoTileCommand, tile);
         insertIntoTileCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTileCommand.ExecuteNonQuery();
@@ -3046,15 +2846,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoTile(string cdbName, Tile tile, Stream content)
     {
         insertIntoTileCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTileCommand.Parameters[LatitudeParamName].Value = tile.LatitudeValue.Value;
-        insertIntoTileCommand.Parameters[LongitudeParamName].Value = tile.LongitudeValue.Value;
-        insertIntoTileCommand.Parameters[DatasetParamName].Value = tile.DatasetValue.Value;
-        insertIntoTileCommand.Parameters[ComponentSelector1ParamName].Value = tile.ComponentSelector1;
-        insertIntoTileCommand.Parameters[ComponentSelector2ParamName].Value = tile.ComponentSelector2;
-        insertIntoTileCommand.Parameters[LevelOfDetailParamName].Value = tile.Level.Value;
-        insertIntoTileCommand.Parameters[UpParamName].Value = tile.Up;
-        insertIntoTileCommand.Parameters[RightParamName].Value = tile.Right;
-        insertIntoTileCommand.Parameters[FileTypeParamName].Value = tile.FileType;
+        SetTileParameters(insertIntoTileCommand, tile);
         insertIntoTileCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTileCommand.ExecuteNonQuery();
@@ -3071,15 +2863,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoTileAsync(string cdbName, Tile tile, byte[] content, CancellationToken cancellationToken = default)
     {
         insertIntoTileCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTileCommand.Parameters[LatitudeParamName].Value = tile.LatitudeValue.Value;
-        insertIntoTileCommand.Parameters[LongitudeParamName].Value = tile.LongitudeValue.Value;
-        insertIntoTileCommand.Parameters[DatasetParamName].Value = tile.DatasetValue.Value;
-        insertIntoTileCommand.Parameters[ComponentSelector1ParamName].Value = tile.ComponentSelector1;
-        insertIntoTileCommand.Parameters[ComponentSelector2ParamName].Value = tile.ComponentSelector2;
-        insertIntoTileCommand.Parameters[LevelOfDetailParamName].Value = tile.Level.Value;
-        insertIntoTileCommand.Parameters[UpParamName].Value = tile.Up;
-        insertIntoTileCommand.Parameters[RightParamName].Value = tile.Right;
-        insertIntoTileCommand.Parameters[FileTypeParamName].Value = tile.FileType;
+        SetTileParameters(insertIntoTileCommand, tile);
         insertIntoTileCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTileCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -3096,15 +2880,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoTileAsync(string cdbName, Tile tile, Stream content, CancellationToken cancellationToken = default)
     {
         insertIntoTileCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTileCommand.Parameters[LatitudeParamName].Value = tile.LatitudeValue.Value;
-        insertIntoTileCommand.Parameters[LongitudeParamName].Value = tile.LongitudeValue.Value;
-        insertIntoTileCommand.Parameters[DatasetParamName].Value = tile.DatasetValue.Value;
-        insertIntoTileCommand.Parameters[ComponentSelector1ParamName].Value = tile.ComponentSelector1;
-        insertIntoTileCommand.Parameters[ComponentSelector2ParamName].Value = tile.ComponentSelector2;
-        insertIntoTileCommand.Parameters[LevelOfDetailParamName].Value = tile.Level.Value;
-        insertIntoTileCommand.Parameters[UpParamName].Value = tile.Up;
-        insertIntoTileCommand.Parameters[RightParamName].Value = tile.Right;
-        insertIntoTileCommand.Parameters[FileTypeParamName].Value = tile.FileType;
+        SetTileParameters(insertIntoTileCommand, tile);
         insertIntoTileCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTileCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -3178,15 +2954,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual bool TrySelectFromTile(string cdbName, Tile tile, Stream output)
     {
         selectFromTileCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromTileCommand.Parameters[LatitudeParamName].Value = tile.LatitudeValue.Value;
-        selectFromTileCommand.Parameters[LongitudeParamName].Value = tile.LongitudeValue.Value;
-        selectFromTileCommand.Parameters[DatasetParamName].Value = tile.DatasetValue.Value;
-        selectFromTileCommand.Parameters[ComponentSelector1ParamName].Value = tile.ComponentSelector1;
-        selectFromTileCommand.Parameters[ComponentSelector2ParamName].Value = tile.ComponentSelector2;
-        selectFromTileCommand.Parameters[LevelOfDetailParamName].Value = tile.Level.Value;
-        selectFromTileCommand.Parameters[UpParamName].Value = tile.Up;
-        selectFromTileCommand.Parameters[RightParamName].Value = tile.Right;
-        selectFromTileCommand.Parameters[FileTypeParamName].Value = tile.FileType;
+        SetTileParameters(selectFromTileCommand, tile);
 
         using DbDataReader dbDataReader = selectFromTileCommand.ExecuteReader(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
@@ -3215,15 +2983,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual async Task<bool> TrySelectFromTileAsync(string cdbName, Tile tile, Stream output, CancellationToken cancellationToken = default)
     {
         selectFromTileCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromTileCommand.Parameters[LatitudeParamName].Value = tile.LatitudeValue.Value;
-        selectFromTileCommand.Parameters[LongitudeParamName].Value = tile.LongitudeValue.Value;
-        selectFromTileCommand.Parameters[DatasetParamName].Value = tile.DatasetValue.Value;
-        selectFromTileCommand.Parameters[ComponentSelector1ParamName].Value = tile.ComponentSelector1;
-        selectFromTileCommand.Parameters[ComponentSelector2ParamName].Value = tile.ComponentSelector2;
-        selectFromTileCommand.Parameters[LevelOfDetailParamName].Value = tile.Level.Value;
-        selectFromTileCommand.Parameters[UpParamName].Value = tile.Up;
-        selectFromTileCommand.Parameters[RightParamName].Value = tile.Right;
-        selectFromTileCommand.Parameters[FileTypeParamName].Value = tile.FileType;
+        SetTileParameters(selectFromTileCommand, tile);
 
         await using DbDataReader dbDataReader = await selectFromTileCommand.ExecuteReaderAsync(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow, cancellationToken);
@@ -3321,6 +3081,24 @@ public abstract class SQLDataStore : IDisposable
         return dbCommand;
     }
 
+    private void SetTileArchivedFeatureParameters(DbCommand dbCommand, TileArchivedFeature tileArchivedFeature)
+    {
+        dbCommand.Parameters[LatitudeParamName].Value = tileArchivedFeature.LatitudeValue.Value;
+        dbCommand.Parameters[LongitudeParamName].Value = tileArchivedFeature.LongitudeValue.Value;
+        dbCommand.Parameters[DatasetParamName].Value = tileArchivedFeature.DatasetValue.Value;
+        dbCommand.Parameters[ComponentSelector1ParamName].Value = tileArchivedFeature.ComponentSelector1;
+        dbCommand.Parameters[ComponentSelector2ParamName].Value = tileArchivedFeature.ComponentSelector2;
+        dbCommand.Parameters[LevelOfDetailParamName].Value = tileArchivedFeature.Level.Value;
+        dbCommand.Parameters[UpParamName].Value = tileArchivedFeature.Up;
+        dbCommand.Parameters[RightParamName].Value = tileArchivedFeature.Right;
+        dbCommand.Parameters[FeatureCategoryParamName].Value = tileArchivedFeature.FeatureCode.Category;
+        dbCommand.Parameters[FeatureSubcategoryParamName].Value = tileArchivedFeature.FeatureCode.Subcategory;
+        dbCommand.Parameters[FeatureTypeParamName].Value = tileArchivedFeature.FeatureCode.Type;
+        dbCommand.Parameters[FeatureSubcodeParamName].Value = tileArchivedFeature.FeatureSubcode;
+        dbCommand.Parameters[ModelNameParamName].Value = tileArchivedFeature.Name;
+        dbCommand.Parameters[FileTypeParamName].Value = tileArchivedFeature.FileType;
+    }
+
     /// <summary>
     /// Inserts an un-archived tiled dataset feature file into the CDB data store.
     /// </summary>
@@ -3331,20 +3109,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoTileArchivedFeature(string cdbName, TileArchivedFeature tileArchivedFeature, byte[] content)
     {
         insertIntoTileArchivedFeatureCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTileArchivedFeatureCommand.Parameters[LatitudeParamName].Value = tileArchivedFeature.LatitudeValue.Value;
-        insertIntoTileArchivedFeatureCommand.Parameters[LongitudeParamName].Value = tileArchivedFeature.LongitudeValue.Value;
-        insertIntoTileArchivedFeatureCommand.Parameters[DatasetParamName].Value = tileArchivedFeature.DatasetValue.Value;
-        insertIntoTileArchivedFeatureCommand.Parameters[ComponentSelector1ParamName].Value = tileArchivedFeature.ComponentSelector1;
-        insertIntoTileArchivedFeatureCommand.Parameters[ComponentSelector2ParamName].Value = tileArchivedFeature.ComponentSelector2;
-        insertIntoTileArchivedFeatureCommand.Parameters[LevelOfDetailParamName].Value = tileArchivedFeature.Level.Value;
-        insertIntoTileArchivedFeatureCommand.Parameters[UpParamName].Value = tileArchivedFeature.Up;
-        insertIntoTileArchivedFeatureCommand.Parameters[RightParamName].Value = tileArchivedFeature.Right;
-        insertIntoTileArchivedFeatureCommand.Parameters[FeatureCategoryParamName].Value = tileArchivedFeature.FeatureCode.Category;
-        insertIntoTileArchivedFeatureCommand.Parameters[FeatureSubcategoryParamName].Value = tileArchivedFeature.FeatureCode.Subcategory;
-        insertIntoTileArchivedFeatureCommand.Parameters[FeatureTypeParamName].Value = tileArchivedFeature.FeatureCode.Type;
-        insertIntoTileArchivedFeatureCommand.Parameters[FeatureSubcodeParamName].Value = tileArchivedFeature.FeatureSubcode;
-        insertIntoTileArchivedFeatureCommand.Parameters[ModelNameParamName].Value = tileArchivedFeature.Name;
-        insertIntoTileArchivedFeatureCommand.Parameters[FileTypeParamName].Value = tileArchivedFeature.FileType;
+        SetTileArchivedFeatureParameters(insertIntoTileArchivedFeatureCommand, tileArchivedFeature);
         insertIntoTileArchivedFeatureCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTileArchivedFeatureCommand.ExecuteNonQuery();
@@ -3360,20 +3125,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoTileArchivedFeature(string cdbName, TileArchivedFeature tileArchivedFeature, Stream content)
     {
         insertIntoTileArchivedFeatureCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTileArchivedFeatureCommand.Parameters[LatitudeParamName].Value = tileArchivedFeature.LatitudeValue.Value;
-        insertIntoTileArchivedFeatureCommand.Parameters[LongitudeParamName].Value = tileArchivedFeature.LongitudeValue.Value;
-        insertIntoTileArchivedFeatureCommand.Parameters[DatasetParamName].Value = tileArchivedFeature.DatasetValue.Value;
-        insertIntoTileArchivedFeatureCommand.Parameters[ComponentSelector1ParamName].Value = tileArchivedFeature.ComponentSelector1;
-        insertIntoTileArchivedFeatureCommand.Parameters[ComponentSelector2ParamName].Value = tileArchivedFeature.ComponentSelector2;
-        insertIntoTileArchivedFeatureCommand.Parameters[LevelOfDetailParamName].Value = tileArchivedFeature.Level.Value;
-        insertIntoTileArchivedFeatureCommand.Parameters[UpParamName].Value = tileArchivedFeature.Up;
-        insertIntoTileArchivedFeatureCommand.Parameters[RightParamName].Value = tileArchivedFeature.Right;
-        insertIntoTileArchivedFeatureCommand.Parameters[FeatureCategoryParamName].Value = tileArchivedFeature.FeatureCode.Category;
-        insertIntoTileArchivedFeatureCommand.Parameters[FeatureSubcategoryParamName].Value = tileArchivedFeature.FeatureCode.Subcategory;
-        insertIntoTileArchivedFeatureCommand.Parameters[FeatureTypeParamName].Value = tileArchivedFeature.FeatureCode.Type;
-        insertIntoTileArchivedFeatureCommand.Parameters[FeatureSubcodeParamName].Value = tileArchivedFeature.FeatureSubcode;
-        insertIntoTileArchivedFeatureCommand.Parameters[ModelNameParamName].Value = tileArchivedFeature.Name;
-        insertIntoTileArchivedFeatureCommand.Parameters[FileTypeParamName].Value = tileArchivedFeature.FileType;
+        SetTileArchivedFeatureParameters(insertIntoTileArchivedFeatureCommand, tileArchivedFeature);
         insertIntoTileArchivedFeatureCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTileArchivedFeatureCommand.ExecuteNonQuery();
@@ -3390,20 +3142,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoTileArchivedFeatureAsync(string cdbName, TileArchivedFeature tileArchivedFeature, byte[] content, CancellationToken cancellationToken = default)
     {
         insertIntoTileArchivedFeatureCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTileArchivedFeatureCommand.Parameters[LatitudeParamName].Value = tileArchivedFeature.LatitudeValue.Value;
-        insertIntoTileArchivedFeatureCommand.Parameters[LongitudeParamName].Value = tileArchivedFeature.LongitudeValue.Value;
-        insertIntoTileArchivedFeatureCommand.Parameters[DatasetParamName].Value = tileArchivedFeature.DatasetValue.Value;
-        insertIntoTileArchivedFeatureCommand.Parameters[ComponentSelector1ParamName].Value = tileArchivedFeature.ComponentSelector1;
-        insertIntoTileArchivedFeatureCommand.Parameters[ComponentSelector2ParamName].Value = tileArchivedFeature.ComponentSelector2;
-        insertIntoTileArchivedFeatureCommand.Parameters[LevelOfDetailParamName].Value = tileArchivedFeature.Level.Value;
-        insertIntoTileArchivedFeatureCommand.Parameters[UpParamName].Value = tileArchivedFeature.Up;
-        insertIntoTileArchivedFeatureCommand.Parameters[RightParamName].Value = tileArchivedFeature.Right;
-        insertIntoTileArchivedFeatureCommand.Parameters[FeatureCategoryParamName].Value = tileArchivedFeature.FeatureCode.Category;
-        insertIntoTileArchivedFeatureCommand.Parameters[FeatureSubcategoryParamName].Value = tileArchivedFeature.FeatureCode.Subcategory;
-        insertIntoTileArchivedFeatureCommand.Parameters[FeatureTypeParamName].Value = tileArchivedFeature.FeatureCode.Type;
-        insertIntoTileArchivedFeatureCommand.Parameters[FeatureSubcodeParamName].Value = tileArchivedFeature.FeatureSubcode;
-        insertIntoTileArchivedFeatureCommand.Parameters[ModelNameParamName].Value = tileArchivedFeature.Name;
-        insertIntoTileArchivedFeatureCommand.Parameters[FileTypeParamName].Value = tileArchivedFeature.FileType;
+        SetTileArchivedFeatureParameters(insertIntoTileArchivedFeatureCommand, tileArchivedFeature);
         insertIntoTileArchivedFeatureCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTileArchivedFeatureCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -3420,20 +3159,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoTileArchivedFeatureAsync(string cdbName, TileArchivedFeature tileArchivedFeature, Stream content, CancellationToken cancellationToken = default)
     {
         insertIntoTileArchivedFeatureCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTileArchivedFeatureCommand.Parameters[LatitudeParamName].Value = tileArchivedFeature.LatitudeValue.Value;
-        insertIntoTileArchivedFeatureCommand.Parameters[LongitudeParamName].Value = tileArchivedFeature.LongitudeValue.Value;
-        insertIntoTileArchivedFeatureCommand.Parameters[DatasetParamName].Value = tileArchivedFeature.DatasetValue.Value;
-        insertIntoTileArchivedFeatureCommand.Parameters[ComponentSelector1ParamName].Value = tileArchivedFeature.ComponentSelector1;
-        insertIntoTileArchivedFeatureCommand.Parameters[ComponentSelector2ParamName].Value = tileArchivedFeature.ComponentSelector2;
-        insertIntoTileArchivedFeatureCommand.Parameters[LevelOfDetailParamName].Value = tileArchivedFeature.Level.Value;
-        insertIntoTileArchivedFeatureCommand.Parameters[UpParamName].Value = tileArchivedFeature.Up;
-        insertIntoTileArchivedFeatureCommand.Parameters[RightParamName].Value = tileArchivedFeature.Right;
-        insertIntoTileArchivedFeatureCommand.Parameters[FeatureCategoryParamName].Value = tileArchivedFeature.FeatureCode.Category;
-        insertIntoTileArchivedFeatureCommand.Parameters[FeatureSubcategoryParamName].Value = tileArchivedFeature.FeatureCode.Subcategory;
-        insertIntoTileArchivedFeatureCommand.Parameters[FeatureTypeParamName].Value = tileArchivedFeature.FeatureCode.Type;
-        insertIntoTileArchivedFeatureCommand.Parameters[FeatureSubcodeParamName].Value = tileArchivedFeature.FeatureSubcode;
-        insertIntoTileArchivedFeatureCommand.Parameters[ModelNameParamName].Value = tileArchivedFeature.Name;
-        insertIntoTileArchivedFeatureCommand.Parameters[FileTypeParamName].Value = tileArchivedFeature.FileType;
+        SetTileArchivedFeatureParameters(insertIntoTileArchivedFeatureCommand, tileArchivedFeature);
         insertIntoTileArchivedFeatureCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTileArchivedFeatureCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -3517,20 +3243,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual bool TrySelectFromTileArchivedFeature(string cdbName, TileArchivedFeature tileArchivedFeature, Stream output)
     {
         selectFromTileArchivedFeatureCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromTileArchivedFeatureCommand.Parameters[LatitudeParamName].Value = tileArchivedFeature.LatitudeValue.Value;
-        selectFromTileArchivedFeatureCommand.Parameters[LongitudeParamName].Value = tileArchivedFeature.LongitudeValue.Value;
-        selectFromTileArchivedFeatureCommand.Parameters[DatasetParamName].Value = tileArchivedFeature.DatasetValue.Value;
-        selectFromTileArchivedFeatureCommand.Parameters[ComponentSelector1ParamName].Value = tileArchivedFeature.ComponentSelector1;
-        selectFromTileArchivedFeatureCommand.Parameters[ComponentSelector2ParamName].Value = tileArchivedFeature.ComponentSelector2;
-        selectFromTileArchivedFeatureCommand.Parameters[LevelOfDetailParamName].Value = tileArchivedFeature.Level.Value;
-        selectFromTileArchivedFeatureCommand.Parameters[UpParamName].Value = tileArchivedFeature.Up;
-        selectFromTileArchivedFeatureCommand.Parameters[RightParamName].Value = tileArchivedFeature.Right;
-        selectFromTileArchivedFeatureCommand.Parameters[FeatureCategoryParamName].Value = tileArchivedFeature.FeatureCode.Category;
-        selectFromTileArchivedFeatureCommand.Parameters[FeatureSubcategoryParamName].Value = tileArchivedFeature.FeatureCode.Subcategory;
-        selectFromTileArchivedFeatureCommand.Parameters[FeatureTypeParamName].Value = tileArchivedFeature.FeatureCode.Type;
-        selectFromTileArchivedFeatureCommand.Parameters[FeatureSubcodeParamName].Value = tileArchivedFeature.FeatureSubcode;
-        selectFromTileArchivedFeatureCommand.Parameters[ModelNameParamName].Value = tileArchivedFeature.Name;
-        selectFromTileArchivedFeatureCommand.Parameters[FileTypeParamName].Value = tileArchivedFeature.FileType;
+        SetTileArchivedFeatureParameters(selectFromTileArchivedFeatureCommand, tileArchivedFeature);
 
         using DbDataReader dbDataReader = selectFromTileArchivedFeatureCommand.ExecuteReader(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
@@ -3559,20 +3272,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual async Task<bool> TrySelectFromTileArchivedFeatureAsync(string cdbName, TileArchivedFeature tileArchivedFeature, Stream output, CancellationToken cancellationToken = default)
     {
         selectFromTileArchivedFeatureCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromTileArchivedFeatureCommand.Parameters[LatitudeParamName].Value = tileArchivedFeature.LatitudeValue.Value;
-        selectFromTileArchivedFeatureCommand.Parameters[LongitudeParamName].Value = tileArchivedFeature.LongitudeValue.Value;
-        selectFromTileArchivedFeatureCommand.Parameters[DatasetParamName].Value = tileArchivedFeature.DatasetValue.Value;
-        selectFromTileArchivedFeatureCommand.Parameters[ComponentSelector1ParamName].Value = tileArchivedFeature.ComponentSelector1;
-        selectFromTileArchivedFeatureCommand.Parameters[ComponentSelector2ParamName].Value = tileArchivedFeature.ComponentSelector2;
-        selectFromTileArchivedFeatureCommand.Parameters[LevelOfDetailParamName].Value = tileArchivedFeature.Level.Value;
-        selectFromTileArchivedFeatureCommand.Parameters[UpParamName].Value = tileArchivedFeature.Up;
-        selectFromTileArchivedFeatureCommand.Parameters[RightParamName].Value = tileArchivedFeature.Right;
-        selectFromTileArchivedFeatureCommand.Parameters[FeatureCategoryParamName].Value = tileArchivedFeature.FeatureCode.Category;
-        selectFromTileArchivedFeatureCommand.Parameters[FeatureSubcategoryParamName].Value = tileArchivedFeature.FeatureCode.Subcategory;
-        selectFromTileArchivedFeatureCommand.Parameters[FeatureTypeParamName].Value = tileArchivedFeature.FeatureCode.Type;
-        selectFromTileArchivedFeatureCommand.Parameters[FeatureSubcodeParamName].Value = tileArchivedFeature.FeatureSubcode;
-        selectFromTileArchivedFeatureCommand.Parameters[ModelNameParamName].Value = tileArchivedFeature.Name;
-        selectFromTileArchivedFeatureCommand.Parameters[FileTypeParamName].Value = tileArchivedFeature.FileType;
+        SetTileArchivedFeatureParameters(selectFromTileArchivedFeatureCommand, tileArchivedFeature);
 
         await using DbDataReader dbDataReader = await selectFromTileArchivedFeatureCommand.ExecuteReaderAsync(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow, cancellationToken);
@@ -3662,6 +3362,20 @@ public abstract class SQLDataStore : IDisposable
         return dbCommand;
     }
 
+    private void SetTileArchivedTextureParameters(DbCommand dbCommand, TileArchivedTexture tileArchivedTexture)
+    {
+        dbCommand.Parameters[LatitudeParamName].Value = tileArchivedTexture.LatitudeValue.Value;
+        dbCommand.Parameters[LongitudeParamName].Value = tileArchivedTexture.LongitudeValue.Value;
+        dbCommand.Parameters[DatasetParamName].Value = tileArchivedTexture.DatasetValue.Value;
+        dbCommand.Parameters[ComponentSelector1ParamName].Value = tileArchivedTexture.ComponentSelector1;
+        dbCommand.Parameters[ComponentSelector2ParamName].Value = tileArchivedTexture.ComponentSelector2;
+        dbCommand.Parameters[LevelOfDetailParamName].Value = tileArchivedTexture.Level.Value;
+        dbCommand.Parameters[UpParamName].Value = tileArchivedTexture.Up;
+        dbCommand.Parameters[RightParamName].Value = tileArchivedTexture.Right;
+        dbCommand.Parameters[TextureNameParamName].Value = tileArchivedTexture.Name;
+        dbCommand.Parameters[FileTypeParamName].Value = tileArchivedTexture.FileType;
+    }
+
     /// <summary>
     /// Inserts an un-archived tiled dataset texture file into the CDB data store.
     /// </summary>
@@ -3672,16 +3386,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoTileArchivedTexture(string cdbName, TileArchivedTexture tileArchivedTexture, byte[] content)
     {
         insertIntoTileArchivedTextureCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTileArchivedTextureCommand.Parameters[LatitudeParamName].Value = tileArchivedTexture.LatitudeValue.Value;
-        insertIntoTileArchivedTextureCommand.Parameters[LongitudeParamName].Value = tileArchivedTexture.LongitudeValue.Value;
-        insertIntoTileArchivedTextureCommand.Parameters[DatasetParamName].Value = tileArchivedTexture.DatasetValue.Value;
-        insertIntoTileArchivedTextureCommand.Parameters[ComponentSelector1ParamName].Value = tileArchivedTexture.ComponentSelector1;
-        insertIntoTileArchivedTextureCommand.Parameters[ComponentSelector2ParamName].Value = tileArchivedTexture.ComponentSelector2;
-        insertIntoTileArchivedTextureCommand.Parameters[LevelOfDetailParamName].Value = tileArchivedTexture.Level.Value;
-        insertIntoTileArchivedTextureCommand.Parameters[UpParamName].Value = tileArchivedTexture.Up;
-        insertIntoTileArchivedTextureCommand.Parameters[RightParamName].Value = tileArchivedTexture.Right;
-        insertIntoTileArchivedTextureCommand.Parameters[TextureNameParamName].Value = tileArchivedTexture.Name;
-        insertIntoTileArchivedTextureCommand.Parameters[FileTypeParamName].Value = tileArchivedTexture.FileType;
+        SetTileArchivedTextureParameters(insertIntoTileArchivedTextureCommand, tileArchivedTexture);
         insertIntoTileArchivedTextureCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTileArchivedTextureCommand.ExecuteNonQuery();
@@ -3697,16 +3402,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoTileArchivedTexture(string cdbName, TileArchivedTexture tileArchivedTexture, Stream content)
     {
         insertIntoTileArchivedTextureCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTileArchivedTextureCommand.Parameters[LatitudeParamName].Value = tileArchivedTexture.LatitudeValue.Value;
-        insertIntoTileArchivedTextureCommand.Parameters[LongitudeParamName].Value = tileArchivedTexture.LongitudeValue.Value;
-        insertIntoTileArchivedTextureCommand.Parameters[DatasetParamName].Value = tileArchivedTexture.DatasetValue.Value;
-        insertIntoTileArchivedTextureCommand.Parameters[ComponentSelector1ParamName].Value = tileArchivedTexture.ComponentSelector1;
-        insertIntoTileArchivedTextureCommand.Parameters[ComponentSelector2ParamName].Value = tileArchivedTexture.ComponentSelector2;
-        insertIntoTileArchivedTextureCommand.Parameters[LevelOfDetailParamName].Value = tileArchivedTexture.Level.Value;
-        insertIntoTileArchivedTextureCommand.Parameters[UpParamName].Value = tileArchivedTexture.Up;
-        insertIntoTileArchivedTextureCommand.Parameters[RightParamName].Value = tileArchivedTexture.Right;
-        insertIntoTileArchivedTextureCommand.Parameters[TextureNameParamName].Value = tileArchivedTexture.Name;
-        insertIntoTileArchivedTextureCommand.Parameters[FileTypeParamName].Value = tileArchivedTexture.FileType;
+        SetTileArchivedTextureParameters(insertIntoTileArchivedTextureCommand, tileArchivedTexture);
         insertIntoTileArchivedTextureCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTileArchivedTextureCommand.ExecuteNonQuery();
@@ -3723,16 +3419,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoTileArchivedTextureAsync(string cdbName, TileArchivedTexture tileArchivedTexture, byte[] content, CancellationToken cancellationToken = default)
     {
         insertIntoTileArchivedTextureCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTileArchivedTextureCommand.Parameters[LatitudeParamName].Value = tileArchivedTexture.LatitudeValue.Value;
-        insertIntoTileArchivedTextureCommand.Parameters[LongitudeParamName].Value = tileArchivedTexture.LongitudeValue.Value;
-        insertIntoTileArchivedTextureCommand.Parameters[DatasetParamName].Value = tileArchivedTexture.DatasetValue.Value;
-        insertIntoTileArchivedTextureCommand.Parameters[ComponentSelector1ParamName].Value = tileArchivedTexture.ComponentSelector1;
-        insertIntoTileArchivedTextureCommand.Parameters[ComponentSelector2ParamName].Value = tileArchivedTexture.ComponentSelector2;
-        insertIntoTileArchivedTextureCommand.Parameters[LevelOfDetailParamName].Value = tileArchivedTexture.Level.Value;
-        insertIntoTileArchivedTextureCommand.Parameters[UpParamName].Value = tileArchivedTexture.Up;
-        insertIntoTileArchivedTextureCommand.Parameters[RightParamName].Value = tileArchivedTexture.Right;
-        insertIntoTileArchivedTextureCommand.Parameters[TextureNameParamName].Value = tileArchivedTexture.Name;
-        insertIntoTileArchivedTextureCommand.Parameters[FileTypeParamName].Value = tileArchivedTexture.FileType;
+        SetTileArchivedTextureParameters(insertIntoTileArchivedTextureCommand, tileArchivedTexture);
         insertIntoTileArchivedTextureCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTileArchivedTextureCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -3749,16 +3436,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoTileArchivedTextureAsync(string cdbName, TileArchivedTexture tileArchivedTexture, Stream content, CancellationToken cancellationToken = default)
     {
         insertIntoTileArchivedTextureCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoTileArchivedTextureCommand.Parameters[LatitudeParamName].Value = tileArchivedTexture.LatitudeValue.Value;
-        insertIntoTileArchivedTextureCommand.Parameters[LongitudeParamName].Value = tileArchivedTexture.LongitudeValue.Value;
-        insertIntoTileArchivedTextureCommand.Parameters[DatasetParamName].Value = tileArchivedTexture.DatasetValue.Value;
-        insertIntoTileArchivedTextureCommand.Parameters[ComponentSelector1ParamName].Value = tileArchivedTexture.ComponentSelector1;
-        insertIntoTileArchivedTextureCommand.Parameters[ComponentSelector2ParamName].Value = tileArchivedTexture.ComponentSelector2;
-        insertIntoTileArchivedTextureCommand.Parameters[LevelOfDetailParamName].Value = tileArchivedTexture.Level.Value;
-        insertIntoTileArchivedTextureCommand.Parameters[UpParamName].Value = tileArchivedTexture.Up;
-        insertIntoTileArchivedTextureCommand.Parameters[RightParamName].Value = tileArchivedTexture.Right;
-        insertIntoTileArchivedTextureCommand.Parameters[TextureNameParamName].Value = tileArchivedTexture.Name;
-        insertIntoTileArchivedTextureCommand.Parameters[FileTypeParamName].Value = tileArchivedTexture.FileType;
+        SetTileArchivedTextureParameters(insertIntoTileArchivedTextureCommand, tileArchivedTexture);
         insertIntoTileArchivedTextureCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoTileArchivedTextureCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -3834,16 +3512,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual bool TrySelectFromTileArchivedTexture(string cdbName, TileArchivedTexture tileArchivedTexture, Stream output)
     {
         selectFromTileArchivedTextureCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromTileArchivedTextureCommand.Parameters[LatitudeParamName].Value = tileArchivedTexture.LatitudeValue.Value;
-        selectFromTileArchivedTextureCommand.Parameters[LongitudeParamName].Value = tileArchivedTexture.LongitudeValue.Value;
-        selectFromTileArchivedTextureCommand.Parameters[DatasetParamName].Value = tileArchivedTexture.DatasetValue.Value;
-        selectFromTileArchivedTextureCommand.Parameters[ComponentSelector1ParamName].Value = tileArchivedTexture.ComponentSelector1;
-        selectFromTileArchivedTextureCommand.Parameters[ComponentSelector2ParamName].Value = tileArchivedTexture.ComponentSelector2;
-        selectFromTileArchivedTextureCommand.Parameters[LevelOfDetailParamName].Value = tileArchivedTexture.Level.Value;
-        selectFromTileArchivedTextureCommand.Parameters[UpParamName].Value = tileArchivedTexture.Up;
-        selectFromTileArchivedTextureCommand.Parameters[RightParamName].Value = tileArchivedTexture.Right;
-        selectFromTileArchivedTextureCommand.Parameters[TextureNameParamName].Value = tileArchivedTexture.Name;
-        selectFromTileArchivedTextureCommand.Parameters[FileTypeParamName].Value = tileArchivedTexture.FileType;
+        SetTileArchivedTextureParameters(selectFromTileArchivedTextureCommand, tileArchivedTexture);
 
         using DbDataReader dbDataReader = selectFromTileArchivedTextureCommand.ExecuteReader(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
@@ -3872,16 +3541,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual async Task<bool> TrySelectFromTileArchivedTextureAsync(string cdbName, TileArchivedTexture tileArchivedTexture, Stream output, CancellationToken cancellationToken = default)
     {
         selectFromTileArchivedTextureCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromTileArchivedTextureCommand.Parameters[LatitudeParamName].Value = tileArchivedTexture.LatitudeValue.Value;
-        selectFromTileArchivedTextureCommand.Parameters[LongitudeParamName].Value = tileArchivedTexture.LongitudeValue.Value;
-        selectFromTileArchivedTextureCommand.Parameters[DatasetParamName].Value = tileArchivedTexture.DatasetValue.Value;
-        selectFromTileArchivedTextureCommand.Parameters[ComponentSelector1ParamName].Value = tileArchivedTexture.ComponentSelector1;
-        selectFromTileArchivedTextureCommand.Parameters[ComponentSelector2ParamName].Value = tileArchivedTexture.ComponentSelector2;
-        selectFromTileArchivedTextureCommand.Parameters[LevelOfDetailParamName].Value = tileArchivedTexture.Level.Value;
-        selectFromTileArchivedTextureCommand.Parameters[UpParamName].Value = tileArchivedTexture.Up;
-        selectFromTileArchivedTextureCommand.Parameters[RightParamName].Value = tileArchivedTexture.Right;
-        selectFromTileArchivedTextureCommand.Parameters[TextureNameParamName].Value = tileArchivedTexture.Name;
-        selectFromTileArchivedTextureCommand.Parameters[FileTypeParamName].Value = tileArchivedTexture.FileType;
+        SetTileArchivedTextureParameters(selectFromTileArchivedTextureCommand, tileArchivedTexture);
 
         await using DbDataReader dbDataReader = await selectFromTileArchivedTextureCommand.ExecuteReaderAsync(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow, cancellationToken);
@@ -3959,6 +3619,14 @@ public abstract class SQLDataStore : IDisposable
         return dbCommand;
     }
 
+    private void SetNavigationParameters(DbCommand dbCommand, Navigation navigation)
+    {
+        dbCommand.Parameters[DatasetParamName].Value = navigation.Dataset.Value;
+        dbCommand.Parameters[ComponentSelector1ParamName].Value = navigation.ComponentSelector1;
+        dbCommand.Parameters[ComponentSelector2ParamName].Value = navigation.ComponentSelector2;
+        dbCommand.Parameters[FileTypeParamName].Value = navigation.FileType;
+    }
+
     /// <summary>
     /// Inserts a navigation file into the CDB data store.
     /// </summary>
@@ -3969,10 +3637,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoNavigation(string cdbName, Navigation navigation, byte[] content)
     {
         insertIntoNavigationCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoNavigationCommand.Parameters[DatasetParamName].Value = navigation.Dataset.Value;
-        insertIntoNavigationCommand.Parameters[ComponentSelector1ParamName].Value = navigation.ComponentSelector1;
-        insertIntoNavigationCommand.Parameters[ComponentSelector2ParamName].Value = navigation.ComponentSelector2;
-        insertIntoNavigationCommand.Parameters[FileTypeParamName].Value = navigation.FileType;
+        SetNavigationParameters(insertIntoNavigationCommand, navigation);
         insertIntoNavigationCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoNavigationCommand.ExecuteNonQuery();
@@ -3988,10 +3653,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual int InsertIntoNavigation(string cdbName, Navigation navigation, Stream content)
     {
         insertIntoNavigationCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoNavigationCommand.Parameters[DatasetParamName].Value = navigation.Dataset.Value;
-        insertIntoNavigationCommand.Parameters[ComponentSelector1ParamName].Value = navigation.ComponentSelector1;
-        insertIntoNavigationCommand.Parameters[ComponentSelector2ParamName].Value = navigation.ComponentSelector2;
-        insertIntoNavigationCommand.Parameters[FileTypeParamName].Value = navigation.FileType;
+        SetNavigationParameters(insertIntoNavigationCommand, navigation);
         insertIntoNavigationCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoNavigationCommand.ExecuteNonQuery();
@@ -4008,10 +3670,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoNavigationAsync(string cdbName, Navigation navigation, byte[] content, CancellationToken cancellationToken = default)
     {
         insertIntoNavigationCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoNavigationCommand.Parameters[DatasetParamName].Value = navigation.Dataset.Value;
-        insertIntoNavigationCommand.Parameters[ComponentSelector1ParamName].Value = navigation.ComponentSelector1;
-        insertIntoNavigationCommand.Parameters[ComponentSelector2ParamName].Value = navigation.ComponentSelector2;
-        insertIntoNavigationCommand.Parameters[FileTypeParamName].Value = navigation.FileType;
+        SetNavigationParameters(insertIntoNavigationCommand, navigation);
         insertIntoNavigationCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoNavigationCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -4028,10 +3687,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual Task<int> InsertIntoNavigationAsync(string cdbName, Navigation navigation, Stream content, CancellationToken cancellationToken = default)
     {
         insertIntoNavigationCommand.Parameters[CdbParamName].Value = cdbName;
-        insertIntoNavigationCommand.Parameters[DatasetParamName].Value = navigation.Dataset.Value;
-        insertIntoNavigationCommand.Parameters[ComponentSelector1ParamName].Value = navigation.ComponentSelector1;
-        insertIntoNavigationCommand.Parameters[ComponentSelector2ParamName].Value = navigation.ComponentSelector2;
-        insertIntoNavigationCommand.Parameters[FileTypeParamName].Value = navigation.FileType;
+        SetNavigationParameters(insertIntoNavigationCommand, navigation);
         insertIntoNavigationCommand.Parameters[ContentParamName].Value = content;
 
         return insertIntoNavigationCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -4095,10 +3751,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual bool TrySelectFromNavigation(string cdbName, Navigation navigation, Stream output)
     {
         selectFromNavigationCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromNavigationCommand.Parameters[DatasetParamName].Value = navigation.Dataset.Value;
-        selectFromNavigationCommand.Parameters[ComponentSelector1ParamName].Value = navigation.ComponentSelector1;
-        selectFromNavigationCommand.Parameters[ComponentSelector2ParamName].Value = navigation.ComponentSelector2;
-        selectFromNavigationCommand.Parameters[FileTypeParamName].Value = navigation.FileType;
+        SetNavigationParameters(selectFromNavigationCommand, navigation);
 
         using DbDataReader dbDataReader = selectFromNavigationCommand.ExecuteReader(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
@@ -4127,10 +3780,7 @@ public abstract class SQLDataStore : IDisposable
     public virtual async Task<bool> TrySelectFromNavigationAsync(string cdbName, Navigation navigation, Stream output, CancellationToken cancellationToken = default)
     {
         selectFromNavigationCommand.Parameters[CdbParamName].Value = cdbName;
-        selectFromNavigationCommand.Parameters[DatasetParamName].Value = navigation.Dataset.Value;
-        selectFromNavigationCommand.Parameters[ComponentSelector1ParamName].Value = navigation.ComponentSelector1;
-        selectFromNavigationCommand.Parameters[ComponentSelector2ParamName].Value = navigation.ComponentSelector2;
-        selectFromNavigationCommand.Parameters[FileTypeParamName].Value = navigation.FileType;
+        SetNavigationParameters(selectFromNavigationCommand, navigation);
 
         await using DbDataReader dbDataReader = await selectFromNavigationCommand.ExecuteReaderAsync(
             CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow, cancellationToken);
