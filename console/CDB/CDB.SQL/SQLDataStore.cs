@@ -817,11 +817,16 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = InsertIntoMetadataStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, MetadataNameParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
+        CreateAndAttachMetadataParameters(dbCommand);
         CreateAndAttachParameter(dbCommand, ContentParamName, DbType.Binary);
         dbCommand.Prepare();
         return dbCommand;
+    }
+
+    private void CreateAndAttachMetadataParameters(DbCommand dbCommand)
+    {
+        CreateAndAttachParameter(dbCommand, MetadataNameParamName, DbType.String);
+        CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
     }
 
     private void SetMetadataParameters(DbCommand dbCommand, Metadata metadata)
@@ -915,8 +920,7 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = SelectFromMetadataStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, MetadataNameParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
+        CreateAndAttachMetadataParameters(dbCommand);
         dbCommand.Prepare();
         return dbCommand;
     }
@@ -1058,14 +1062,19 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = InsertIntoTextureStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
+        CreateAndAttachTextureParameters(dbCommand);
+        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.Binary);
+        dbCommand.Prepare();
+        return dbCommand;
+    }
+
+    private void CreateAndAttachTextureParameters(DbCommand dbCommand)
+    {
         CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, TextureNameParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.Binary);
-        dbCommand.Prepare();
-        return dbCommand;
     }
 
     private void SetTextureParameters(DbCommand dbCommand, Texture texture)
@@ -1165,11 +1174,7 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = SelectFromTextureStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, TextureNameParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
+        CreateAndAttachTextureParameters(dbCommand);
         dbCommand.Prepare();
         return dbCommand;
     }
@@ -1303,15 +1308,20 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = InsertIntoTextureLodStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
+        CreateAndAttachTextureLodParameters(dbCommand);
+        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.Binary);
+        dbCommand.Prepare();
+        return dbCommand;
+    }
+
+    private void CreateAndAttachTextureLodParameters(DbCommand dbCommand)
+    {
         CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, LevelOfDetailParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, TextureNameParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.Binary);
-        dbCommand.Prepare();
-        return dbCommand;
     }
 
     private void SetTextureLodParameters(DbCommand dbCommand, TextureLod textureLod)
@@ -1413,12 +1423,7 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = SelectFromTextureLodStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, LevelOfDetailParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, TextureNameParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
+        CreateAndAttachTextureLodParameters(dbCommand);
         dbCommand.Prepare();
         return dbCommand;
     }
@@ -1604,6 +1609,14 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = InsertIntoGeotypicalModelStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
+        CreateAndAttachGeotypicalModelParameters(dbCommand);
+        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.Binary);
+        dbCommand.Prepare();
+        return dbCommand;
+    }
+
+    private void CreateAndAttachGeotypicalModelParameters(DbCommand dbCommand)
+    {
         CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
@@ -1613,9 +1626,6 @@ public abstract class SQLDataStore : IDisposable
         CreateAndAttachParameter(dbCommand, FeatureSubcodeParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ModelNameParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.Binary);
-        dbCommand.Prepare();
-        return dbCommand;
     }
 
     private void SetGeotypicalModelParameters(DbCommand dbCommand, GeotypicalModel geotypicalModel)
@@ -1723,15 +1733,7 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = SelectFromGeotypicalModelStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, FeatureCategoryParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, FeatureSubcategoryParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, FeatureTypeParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, FeatureSubcodeParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ModelNameParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
+        CreateAndAttachGeotypicalModelParameters(dbCommand);
         dbCommand.Prepare();
         return dbCommand;
     }
@@ -1869,6 +1871,14 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = InsertIntoGeotypicalModelLodStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
+        CreateAndAttachGeotypicalModelLodParameters(dbCommand);
+        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.Binary);
+        dbCommand.Prepare();
+        return dbCommand;
+    }
+
+    private void CreateAndAttachGeotypicalModelLodParameters(DbCommand dbCommand)
+    {
         CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
@@ -1879,9 +1889,6 @@ public abstract class SQLDataStore : IDisposable
         CreateAndAttachParameter(dbCommand, FeatureSubcodeParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ModelNameParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.Binary);
-        dbCommand.Prepare();
-        return dbCommand;
     }
 
     private void SetGeotypicalModelLodParameters(DbCommand dbCommand, GeotypicalModelLod geotypicalModelLod)
@@ -1991,16 +1998,7 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = SelectFromGeotypicalModelLodStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, LevelOfDetailParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, FeatureCategoryParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, FeatureSubcategoryParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, FeatureTypeParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, FeatureSubcodeParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ModelNameParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
+        CreateAndAttachGeotypicalModelLodParameters(dbCommand);
         dbCommand.Prepare();
         return dbCommand;
     }
@@ -2206,6 +2204,14 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = InsertIntoMovingModelStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
+        CreateAndAttachMovingModelParameters(dbCommand);
+        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.String);
+        dbCommand.Prepare();
+        return dbCommand;
+    }
+
+    private void CreateAndAttachMovingModelParameters(DbCommand dbCommand)
+    {
         CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
@@ -2217,9 +2223,6 @@ public abstract class SQLDataStore : IDisposable
         CreateAndAttachParameter(dbCommand, SpecificParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ExtraParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.String);
-        dbCommand.Prepare();
-        return dbCommand;
     }
 
     private void SetMovingModelParameters(DbCommand dbCommand, MovingModel movingModel)
@@ -2331,17 +2334,7 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = SelectFromMovingModelStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, KindParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, DomainParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, CountryParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, CategoryParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, SubcategoryParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, SpecificParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ExtraParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
+        CreateAndAttachMovingModelParameters(dbCommand);
         dbCommand.Prepare();
         return dbCommand;
     }
@@ -2481,6 +2474,14 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = InsertIntoMovingModelLodStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
+        CreateAndAttachMovingModelLodParameters(dbCommand);
+        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.String);
+        dbCommand.Prepare();
+        return dbCommand;
+    }
+
+    private void CreateAndAttachMovingModelLodParameters(DbCommand dbCommand)
+    {
         CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
@@ -2493,9 +2494,6 @@ public abstract class SQLDataStore : IDisposable
         CreateAndAttachParameter(dbCommand, SpecificParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ExtraParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.String);
-        dbCommand.Prepare();
-        return dbCommand;
     }
 
     private void SetMovingModelLodParameters(DbCommand dbCommand, MovingModelLod movingModelLod)
@@ -2609,18 +2607,7 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = SelectFromMovingModelLodStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, LevelOfDetailParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, KindParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, DomainParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, CountryParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, CategoryParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, SubcategoryParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, SpecificParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ExtraParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
+        CreateAndAttachMovingModelLodParameters(dbCommand);
         dbCommand.Prepare();
         return dbCommand;
     }
@@ -2793,6 +2780,14 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = InsertIntoTileStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
+        CreateAndAttachTileParameters(dbCommand);
+        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.Binary);
+        dbCommand.Prepare();
+        return dbCommand;
+    }
+
+    private void CreateAndAttachTileParameters(DbCommand dbCommand)
+    {
         CreateAndAttachParameter(dbCommand, LatitudeParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, LongitudeParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
@@ -2802,9 +2797,6 @@ public abstract class SQLDataStore : IDisposable
         CreateAndAttachParameter(dbCommand, UpParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, RightParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.Binary);
-        dbCommand.Prepare();
-        return dbCommand;
     }
 
     private void SetTileParameters(DbCommand dbCommand, Tile tile)
@@ -2912,15 +2904,7 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = SelectFromTileStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, LatitudeParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, LongitudeParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, LevelOfDetailParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, UpParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, RightParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
+        CreateAndAttachTileParameters(dbCommand);
         dbCommand.Prepare();
         return dbCommand;
     }
@@ -3062,6 +3046,14 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = InsertIntoTileArchivedFeatureStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
+        CreateAndAttachTileArchivedFeatureParameters(dbCommand);
+        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.Binary);
+        dbCommand.Prepare();
+        return dbCommand;
+    }
+
+    private void CreateAndAttachTileArchivedFeatureParameters(DbCommand dbCommand)
+    {
         CreateAndAttachParameter(dbCommand, LatitudeParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, LongitudeParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
@@ -3076,9 +3068,6 @@ public abstract class SQLDataStore : IDisposable
         CreateAndAttachParameter(dbCommand, FeatureSubcodeParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ModelNameParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.Binary);
-        dbCommand.Prepare();
-        return dbCommand;
     }
 
     private void SetTileArchivedFeatureParameters(DbCommand dbCommand, TileArchivedFeature tileArchivedFeature)
@@ -3196,20 +3185,7 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = SelectFromTileArchivedFeatureStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, LatitudeParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, LongitudeParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, LevelOfDetailParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, UpParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, RightParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, FeatureCategoryParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, FeatureSubcategoryParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, FeatureTypeParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, FeatureSubcodeParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ModelNameParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
+        CreateAndAttachTileArchivedFeatureParameters(dbCommand);
         dbCommand.Prepare();
         return dbCommand;
     }
@@ -3347,6 +3323,14 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = InsertIntoTileArchivedTextureStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
+        CreateAndAttachTileArchivedTextureParameters(dbCommand);
+        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.Binary);
+        dbCommand.Prepare();
+        return dbCommand;
+    }
+
+    private void CreateAndAttachTileArchivedTextureParameters(DbCommand dbCommand)
+    {
         CreateAndAttachParameter(dbCommand, LatitudeParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, LongitudeParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
@@ -3357,9 +3341,6 @@ public abstract class SQLDataStore : IDisposable
         CreateAndAttachParameter(dbCommand, RightParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, TextureNameParamName, DbType.String);
         CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.Binary);
-        dbCommand.Prepare();
-        return dbCommand;
     }
 
     private void SetTileArchivedTextureParameters(DbCommand dbCommand, TileArchivedTexture tileArchivedTexture)
@@ -3469,16 +3450,7 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = SelectFromTileArchivedTextureStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, LatitudeParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, LongitudeParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, LevelOfDetailParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, UpParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, RightParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, TextureNameParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
+        CreateAndAttachTileArchivedTextureParameters(dbCommand);
         dbCommand.Prepare();
         return dbCommand;
     }
@@ -3610,13 +3582,18 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = InsertIntoNavigationStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
+        CreateAndAttachNavigationParameters(dbCommand);
+        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.Binary);
+        dbCommand.Prepare();
+        return dbCommand;
+    }
+
+    private void CreateAndAttachNavigationParameters(DbCommand dbCommand)
+    {
         CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, ContentParamName, DbType.Binary);
-        dbCommand.Prepare();
-        return dbCommand;
     }
 
     private void SetNavigationParameters(DbCommand dbCommand, Navigation navigation)
@@ -3714,10 +3691,7 @@ public abstract class SQLDataStore : IDisposable
         DbCommand dbCommand = dbConnection.CreateCommand();
         dbCommand.CommandText = SelectFromNavigationStatement;
         CreateAndAttachParameter(dbCommand, CdbParamName, DbType.String);
-        CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
+        CreateAndAttachNavigationParameters(dbCommand);
         dbCommand.Prepare();
         return dbCommand;
     }
