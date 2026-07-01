@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
+using System;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace Silnith.CDB.Visitor;
@@ -115,7 +117,7 @@ public class MovingModelVisitor : VisitorBase
                 // See 3.5.3. MModel Directory Structure 3: Signature
                 levelOfDetailDirectoryWalker.WalkModelGeometryDirectories(entityDir, (lod, lodDir) =>
                 {
-                    foreach (var file in lodDir.EnumerateFiles("*", enumerationOptions))
+                    foreach (FileInfo file in lodDir.EnumerateFiles("*", enumerationOptions))
                     {
                         // See 3.5.3.1. Naming Convention
                         Match movingModelLodMatch = MovingModelLod.FilenamePattern.Match(file.Name);

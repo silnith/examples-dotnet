@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Globalization;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace Silnith.CDB.Visitor;
@@ -44,7 +46,7 @@ public class DISEntityDirectoryWalker : VisitorBase
     /// <param name="processMovingModelDirectory">The action to take for every leaf directory in the directory hierarchy.</param>
     public void WalkDirectories(DirectoryInfo dir, ProcessDISEntityDirectory processMovingModelDirectory)
     {
-        foreach (var kindDir in dir.EnumerateDirectories("*", enumerationOptions))
+        foreach (DirectoryInfo kindDir in dir.EnumerateDirectories("*", enumerationOptions))
         {
             Match kindDirectoryMatch = DISEntity.ParentDirectoryPattern.Match(kindDir.Name);
             if (!kindDirectoryMatch.Success)
@@ -56,7 +58,7 @@ public class DISEntityDirectoryWalker : VisitorBase
             int kindFromDirectory = int.Parse(kindDirectoryMatch.Groups["code"].Value, CultureInfo.InvariantCulture);
             string kindName = kindDirectoryMatch.Groups["name"].Value;
 
-            foreach (var domainDir in kindDir.EnumerateDirectories("*", enumerationOptions))
+            foreach (DirectoryInfo domainDir in kindDir.EnumerateDirectories("*", enumerationOptions))
             {
                 Match domainDirectoryMatch = DISEntity.ParentDirectoryPattern.Match(domainDir.Name);
                 if (!domainDirectoryMatch.Success)
@@ -68,7 +70,7 @@ public class DISEntityDirectoryWalker : VisitorBase
                 int domainFromDirectory = int.Parse(domainDirectoryMatch.Groups["code"].Value, CultureInfo.InvariantCulture);
                 string domainName = domainDirectoryMatch.Groups["name"].Value;
 
-                foreach (var countryDir in domainDir.EnumerateDirectories("*", enumerationOptions))
+                foreach (DirectoryInfo countryDir in domainDir.EnumerateDirectories("*", enumerationOptions))
                 {
                     Match countryDirectoryMatch = DISEntity.ParentDirectoryPattern.Match(countryDir.Name);
                     if (!countryDirectoryMatch.Success)
@@ -80,7 +82,7 @@ public class DISEntityDirectoryWalker : VisitorBase
                     int countryFromDirectory = int.Parse(countryDirectoryMatch.Groups["code"].Value, CultureInfo.InvariantCulture);
                     string countryName = countryDirectoryMatch.Groups["name"].Value;
 
-                    foreach (var categoryDir in countryDir.EnumerateDirectories("*", enumerationOptions))
+                    foreach (DirectoryInfo categoryDir in countryDir.EnumerateDirectories("*", enumerationOptions))
                     {
                         Match categoryDirectoryMatch = DISEntity.ParentDirectoryPattern.Match(categoryDir.Name);
                         if (!categoryDirectoryMatch.Success)
@@ -92,7 +94,7 @@ public class DISEntityDirectoryWalker : VisitorBase
                         int categoryFromDirectory = int.Parse(categoryDirectoryMatch.Groups["code"].Value, CultureInfo.InvariantCulture);
                         string categoryName = categoryDirectoryMatch.Groups["name"].Value;
 
-                        foreach (var disDirectory in categoryDir.EnumerateDirectories("*", enumerationOptions))
+                        foreach (DirectoryInfo disDirectory in categoryDir.EnumerateDirectories("*", enumerationOptions))
                         {
                             Match disMatch = DISEntity.DirectoryPattern.Match(disDirectory.Name);
                             if (!disMatch.Success)

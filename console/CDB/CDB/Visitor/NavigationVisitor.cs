@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
+using System;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace Silnith.CDB.Visitor;
@@ -46,7 +48,7 @@ public class NavigationVisitor : VisitorBase
             return;
         }
 
-        foreach (var datasetDir in navigationDir.EnumerateDirectories("*", enumerationOptions))
+        foreach (DirectoryInfo datasetDir in navigationDir.EnumerateDirectories("*", enumerationOptions))
         {
             Match datasetMatch = Dataset.DirectoryPattern.Match(datasetDir.Name);
             if (!datasetMatch.Success)
@@ -56,8 +58,14 @@ public class NavigationVisitor : VisitorBase
                 continue;
             }
             Dataset datasetFromDirectory = Dataset.FromDirectoryMatch(datasetMatch);
+            string datasetName = datasetMatch.Groups["name"].Value;
+            if (datasetFromDirectory.Value != 400
+                || datasetName != "NavData")
+            {
+                logger.LogWarning("Directory {DatasetDirectory} is not 400_NavData", datasetDir);
+            }
 
-            foreach (var file in datasetDir.EnumerateFiles("*", enumerationOptions))
+            foreach (FileInfo file in datasetDir.EnumerateFiles("*", enumerationOptions))
             {
                 Match match = Navigation.FilenamePattern.Match(file.Name);
                 if (!match.Success)

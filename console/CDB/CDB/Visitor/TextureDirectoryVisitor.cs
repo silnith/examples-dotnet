@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Globalization;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace Silnith.CDB.Visitor;
@@ -59,7 +61,7 @@ public class TextureDirectoryVisitor : VisitorBase
     /// <param name="processTextureDirectory">The action to take for every leaf directory in the directory hierarchy.</param>
     public void WalkDirectories(DirectoryInfo dir, ProcessTextureDirectory processTextureDirectory)
     {
-        foreach (var level1Dir in dir.EnumerateDirectories("*", enumerationOptions))
+        foreach (DirectoryInfo level1Dir in dir.EnumerateDirectories("*", enumerationOptions))
         {
             Match level1Match = Texture.PrefixPattern.Match(level1Dir.Name);
             if (!level1Match.Success)
@@ -68,9 +70,9 @@ public class TextureDirectoryVisitor : VisitorBase
                     level1Dir);
                 continue;
             }
-            var level1Prefix = level1Match.Groups["prefix"].Value;
+            string level1Prefix = level1Match.Groups["prefix"].Value;
 
-            foreach (var level2Dir in level1Dir.EnumerateDirectories("*", enumerationOptions))
+            foreach (DirectoryInfo level2Dir in level1Dir.EnumerateDirectories("*", enumerationOptions))
             {
                 Match level2Match = Texture.PrefixPattern.Match(level2Dir.Name);
                 if (!level2Match.Success)
@@ -79,9 +81,9 @@ public class TextureDirectoryVisitor : VisitorBase
                         level2Dir);
                     continue;
                 }
-                var level2Prefix = level2Match.Groups["prefix"].Value;
+                string level2Prefix = level2Match.Groups["prefix"].Value;
 
-                foreach (var textureDir in level2Dir.EnumerateDirectories("*", enumerationOptions))
+                foreach (DirectoryInfo textureDir in level2Dir.EnumerateDirectories("*", enumerationOptions))
                 {
                     string textureName = textureDir.Name;
 
