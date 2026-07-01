@@ -1,89 +1,99 @@
-﻿using Npgsql;
+﻿using Microsoft.Data.Sqlite;
 using Silnith.CDB.SQL;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace Silnith.CDB.PostgreSQL;
+namespace Silnith.CDB.SQLite;
 
 /// <summary>
-/// A client for a PostgreSQL database that uses a schema designed for storing
+/// An encapsulated SQLite database that uses a schema designed for storing
 /// files from a CDB data store.
 /// </summary>
-public class PostgreSQLCDB : SQLCDB
+public class SQLiteDataStore : SQLDataStore
 {
+    private const string varcharColumnType = "text";
+    private const string varchar32ColumnType = "text";
+    private const string char1ColumnType = "text";
+    private const string numeric2ColumnType = "integer";
+    private const string numeric3ColumnType = "integer";
+    private const string numeric7ColumnType = "integer";
+    private const string blobColumnType = "blob";
 
     #region SQL Parameters
 
     #region Universal Parameters
 
-    private const string cdbParamName = "@cdb";
+    private const string cdbParamName = "$cdb";
 
     /// <inheritdoc/>
     protected override string CdbParamName => cdbParamName;
 
-    private const string datasetParamName = "@dataset";
+    private const string datasetParamName = "$dataset";
 
     /// <inheritdoc/>
     protected override string DatasetParamName => datasetParamName;
 
-    private const string cs1ParamName = "@component_selector_1";
+    private const string cs1ParamName = "$component_selector_1";
 
     /// <inheritdoc/>
     protected override string ComponentSelector1ParamName => cs1ParamName;
 
-    private const string cs2ParamName = "@component_selector_2";
+    private const string cs2ParamName = "$component_selector_2";
 
     /// <inheritdoc/>
     protected override string ComponentSelector2ParamName => cs2ParamName;
 
-    private const string lodParamName = "@level_of_detail";
+    private const string lodParamName = "$level_of_detail";
 
     /// <inheritdoc/>
     protected override string LevelOfDetailParamName => lodParamName;
 
-    private const string fileTypeParamName = "@file_type";
+    private const string fileTypeParamName = "$file_type";
 
     /// <inheritdoc/>
     protected override string FileTypeParamName => fileTypeParamName;
 
-    private const string contentParamName = "@content";
+    private const string contentParamName = "$content";
 
     /// <inheritdoc/>
     protected override string ContentParamName => contentParamName;
 
     #endregion
 
-    private const string metadataNameParamName = "@metadata_name";
+    private const string metadataNameParamName = "$metadata_name";
 
     /// <inheritdoc/>
     protected override string MetadataNameParamName => metadataNameParamName;
 
-    private const string textureNameParamName = "@texture_name";
+    private const string textureNameParamName = "$texture_name";
 
     /// <inheritdoc/>
     protected override string TextureNameParamName => textureNameParamName;
 
-    private const string modelNameParamName = "@model_name";
+    private const string modelNameParamName = "$model_name";
 
     /// <inheritdoc/>
     protected override string ModelNameParamName => modelNameParamName;
 
     #region Feature Code Parameters
 
-    private const string featureCategoryParamName = "@feature_category";
+    private const string featureCategoryParamName = "$feature_category";
 
     /// <inheritdoc/>
     protected override string FeatureCategoryParamName => featureCategoryParamName;
 
-    private const string featureSubcategoryParamName = "@feature_subcategory";
+    private const string featureSubcategoryParamName = "$feature_subcategory";
 
     /// <inheritdoc/>
     protected override string FeatureSubcategoryParamName => featureSubcategoryParamName;
 
-    private const string featureTypeParamName = "@feature_type";
+    private const string featureTypeParamName = "$feature_type";
 
     /// <inheritdoc/>
     protected override string FeatureTypeParamName => featureTypeParamName;
 
-    private const string featureSubcodeParamName = "@feature_subcode";
+    private const string featureSubcodeParamName = "$feature_subcode";
 
     /// <inheritdoc/>
     protected override string FeatureSubcodeParamName => featureSubcodeParamName;
@@ -92,37 +102,37 @@ public class PostgreSQLCDB : SQLCDB
 
     #region DIS Code Parameters
 
-    private const string kindParamName = "@dis_kind";
+    private const string kindParamName = "$dis_kind";
 
     /// <inheritdoc/>
     protected override string KindParamName => kindParamName;
 
-    private const string domainParamName = "@dis_domain";
+    private const string domainParamName = "$dis_domain";
 
     /// <inheritdoc/>
     protected override string DomainParamName => domainParamName;
 
-    private const string countryParamName = "@dis_country";
+    private const string countryParamName = "$dis_country";
 
     /// <inheritdoc/>
     protected override string CountryParamName => countryParamName;
 
-    private const string categoryParamName = "@dis_category";
+    private const string categoryParamName = "$dis_category";
 
     /// <inheritdoc/>
     protected override string CategoryParamName => categoryParamName;
 
-    private const string subcategoryParamName = "@dis_subcategory";
+    private const string subcategoryParamName = "$dis_subcategory";
 
     /// <inheritdoc/>
     protected override string SubcategoryParamName => subcategoryParamName;
 
-    private const string specificParamName = "@dis_specific";
+    private const string specificParamName = "$dis_specific";
 
     /// <inheritdoc/>
     protected override string SpecificParamName => specificParamName;
 
-    private const string extraParamName = "@dis_extra";
+    private const string extraParamName = "$dis_extra";
 
     /// <inheritdoc/>
     protected override string ExtraParamName => extraParamName;
@@ -131,22 +141,22 @@ public class PostgreSQLCDB : SQLCDB
 
     #region Tile Parameters
 
-    private const string latitudeParamName = "@latitude";
+    private const string latitudeParamName = "$latitude";
 
     /// <inheritdoc/>
     protected override string LatitudeParamName => latitudeParamName;
 
-    private const string longitudeParamName = "@longitude";
+    private const string longitudeParamName = "$longitude";
 
     /// <inheritdoc/>
     protected override string LongitudeParamName => longitudeParamName;
 
-    private const string upParamName = "@up";
+    private const string upParamName = "$up";
 
     /// <inheritdoc/>
     protected override string UpParamName => upParamName;
 
-    private const string rightParamName = "@right";
+    private const string rightParamName = "$right";
 
     /// <inheritdoc/>
     protected override string RightParamName => rightParamName;
@@ -165,11 +175,13 @@ public class PostgreSQLCDB : SQLCDB
     /// <inheritdoc/>
     protected override string ContentColumnName => contentColumnName;
 
+    private const string rowidColumnName = "rowid";
+
     #region CDB
 
     private const string createTableCDB = $"""
         create table if not exists CDB (
-            {cdbNameColumnName} character varying primary key
+            {cdbNameColumnName} {varcharColumnType} primary key
         )
         """;
 
@@ -201,10 +213,10 @@ public class PostgreSQLCDB : SQLCDB
 
     private const string createTableMetadata = $"""
         create table if not exists Metadata (
-            cdb character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            name character varying not null,
-            file_type character varying not null,
-            {contentColumnName} bytea not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            name {varcharColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 name,
@@ -233,9 +245,42 @@ public class PostgreSQLCDB : SQLCDB
     /// <inheritdoc/>
     protected override string InsertIntoMetadataStatement => insertIntoMetadata;
 
+    /*
+     * SQLite cannot handle a Stream as an input object.  Therefore this
+     * implementation must convert all the Streams to byte arrays.
+     */
+
+    /// <inheritdoc/>
+    public override int InsertIntoMetadata(string cdbName, Metadata metadata, Stream content)
+    {
+        using MemoryStream memoryStream = new();
+        content.CopyTo(memoryStream);
+        return InsertIntoMetadata(cdbName, metadata, memoryStream.ToArray());
+    }
+
+    /// <inheritdoc/>
+    public override async Task<int> InsertIntoMetadataAsync(string cdbName, Metadata metadata, Stream content, CancellationToken cancellationToken = default)
+    {
+        await using MemoryStream memoryStream = new();
+        await content.CopyToAsync(memoryStream, cancellationToken);
+        return await InsertIntoMetadataAsync(cdbName, metadata, memoryStream.ToArray(), cancellationToken);
+    }
+
+    /*
+     * If a select statement for a column of type blob also includes the
+     * implicit rowid column, then the SQLite driver will return the blob
+     * column as type SqliteBlob, which supports streaming the blob contents.
+     * 
+     * If not, the driver will return the entire blob as a MemoryStream,
+     * which is fully buffered in memory.
+     * 
+     * https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/blob-io
+     */
+
     private const string selectFromMetadata = $"""
         select
-            {contentColumnName}
+            {contentColumnName},
+            {rowidColumnName}
         from Metadata
         where cdb = {cdbParamName}
             and name = {metadataNameParamName}
@@ -251,13 +296,13 @@ public class PostgreSQLCDB : SQLCDB
 
     private const string createTableTexture = $"""
         create table if not exists Texture (
-            cdb character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset numeric(3,0) not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            texture_name character varying not null,
-            file_type character varying not null,
-            {contentColumnName} binary large object not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            texture_name {varchar32ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 dataset,
@@ -295,9 +340,26 @@ public class PostgreSQLCDB : SQLCDB
     /// <inheritdoc/>
     protected override string InsertIntoTextureStatement => insertIntoTexture;
 
+    /// <inheritdoc/>
+    public override int InsertIntoTexture(string cdbName, Texture texture, Stream content)
+    {
+        using MemoryStream memoryStream = new();
+        content.CopyTo(memoryStream);
+        return InsertIntoTexture(cdbName, texture, memoryStream.ToArray());
+    }
+
+    /// <inheritdoc/>
+    public override async Task<int> InsertIntoTextureAsync(string cdbName, Texture texture, Stream content, CancellationToken cancellationToken = default)
+    {
+        await using MemoryStream memoryStream = new();
+        await content.CopyToAsync(memoryStream, cancellationToken);
+        return await InsertIntoTextureAsync(cdbName, texture, memoryStream.ToArray(), cancellationToken);
+    }
+
     private const string selectFromTexture = $"""
         select
-            {contentColumnName}
+            {contentColumnName},
+            {rowidColumnName}
         from Texture
         where cdb = {cdbParamName}
             and dataset = {datasetParamName}
@@ -316,14 +378,14 @@ public class PostgreSQLCDB : SQLCDB
 
     private const string createTableTextureLod = $"""
         create table if not exists TextureLod (
-            cdb character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            lod integer not null,
-            texture_name character varying not null,
-            file_type character varying not null,
-            {contentColumnName} bytea not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            lod {numeric2ColumnType} not null,
+            texture_name {varchar32ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 dataset,
@@ -364,9 +426,26 @@ public class PostgreSQLCDB : SQLCDB
     /// <inheritdoc/>
     protected override string InsertIntoTextureLodStatement => insertIntoTextureLod;
 
+    /// <inheritdoc/>
+    public override int InsertIntoTextureLod(string cdbName, TextureLod textureLod, Stream content)
+    {
+        using MemoryStream memoryStream = new();
+        content.CopyTo(memoryStream);
+        return InsertIntoTextureLod(cdbName, textureLod, memoryStream.ToArray());
+    }
+
+    /// <inheritdoc/>
+    public override async Task<int> InsertIntoTextureLodAsync(string cdbName, TextureLod textureLod, Stream content, CancellationToken cancellationToken = default)
+    {
+        await using MemoryStream memoryStream = new();
+        await content.CopyToAsync(memoryStream, cancellationToken);
+        return await InsertIntoTextureLodAsync(cdbName, textureLod, memoryStream.ToArray(), cancellationToken);
+    }
+
     private const string selectFromTextureLod = $"""
         select
-            {contentColumnName}
+            {contentColumnName},
+            {rowidColumnName}
         from TextureLod
         where cdb = {cdbParamName}
             and dataset = {datasetParamName}
@@ -386,17 +465,17 @@ public class PostgreSQLCDB : SQLCDB
 
     private const string createTableGeotypicalModel = $"""
         create table if not exists GeotypicalModel (
-            cdb character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            feature_category character(1) not null,
-            feature_subcategory character(1) not null,
-            feature_type integer not null,
-            feature_subcode integer not null,
-            model_name character varying not null,
-            file_type character varying not null,
-            {contentColumnName} bytea not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            feature_category {char1ColumnType} not null,
+            feature_subcategory {char1ColumnType} not null,
+            feature_type {numeric3ColumnType} not null,
+            feature_subcode {numeric3ColumnType} not null,
+            model_name {varchar32ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 dataset,
@@ -446,9 +525,26 @@ public class PostgreSQLCDB : SQLCDB
     /// <inheritdoc/>
     protected override string InsertIntoGeotypicalModelStatement => insertIntoGeotypicalModel;
 
+    /// <inheritdoc/>
+    public override int InsertIntoGeotypicalModel(string cdbName, GeotypicalModel geotypicalModel, Stream content)
+    {
+        using MemoryStream memoryStream = new();
+        content.CopyTo(memoryStream);
+        return InsertIntoGeotypicalModel(cdbName, geotypicalModel, memoryStream.ToArray());
+    }
+
+    /// <inheritdoc/>
+    public override async Task<int> InsertIntoGeotypicalModelAsync(string cdbName, GeotypicalModel geotypicalModel, Stream content, CancellationToken cancellationToken = default)
+    {
+        await using MemoryStream memoryStream = new();
+        await content.CopyToAsync(memoryStream, cancellationToken);
+        return await InsertIntoGeotypicalModelAsync(cdbName, geotypicalModel, memoryStream.ToArray(), cancellationToken);
+    }
+
     private const string selectFromGeotypicalModel = $"""
         select
-            {contentColumnName}
+            {contentColumnName},
+            {rowidColumnName}
         from GeotypicalModel
         where cdb = {cdbParamName}
             and dataset = {datasetParamName}
@@ -471,18 +567,18 @@ public class PostgreSQLCDB : SQLCDB
 
     private const string createTableGeotypicalModelLod = $"""
         create table if not exists GeotypicalModelLod (
-            cdb character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            lod integer not null,
-            feature_category character(1) not null,
-            feature_subcategory character(1) not null,
-            feature_type integer not null,
-            feature_subcode integer not null,
-            model_name character varying not null,
-            file_type character varying not null,
-            {contentColumnName} bytea not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            lod {numeric2ColumnType} not null,
+            feature_category {char1ColumnType} not null,
+            feature_subcategory {char1ColumnType} not null,
+            feature_type {numeric3ColumnType} not null,
+            feature_subcode {numeric3ColumnType} not null,
+            model_name {varchar32ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 dataset,
@@ -535,9 +631,26 @@ public class PostgreSQLCDB : SQLCDB
     /// <inheritdoc/>
     protected override string InsertIntoGeotypicalModelLodStatement => insertIntoGeotypicalModelLod;
 
+    /// <inheritdoc/>
+    public override int InsertIntoGeotypicalModelLod(string cdbName, GeotypicalModelLod geotypicalModelLod, Stream content)
+    {
+        using MemoryStream memoryStream = new();
+        content.CopyTo(memoryStream);
+        return InsertIntoGeotypicalModelLod(cdbName, geotypicalModelLod, memoryStream.ToArray());
+    }
+
+    /// <inheritdoc/>
+    public override async Task<int> InsertIntoGeotypicalModelLodAsync(string cdbName, GeotypicalModelLod geotypicalModelLod, Stream content, CancellationToken cancellationToken = default)
+    {
+        await using MemoryStream memoryStream = new();
+        await content.CopyToAsync(memoryStream, cancellationToken);
+        return await InsertIntoGeotypicalModelLodAsync(cdbName, geotypicalModelLod, memoryStream.ToArray(), cancellationToken);
+    }
+
     private const string selectFromGeotypicalModelLod = $"""
         select
-            {contentColumnName}
+            {contentColumnName},
+            {rowidColumnName}
         from GeotypicalModelLod
         where cdb = {cdbParamName}
             and dataset = {datasetParamName}
@@ -561,19 +674,19 @@ public class PostgreSQLCDB : SQLCDB
 
     private const string createTableMovingModel = $"""
         create table if not exists MovingModel (
-            cdb character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            kind integer not null,
-            domain integer not null,
-            country integer not null,
-            category integer not null,
-            subcategory integer not null,
-            specific integer not null,
-            extra integer not null,
-            file_type character varying not null,
-            {contentColumnName} bytea not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            kind {numeric3ColumnType} not null,
+            domain {numeric3ColumnType} not null,
+            country {numeric3ColumnType} not null,
+            category {numeric3ColumnType} not null,
+            subcategory {numeric3ColumnType} not null,
+            specific {numeric3ColumnType} not null,
+            extra {numeric3ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 dataset,
@@ -629,9 +742,26 @@ public class PostgreSQLCDB : SQLCDB
     /// <inheritdoc/>
     protected override string InsertIntoMovingModelStatement => insertIntoMovingModel;
 
+    /// <inheritdoc/>
+    public override int InsertIntoMovingModel(string cdbName, MovingModel movingModel, Stream content)
+    {
+        using MemoryStream memoryStream = new();
+        content.CopyTo(memoryStream);
+        return InsertIntoMovingModel(cdbName, movingModel, memoryStream.ToArray());
+    }
+
+    /// <inheritdoc/>
+    public override async Task<int> InsertIntoMovingModelAsync(string cdbName, MovingModel movingModel, Stream content, CancellationToken cancellationToken = default)
+    {
+        await using MemoryStream memoryStream = new();
+        await content.CopyToAsync(memoryStream, cancellationToken);
+        return await InsertIntoMovingModelAsync(cdbName, movingModel, memoryStream.ToArray(), cancellationToken);
+    }
+
     private const string selectFromMovingModel = $"""
         select
-            {contentColumnName}
+            {contentColumnName},
+            {rowidColumnName}
         from MovingModel
         where cdb = {cdbParamName}
             and dataset = {datasetParamName}
@@ -656,20 +786,20 @@ public class PostgreSQLCDB : SQLCDB
 
     private const string createTableMovingModelLod = $"""
         create table if not exists MovingModelLod (
-            cdb character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            lod integer not null,
-            kind integer not null,
-            domain integer not null,
-            country integer not null,
-            category integer not null,
-            subcategory integer not null,
-            specific integer not null,
-            extra integer not null,
-            file_type character varying not null,
-            {contentColumnName} bytea not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            lod {numeric2ColumnType} not null,
+            kind {numeric3ColumnType} not null,
+            domain {numeric3ColumnType} not null,
+            country {numeric3ColumnType} not null,
+            category {numeric3ColumnType} not null,
+            subcategory {numeric3ColumnType} not null,
+            specific {numeric3ColumnType} not null,
+            extra {numeric3ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 dataset,
@@ -728,9 +858,26 @@ public class PostgreSQLCDB : SQLCDB
     /// <inheritdoc/>
     protected override string InsertIntoMovingModelLodStatement => insertIntoMovingModelLod;
 
+    /// <inheritdoc/>
+    public override int InsertIntoMovingModelLod(string cdbName, MovingModelLod movingModelLod, Stream content)
+    {
+        using MemoryStream memoryStream = new();
+        content.CopyTo(memoryStream);
+        return InsertIntoMovingModelLod(cdbName, movingModelLod, memoryStream.ToArray());
+    }
+
+    /// <inheritdoc/>
+    public override async Task<int> InsertIntoMovingModelLodAsync(string cdbName, MovingModelLod movingModelLod, Stream content, CancellationToken cancellationToken = default)
+    {
+        await using MemoryStream memoryStream = new();
+        await content.CopyToAsync(memoryStream, cancellationToken);
+        return await InsertIntoMovingModelLodAsync(cdbName, movingModelLod, memoryStream.ToArray(), cancellationToken);
+    }
+
     private const string selectFromMovingModelLod = $"""
         select
-            {contentColumnName}
+            {contentColumnName},
+            {rowidColumnName}
         from MovingModelLod
         where cdb = {cdbParamName}
             and dataset = {datasetParamName}
@@ -756,17 +903,17 @@ public class PostgreSQLCDB : SQLCDB
 
     private const string createTableTile = $"""
         create table if not exists Tile (
-            cdb character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            latitude integer not null,
-            longitude integer not null,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            lod integer not null,
-            up integer not null,
-            right integer not null,
-            file_type character varying not null,
-            {contentColumnName} bytea not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            latitude {numeric2ColumnType} not null,
+            longitude {numeric3ColumnType} not null,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            lod {numeric2ColumnType} not null,
+            up {numeric7ColumnType} not null,
+            right {numeric7ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 latitude,
@@ -816,9 +963,26 @@ public class PostgreSQLCDB : SQLCDB
     /// <inheritdoc/>
     protected override string InsertIntoTileStatement => insertIntoTile;
 
+    /// <inheritdoc/>
+    public override int InsertIntoTile(string cdbName, Tile tile, Stream content)
+    {
+        using MemoryStream memoryStream = new();
+        content.CopyTo(memoryStream);
+        return InsertIntoTile(cdbName, tile, memoryStream.ToArray());
+    }
+
+    /// <inheritdoc/>
+    public override async Task<int> InsertIntoTileAsync(string cdbName, Tile tile, Stream content, CancellationToken cancellationToken = default)
+    {
+        await using MemoryStream memoryStream = new();
+        await content.CopyToAsync(memoryStream, cancellationToken);
+        return await InsertIntoTileAsync(cdbName, tile, memoryStream.ToArray(), cancellationToken);
+    }
+
     private const string selectFromTile = $"""
         select
-            {contentColumnName}
+            {contentColumnName},
+            {rowidColumnName}
         from Tile
         where cdb = {cdbParamName}
             and latitude = {latitudeParamName}
@@ -841,22 +1005,22 @@ public class PostgreSQLCDB : SQLCDB
 
     private const string createTableTileArchivedFeature = $"""
         create table if not exists TileArchivedFeature (
-            cdb character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            latitude integer not null,
-            longitude integer not null,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            lod integer not null,
-            up integer not null,
-            right integer not null,
-            feature_category character(1) not null,
-            feature_subcategory character(1) not null,
-            feature_type integer not null,
-            feature_subcode integer not null,
-            model_name character varying not null,
-            file_type character varying not null,
-            {contentColumnName} bytea not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            latitude {numeric2ColumnType} not null,
+            longitude {numeric3ColumnType} not null,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            lod {numeric2ColumnType} not null,
+            up {numeric7ColumnType} not null,
+            right {numeric7ColumnType} not null,
+            feature_category {char1ColumnType} not null,
+            feature_subcategory {char1ColumnType} not null,
+            feature_type {numeric3ColumnType} not null,
+            feature_subcode {numeric3ColumnType} not null,
+            model_name {varchar32ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 latitude,
@@ -921,9 +1085,26 @@ public class PostgreSQLCDB : SQLCDB
     /// <inheritdoc/>
     protected override string InsertIntoTileArchivedFeatureStatement => insertIntoTileArchivedFeature;
 
+    /// <inheritdoc/>
+    public override int InsertIntoTileArchivedFeature(string cdbName, TileArchivedFeature tileArchivedFeature, Stream content)
+    {
+        using MemoryStream memoryStream = new();
+        content.CopyTo(memoryStream);
+        return InsertIntoTileArchivedFeature(cdbName, tileArchivedFeature, memoryStream.ToArray());
+    }
+
+    /// <inheritdoc/>
+    public override async Task<int> InsertIntoTileArchivedFeatureAsync(string cdbName, TileArchivedFeature tileArchivedFeature, Stream content, CancellationToken cancellationToken = default)
+    {
+        await using MemoryStream memoryStream = new();
+        await content.CopyToAsync(memoryStream, cancellationToken);
+        return await InsertIntoTileArchivedFeatureAsync(cdbName, tileArchivedFeature, memoryStream.ToArray(), cancellationToken);
+    }
+
     private const string selectFromTileArchivedFeature = $"""
         select
-            {contentColumnName}
+            {contentColumnName},
+            {rowidColumnName}
         from TileArchivedFeature
         where cdb = {cdbParamName}
             and latitude = {latitudeParamName}
@@ -951,18 +1132,18 @@ public class PostgreSQLCDB : SQLCDB
 
     private const string createTableTileArchivedTexture = $"""
         create table if not exists TileArchivedTexture (
-            cdb character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            latitude integer not null,
-            longitude integer not null,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            lod integer not null,
-            up integer not null,
-            right integer not null,
-            texture_name character varying not null,
-            file_type character varying not null,
-            {contentColumnName} bytea not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            latitude {numeric2ColumnType} not null,
+            longitude {numeric3ColumnType} not null,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            lod {numeric2ColumnType} not null,
+            up {numeric7ColumnType} not null,
+            right {numeric7ColumnType} not null,
+            texture_name {varchar32ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 latitude,
@@ -1015,9 +1196,26 @@ public class PostgreSQLCDB : SQLCDB
     /// <inheritdoc/>
     protected override string InsertIntoTileArchivedTextureStatement => insertIntoTileArchivedTexture;
 
+    /// <inheritdoc/>
+    public override int InsertIntoTileArchivedTexture(string cdbName, TileArchivedTexture tileArchivedTexture, Stream content)
+    {
+        using MemoryStream memoryStream = new();
+        content.CopyTo(memoryStream);
+        return InsertIntoTileArchivedTexture(cdbName, tileArchivedTexture, memoryStream.ToArray());
+    }
+
+    /// <inheritdoc/>
+    public override async Task<int> InsertIntoTileArchivedTextureAsync(string cdbName, TileArchivedTexture tileArchivedTexture, Stream content, CancellationToken cancellationToken = default)
+    {
+        await using MemoryStream memoryStream = new();
+        await content.CopyToAsync(memoryStream, cancellationToken);
+        return await InsertIntoTileArchivedTextureAsync(cdbName, tileArchivedTexture, memoryStream.ToArray(), cancellationToken);
+    }
+
     private const string selectFromTileArchivedTexture = $"""
         select
-            {contentColumnName}
+            {contentColumnName},
+            {rowidColumnName}
         from TileArchivedTexture
         where cdb = {cdbParamName}
             and latitude = {latitudeParamName}
@@ -1041,12 +1239,12 @@ public class PostgreSQLCDB : SQLCDB
 
     private const string createTableNavigation = $"""
         create table if not exists Navigation (
-            cdb character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            file_type character varying not null,
-            {contentColumnName} bytea not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 dataset,
@@ -1081,9 +1279,26 @@ public class PostgreSQLCDB : SQLCDB
     /// <inheritdoc/>
     protected override string InsertIntoNavigationStatement => insertIntoNavigation;
 
+    /// <inheritdoc/>
+    public override int InsertIntoNavigation(string cdbName, Navigation navigation, Stream content)
+    {
+        using MemoryStream memoryStream = new();
+        content.CopyTo(memoryStream);
+        return InsertIntoNavigation(cdbName, navigation, memoryStream.ToArray());
+    }
+
+    /// <inheritdoc/>
+    public override async Task<int> InsertIntoNavigationAsync(string cdbName, Navigation navigation, Stream content, CancellationToken cancellationToken = default)
+    {
+        await using MemoryStream memoryStream = new();
+        await content.CopyToAsync(memoryStream, cancellationToken);
+        return await InsertIntoNavigationAsync(cdbName, navigation, memoryStream.ToArray(), cancellationToken);
+    }
+
     private const string selectFromNavigation = $"""
         select
-            {contentColumnName}
+            {contentColumnName},
+            {rowidColumnName}
         from Navigation
         where cdb = {cdbParamName}
             and dataset = {datasetParamName}
@@ -1097,7 +1312,13 @@ public class PostgreSQLCDB : SQLCDB
 
     #endregion
 
-    public PostgreSQLCDB(NpgsqlConnection npgsqlConnection, bool createSchema = false) : base(npgsqlConnection, createSchema)
+    /// <summary>
+    /// Creates a new SQL data store using the provided SQLite connection.
+    /// </summary>
+    /// <param name="sqliteConnection">The database connection.</param>
+    /// <param name="createSchema"><see langword="true"/> to run the DDL to create the schema.</param>
+    public SQLiteDataStore(SqliteConnection sqliteConnection, bool createSchema = false)
+        : base(sqliteConnection, createSchema)
     {
     }
 

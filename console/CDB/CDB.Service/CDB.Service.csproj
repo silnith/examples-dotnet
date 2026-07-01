@@ -4,8 +4,8 @@
         <TargetFramework>net7.0</TargetFramework>
         <AssemblyName>Silnith.CDB.Service</AssemblyName>
         <RootNamespace>Silnith.CDB.Service</RootNamespace>
+        <ImplicitUsings>disable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
     <ItemGroup>

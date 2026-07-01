@@ -1,4 +1,8 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Silnith.CDB;
 
@@ -18,7 +22,7 @@ namespace Silnith.CDB;
 /// this interface.
 /// </para>
 /// </remarks>
-public interface IDataStore : IDisposable
+public interface ICDB : IDisposable
 {
     /// <summary>
     /// A simple identifier for the CDB data store.
@@ -94,4 +98,50 @@ public interface IDataStore : IDisposable
     /// <param name="output">A stream that will receive the file contents.</param>
     /// <returns><see langword="true"/> if the file was found and its contents returned.</returns>
     public bool TryReadFile(string filePathAndName, Stream output);
+
+    /// <summary>
+    /// Tries to read a file out of the CDB and return its contents.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The <paramref name="filePathAndName"/> should always begin with one of
+    /// the known root directories.  These are:
+    /// </para>
+    /// <list type="bullet">
+    /// <item><term><c>/Metadata/</c></term></item>
+    /// <item><term><c>/GTModel/</c></term></item>
+    /// <item><term><c>/MModel/</c></term></item>
+    /// <item><term><c>/Tiles/</c></term></item>
+    /// <item><term><c>/Navigation/</c></term></item>
+    /// </list>
+    /// </remarks>
+    /// <param name="filePathAndName">The relative path and filename of the file to read.
+    /// The path should be relative to the CDB root.</param>
+    /// <param name="output">A stream that will receive the file contents.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns><see langword="true"/> if the file was found and its contents returned.</returns>
+    public Task<bool> TryReadFileAsync(string filePathAndName, Stream output, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Reads a file out of the CDB and return its contents.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The <paramref name="filePathAndName"/> should always begin with one of
+    /// the known root directories.  These are:
+    /// </para>
+    /// <list type="bullet">
+    /// <item><term><c>/Metadata/</c></term></item>
+    /// <item><term><c>/GTModel/</c></term></item>
+    /// <item><term><c>/MModel/</c></term></item>
+    /// <item><term><c>/Tiles/</c></term></item>
+    /// <item><term><c>/Navigation/</c></term></item>
+    /// </list>
+    /// </remarks>
+    /// <param name="filePathAndName">The relative path and filename of the file to read.
+    /// The path should be relative to the CDB root.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The file contents.</returns>
+    /// <exception cref="FileNotFoundException">If the file was not found.</exception>
+    public Task<byte[]> ReadFileAsync(string filePathAndName, CancellationToken cancellationToken = default);
 }

@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System.IO;
 using System.Net.Mime;
 
 namespace Silnith.CDB.Service.Controllers;
@@ -9,10 +11,10 @@ public class CdbController : ControllerBase
 {
     private readonly ILogger<CdbController> logger;
 
-    private readonly IDataStore dataStore;
+    private readonly ICDB dataStore;
 
     public CdbController(ILogger<CdbController> logger,
-        IDataStore dataStore)
+        ICDB dataStore)
     {
         this.logger = logger;
         this.dataStore = dataStore;

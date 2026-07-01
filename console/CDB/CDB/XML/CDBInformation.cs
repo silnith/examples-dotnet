@@ -1,9 +1,12 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.IO;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace Silnith.CDB.XML;
 
-public class DataStoreInformation
+public class CDBInformation
 {
     public Metadata.Version.Element? Version
     {
@@ -23,7 +26,7 @@ public class DataStoreInformation
         private set;
     } = new SortedDictionary<int, string>().ToImmutableSortedDictionary();
 
-    public void Initialize(IDataStore dataStore)
+    public void Initialize(ICDB dataStore)
     {
         XmlSerializerFactory xmlSerializerFactory = new();
         if (dataStore.TryReadFile("Metadata/Version.xml", out byte[] versionContent))

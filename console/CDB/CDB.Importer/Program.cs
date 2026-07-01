@@ -1,10 +1,13 @@
 ﻿using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Silnith.CDB.SQL;
 using Silnith.CDB.SQLite;
 using Silnith.CDB.Visitor;
 using Silnith.CDB.XML;
+using System;
 using System.Globalization;
+using System.IO;
 
 namespace Silnith.CDB.Importer;
 
@@ -45,18 +48,18 @@ internal class Program
         };
         using SqliteConnection sqliteConnection = new(connectionStringBuilder.ConnectionString);
         sqliteConnection.Open();
-        using SQLiteCDB sqliteCDB = new(sqliteConnection, true);
+        using SQLiteDataStore sqliteDataStore = new(sqliteConnection, true);
 
         string cdbName = "CDB";
         DirectoryInfo cdbRoot = new(cdbName);
 
-        sqliteCDB.ImportDirectory(cdbName, cdbRoot, host.Services);
+        sqliteDataStore.ImportDirectory(cdbName, cdbRoot, host.Services);
 
-        using IDataStore dataStore = new SQLDataStore(cdbName, cdbRoot, sqliteCDB);
-        DataStoreInformation dataStoreInformation = new();
-        dataStoreInformation.Initialize(dataStore);
+        using ICDB cdb = new SQLCDB(cdbName, cdbRoot, sqliteDataStore);
+        CDBInformation cdbInformation = new();
+        cdbInformation.Initialize(cdb);
 
-        foreach ((int code, string name) in dataStoreInformation.DatasetNames)
+        foreach ((int code, string name) in cdbInformation.DatasetNames)
         {
             Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0:D3}_{1}", code, name));
         }

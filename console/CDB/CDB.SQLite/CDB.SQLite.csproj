@@ -4,7 +4,7 @@
         <TargetFrameworks>net7.0</TargetFrameworks>
         <AssemblyName>Silnith.CDB.SQLite</AssemblyName>
         <RootNamespace>Silnith.CDB.SQLite</RootNamespace>
-        <ImplicitUsings>enable</ImplicitUsings>
+        <ImplicitUsings>disable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 

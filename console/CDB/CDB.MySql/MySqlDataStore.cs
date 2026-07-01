@@ -7,8 +7,15 @@ namespace Silnith.CDB.MySql;
 /// A client for a MySql database that uses a schema designed for storing
 /// files from a CDB data store.
 /// </summary>
-public class MySqlCDB : SQLCDB
+public class MySqlDataStore : SQLDataStore
 {
+    private const string varcharColumnType = "national character varying";
+    private const string varchar32ColumnType = "national character varying(32)";
+    private const string char1ColumnType = "national character(1)";
+    private const string numeric2ColumnType = "numeric(2,0)";
+    private const string numeric3ColumnType = "numeric(3,0)";
+    private const string numeric7ColumnType = "numeric(7,0)";
+    private const string blobColumnType = "longblob";
 
     #region SQL Parameters
 
@@ -165,13 +172,11 @@ public class MySqlCDB : SQLCDB
     /// <inheritdoc/>
     protected override string ContentColumnName => contentColumnName;
 
-    private const string rowidColumnName = "rowid";
-
     #region CDB
 
     private const string createTableCDB = $"""
         create table if not exists CDB (
-            {cdbNameColumnName} national character varying primary key
+            {cdbNameColumnName} {varcharColumnType} primary key
         )
         """;
 
@@ -203,10 +208,10 @@ public class MySqlCDB : SQLCDB
 
     private const string createTableMetadata = $"""
         create table if not exists Metadata (
-            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            name national character varying not null,
-            file_type national character varying not null,
-            {contentColumnName} longblob not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            name {varcharColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 name,
@@ -253,13 +258,13 @@ public class MySqlCDB : SQLCDB
 
     private const string createTableTexture = $"""
         create table if not exists Texture (
-            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset numeric(3,0) not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            texture_name national character varying not null,
-            file_type national character varying not null,
-            {contentColumnName} longblob not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            texture_name {varchar32ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 dataset,
@@ -318,14 +323,14 @@ public class MySqlCDB : SQLCDB
 
     private const string createTableTextureLod = $"""
         create table if not exists TextureLod (
-            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            lod integer not null,
-            texture_name national character varying not null,
-            file_type national character varying not null,
-            {contentColumnName} longblob not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            lod {numeric2ColumnType} not null,
+            texture_name {varchar32ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 dataset,
@@ -388,17 +393,17 @@ public class MySqlCDB : SQLCDB
 
     private const string createTableGeotypicalModel = $"""
         create table if not exists GeotypicalModel (
-            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            feature_category national character(1) not null,
-            feature_subcategory national character(1) not null,
-            feature_type integer not null,
-            feature_subcode integer not null,
-            model_name national character varying not null,
-            file_type national character varying not null,
-            {contentColumnName} longblob not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            feature_category {char1ColumnType} not null,
+            feature_subcategory {char1ColumnType} not null,
+            feature_type {numeric3ColumnType} not null,
+            feature_subcode {numeric3ColumnType} not null,
+            model_name {varchar32ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 dataset,
@@ -473,18 +478,18 @@ public class MySqlCDB : SQLCDB
 
     private const string createTableGeotypicalModelLod = $"""
         create table if not exists GeotypicalModelLod (
-            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            lod integer not null,
-            feature_category national character(1) not null,
-            feature_subcategory national character(1) not null,
-            feature_type integer not null,
-            feature_subcode integer not null,
-            model_name national character varying not null,
-            file_type national character varying not null,
-            {contentColumnName} longblob not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            lod {numeric2ColumnType} not null,
+            feature_category {char1ColumnType} not null,
+            feature_subcategory {char1ColumnType} not null,
+            feature_type {numeric3ColumnType} not null,
+            feature_subcode {numeric3ColumnType} not null,
+            model_name {varchar32ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 dataset,
@@ -563,19 +568,19 @@ public class MySqlCDB : SQLCDB
 
     private const string createTableMovingModel = $"""
         create table if not exists MovingModel (
-            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            kind integer not null,
-            domain integer not null,
-            country integer not null,
-            category integer not null,
-            subcategory integer not null,
-            specific integer not null,
-            extra integer not null,
-            file_type national character varying not null,
-            {contentColumnName} longblob not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            kind {numeric3ColumnType} not null,
+            domain {numeric3ColumnType} not null,
+            country {numeric3ColumnType} not null,
+            category {numeric3ColumnType} not null,
+            subcategory {numeric3ColumnType} not null,
+            specific {numeric3ColumnType} not null,
+            extra {numeric3ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 dataset,
@@ -658,20 +663,20 @@ public class MySqlCDB : SQLCDB
 
     private const string createTableMovingModelLod = $"""
         create table if not exists MovingModelLod (
-            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            lod integer not null,
-            kind integer not null,
-            domain integer not null,
-            country integer not null,
-            category integer not null,
-            subcategory integer not null,
-            specific integer not null,
-            extra integer not null,
-            file_type national character varying not null,
-            {contentColumnName} longblob not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            lod {numeric2ColumnType} not null,
+            kind {numeric3ColumnType} not null,
+            domain {numeric3ColumnType} not null,
+            country {numeric3ColumnType} not null,
+            category {numeric3ColumnType} not null,
+            subcategory {numeric3ColumnType} not null,
+            specific {numeric3ColumnType} not null,
+            extra {numeric3ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 dataset,
@@ -758,17 +763,17 @@ public class MySqlCDB : SQLCDB
 
     private const string createTableTile = $"""
         create table if not exists Tile (
-            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            latitude integer not null,
-            longitude integer not null,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            lod integer not null,
-            up integer not null,
-            right integer not null,
-            file_type national character varying not null,
-            {contentColumnName} longblob not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            latitude {numeric2ColumnType} not null,
+            longitude {numeric3ColumnType} not null,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            lod {numeric2ColumnType} not null,
+            up {numeric7ColumnType} not null,
+            right {numeric7ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 latitude,
@@ -843,22 +848,22 @@ public class MySqlCDB : SQLCDB
 
     private const string createTableTileArchivedFeature = $"""
         create table if not exists TileArchivedFeature (
-            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            latitude integer not null,
-            longitude integer not null,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            lod integer not null,
-            up integer not null,
-            right integer not null,
-            feature_category national character(1) not null,
-            feature_subcategory national character(1) not null,
-            feature_type integer not null,
-            feature_subcode integer not null,
-            model_name national character varying not null,
-            file_type national character varying not null,
-            {contentColumnName} longblob not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            latitude {numeric2ColumnType} not null,
+            longitude {numeric3ColumnType} not null,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            lod {numeric2ColumnType} not null,
+            up {numeric7ColumnType} not null,
+            right {numeric7ColumnType} not null,
+            feature_category {char1ColumnType} not null,
+            feature_subcategory {char1ColumnType} not null,
+            feature_type {numeric3ColumnType} not null,
+            feature_subcode {numeric3ColumnType} not null,
+            model_name {varchar32ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 latitude,
@@ -953,18 +958,18 @@ public class MySqlCDB : SQLCDB
 
     private const string createTableTileArchivedTexture = $"""
         create table if not exists TileArchivedTexture (
-            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            latitude integer not null,
-            longitude integer not null,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            lod integer not null,
-            up integer not null,
-            right integer not null,
-            texture_name national character varying not null,
-            file_type national character varying not null,
-            {contentColumnName} longblob not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            latitude {numeric2ColumnType} not null,
+            longitude {numeric3ColumnType} not null,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            lod {numeric2ColumnType} not null,
+            up {numeric7ColumnType} not null,
+            right {numeric7ColumnType} not null,
+            texture_name {varchar32ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 latitude,
@@ -1043,12 +1048,12 @@ public class MySqlCDB : SQLCDB
 
     private const string createTableNavigation = $"""
         create table if not exists Navigation (
-            cdb national character varying not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset integer not null,
-            component_selector_1 integer not null,
-            component_selector_2 integer not null,
-            file_type national character varying not null,
-            {contentColumnName} longblob not null,
+            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
+            dataset {numeric3ColumnType} not null,
+            component_selector_1 {numeric3ColumnType} not null,
+            component_selector_2 {numeric3ColumnType} not null,
+            file_type {varcharColumnType} not null,
+            {contentColumnName} {blobColumnType} not null,
             primary key(
                 cdb,
                 dataset,
@@ -1099,7 +1104,13 @@ public class MySqlCDB : SQLCDB
 
     #endregion
 
-    public MySqlCDB(MySqlConnection mysqlConnection, bool createSchema = false) : base(mysqlConnection, createSchema)
+    /// <summary>
+    /// Creates a new SQL data store using the provided MySql connection.
+    /// </summary>
+    /// <param name="mysqlConnection">The database connection.</param>
+    /// <param name="createSchema"><see langword="true"/> to run the DDL to create the schema.</param>
+    public MySqlDataStore(MySqlConnection mysqlConnection, bool createSchema = false)
+        : base(mysqlConnection, createSchema)
     {
     }
 

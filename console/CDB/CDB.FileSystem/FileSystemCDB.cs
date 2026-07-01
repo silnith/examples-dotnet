@@ -1,6 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using Silnith.CDB;
+using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CDB.FileSystem;
 
@@ -12,9 +16,9 @@ namespace CDB.FileSystem;
 /// This is a classic CDB implementation as described in the OGC CDB standard.
 /// </para>
 /// </remarks>
-public class FileSystemDataStore : IDataStore
+public class FileSystemCDB : ICDB
 {
-    private readonly ILogger<FileSystemDataStore> logger;
+    private readonly ILogger<FileSystemCDB> logger;
 
     /// <summary>
     /// Creates a new data store that reads from the specified directory.
@@ -32,7 +36,7 @@ public class FileSystemDataStore : IDataStore
     /// is usually referred to as a directory named "CDB".  In practice, it can
     /// have any name, but it should contain subdirectories like "Metadata" as
     /// described in the standard.</param>
-    public FileSystemDataStore(ILogger<FileSystemDataStore> logger, string name, DirectoryInfo cdbRoot)
+    public FileSystemCDB(ILogger<FileSystemCDB> logger, string name, DirectoryInfo cdbRoot)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(name);
@@ -69,6 +73,40 @@ public class FileSystemDataStore : IDataStore
 
     /// <inheritdoc/>
     public bool TryReadFile(string filePathAndName, Stream output)
+    {
+        FileInfo file = new(Path.Combine(CdbRoot.FullName, filePathAndName));
+        if (file.Exists)
+        {
+            logger.LogTrace("Found: {File}", file);
+            using FileStream fileStream = file.OpenRead();
+            fileStream.CopyTo(output);
+            return true;
+        }
+        else
+        {
+            logger.LogTrace("Not found: {File}", file);
+            return false;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<byte[]> ReadFileAsync(string filePathAndName, CancellationToken cancellationToken = default)
+    {
+        FileInfo file = new(Path.Combine(CdbRoot.FullName, filePathAndName));
+        if (file.Exists)
+        {
+            logger.LogTrace("Found: {File}", file);
+            return await File.ReadAllBytesAsync(file.FullName, cancellationToken);
+        }
+        else
+        {
+            logger.LogTrace("Not found: {File}", file);
+            throw new FileNotFoundException("message", file.FullName);
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> TryReadFileAsync(string filePathAndName, Stream output, CancellationToken cancellationToken = default)
     {
         FileInfo file = new(Path.Combine(CdbRoot.FullName, filePathAndName));
         if (file.Exists)

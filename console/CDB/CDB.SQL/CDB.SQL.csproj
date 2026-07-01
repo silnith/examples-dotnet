@@ -4,7 +4,7 @@
         <TargetFramework>net7.0</TargetFramework>
         <AssemblyName>Silnith.CDB.SQL</AssemblyName>
         <RootNamespace>Silnith.CDB.SQL</RootNamespace>
-        <ImplicitUsings>enable</ImplicitUsings>
+        <ImplicitUsings>disable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
