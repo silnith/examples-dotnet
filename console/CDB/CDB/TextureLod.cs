@@ -63,4 +63,9 @@ public record TextureLod(
             match.Groups["tnam"].Value,
             match.Groups["file_type"].Value);
     }
+
+    /// <summary>
+    /// The texture file name.
+    /// </summary>
+    public string Filename => $"D{Dataset.Value:D3}_S{ComponentSelector1:D3}_T{ComponentSelector2:D3}_{LevelOfDetail.Code}_{Name}.{FileType}";
 }

@@ -7,4 +7,8 @@
 /// <param name="FileType">The file type.</param>
 public record Metadata(string Name, string FileType)
 {
+    /// <summary>
+    /// The metadata file name.
+    /// </summary>
+    public string Filename => $"{Name}.{FileType}";
 }

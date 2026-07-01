@@ -127,4 +127,9 @@ public record LevelOfDetail([property: Range(-10, 23)] int Value)
             _ => new(level),
         };
     }
+
+    /// <summary>
+    /// The form this level of detail takes when part of a filename.
+    /// </summary>
+    public string Code => Value < 0 ? $"LC{Value:D2}" : $"L{Value:D2}";
 }

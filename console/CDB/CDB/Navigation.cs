@@ -49,4 +49,9 @@ public record Navigation(
         string fileType = match.Groups["file_type"].Value;
         return new(dataset, componentSelector1, componentSelector2, fileType);
     }
+
+    /// <summary>
+    /// The navigation file name.
+    /// </summary>
+    public string Filename => $"D{Dataset.Value:D3}_S{ComponentSelector1:D3}_T{ComponentSelector2:D3}.{FileType}";
 }

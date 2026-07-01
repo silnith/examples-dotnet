@@ -77,4 +77,9 @@ public record Tile(
             int.Parse(match.Groups["right"].Value, CultureInfo.InvariantCulture),
             match.Groups["ext"].Value);
     }
+
+    /// <summary>
+    /// The tile file name.
+    /// </summary>
+    public string Filename => $"{LatitudeValue.Code}{LongitudeValue.Code}_D{DatasetValue.Value:D3}_S{ComponentSelector1:D3}_T{ComponentSelector2:D3}_{Level.Code}_U{Up:D}_R{Right:D}.{FileType}";
 }

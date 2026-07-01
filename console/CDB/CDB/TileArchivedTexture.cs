@@ -9,7 +9,14 @@ namespace Silnith.CDB;
 /// </summary>
 /// <param name="LatitudeValue">The latitude.</param>
 /// <param name="LongitudeValue">The longitude.</param>
-/// <param name="DatasetValue">The dataset.</param>
+/// <param name="DatasetValue">The dataset.
+/// This should be one of: (301, 304, 306, 308)
+/// GSModelTexture
+/// GSModelInteriorTexture
+/// GSModelMaterial
+/// GSModelInteriorMaterial
+/// GSModelCMT
+/// GSModelInteriorCMT</param>
 /// <param name="ComponentSelector1">Component selector 1.</param>
 /// <param name="ComponentSelector2">Component selector 2.</param>
 /// <param name="Level">The level of detail.</param>
@@ -76,4 +83,9 @@ public record TileArchivedTexture(
             match.Groups["texture_name"].Value,
             match.Groups["ext"].Value);
     }
+
+    /// <summary>
+    /// The tile unarchived texture file name.
+    /// </summary>
+    public string Filename => $"{LatitudeValue.Code}{LongitudeValue.Code}_D{DatasetValue.Value:D3}_S{ComponentSelector1:D3}_T{ComponentSelector2:D3}_{Level.Code}_U{Up:D}_R{Right:D}_{Name}.{FileType}";
 }
