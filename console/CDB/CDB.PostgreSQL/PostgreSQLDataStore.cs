@@ -102,37 +102,37 @@ public class PostgreSQLDataStore : SQLDataStore
     private const string kindParamName = "@dis_kind";
 
     /// <inheritdoc/>
-    protected override string KindParamName => kindParamName;
+    protected override string DISKindParamName => kindParamName;
 
     private const string domainParamName = "@dis_domain";
 
     /// <inheritdoc/>
-    protected override string DomainParamName => domainParamName;
+    protected override string DISDomainParamName => domainParamName;
 
     private const string countryParamName = "@dis_country";
 
     /// <inheritdoc/>
-    protected override string CountryParamName => countryParamName;
+    protected override string DISCountryParamName => countryParamName;
 
     private const string categoryParamName = "@dis_category";
 
     /// <inheritdoc/>
-    protected override string CategoryParamName => categoryParamName;
+    protected override string DISCategoryParamName => categoryParamName;
 
     private const string subcategoryParamName = "@dis_subcategory";
 
     /// <inheritdoc/>
-    protected override string SubcategoryParamName => subcategoryParamName;
+    protected override string DISSubcategoryParamName => subcategoryParamName;
 
     private const string specificParamName = "@dis_specific";
 
     /// <inheritdoc/>
-    protected override string SpecificParamName => specificParamName;
+    protected override string DISSpecificParamName => specificParamName;
 
     private const string extraParamName = "@dis_extra";
 
     /// <inheritdoc/>
-    protected override string ExtraParamName => extraParamName;
+    protected override string DISExtraParamName => extraParamName;
 
     #endregion
 

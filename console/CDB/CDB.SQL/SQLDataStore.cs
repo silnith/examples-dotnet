@@ -223,13 +223,13 @@ public abstract class SQLDataStore : IDisposable
     /// <see cref="DatasetParamName"/>,
     /// <see cref="ComponentSelector1ParamName"/>,
     /// <see cref="ComponentSelector2ParamName"/>,
-    /// <see cref="KindParamName"/>,
-    /// <see cref="DomainParamName"/>,
-    /// <see cref="CountryParamName"/>,
-    /// <see cref="CategoryParamName"/>,
-    /// <see cref="SubcategoryParamName"/>,
-    /// <see cref="SpecificParamName"/>,
-    /// <see cref="ExtraParamName"/>,
+    /// <see cref="DISKindParamName"/>,
+    /// <see cref="DISDomainParamName"/>,
+    /// <see cref="DISCountryParamName"/>,
+    /// <see cref="DISCategoryParamName"/>,
+    /// <see cref="DISSubcategoryParamName"/>,
+    /// <see cref="DISSpecificParamName"/>,
+    /// <see cref="DISExtraParamName"/>,
     /// <see cref="FileTypeParamName"/>,
     /// <see cref="ContentParamName"/>.
     /// </summary>
@@ -243,13 +243,13 @@ public abstract class SQLDataStore : IDisposable
     /// <see cref="DatasetParamName"/>,
     /// <see cref="ComponentSelector1ParamName"/>,
     /// <see cref="ComponentSelector2ParamName"/>,
-    /// <see cref="KindParamName"/>,
-    /// <see cref="DomainParamName"/>,
-    /// <see cref="CountryParamName"/>,
-    /// <see cref="CategoryParamName"/>,
-    /// <see cref="SubcategoryParamName"/>,
-    /// <see cref="SpecificParamName"/>,
-    /// <see cref="ExtraParamName"/>,
+    /// <see cref="DISKindParamName"/>,
+    /// <see cref="DISDomainParamName"/>,
+    /// <see cref="DISCountryParamName"/>,
+    /// <see cref="DISCategoryParamName"/>,
+    /// <see cref="DISSubcategoryParamName"/>,
+    /// <see cref="DISSpecificParamName"/>,
+    /// <see cref="DISExtraParamName"/>,
     /// <see cref="FileTypeParamName"/>.
     /// It returns one column,
     /// <see cref="ContentColumnName"/>.
@@ -265,13 +265,13 @@ public abstract class SQLDataStore : IDisposable
     /// <see cref="ComponentSelector1ParamName"/>,
     /// <see cref="ComponentSelector2ParamName"/>,
     /// <see cref="LevelOfDetailParamName"/>,
-    /// <see cref="KindParamName"/>,
-    /// <see cref="DomainParamName"/>,
-    /// <see cref="CountryParamName"/>,
-    /// <see cref="CategoryParamName"/>,
-    /// <see cref="SubcategoryParamName"/>,
-    /// <see cref="SpecificParamName"/>,
-    /// <see cref="ExtraParamName"/>,
+    /// <see cref="DISKindParamName"/>,
+    /// <see cref="DISDomainParamName"/>,
+    /// <see cref="DISCountryParamName"/>,
+    /// <see cref="DISCategoryParamName"/>,
+    /// <see cref="DISSubcategoryParamName"/>,
+    /// <see cref="DISSpecificParamName"/>,
+    /// <see cref="DISExtraParamName"/>,
     /// <see cref="FileTypeParamName"/>,
     /// <see cref="ContentParamName"/>.
     /// </summary>
@@ -286,13 +286,13 @@ public abstract class SQLDataStore : IDisposable
     /// <see cref="ComponentSelector1ParamName"/>,
     /// <see cref="ComponentSelector2ParamName"/>,
     /// <see cref="LevelOfDetailParamName"/>,
-    /// <see cref="KindParamName"/>,
-    /// <see cref="DomainParamName"/>,
-    /// <see cref="CountryParamName"/>,
-    /// <see cref="CategoryParamName"/>,
-    /// <see cref="SubcategoryParamName"/>,
-    /// <see cref="SpecificParamName"/>,
-    /// <see cref="ExtraParamName"/>,
+    /// <see cref="DISKindParamName"/>,
+    /// <see cref="DISDomainParamName"/>,
+    /// <see cref="DISCountryParamName"/>,
+    /// <see cref="DISCategoryParamName"/>,
+    /// <see cref="DISSubcategoryParamName"/>,
+    /// <see cref="DISSpecificParamName"/>,
+    /// <see cref="DISExtraParamName"/>,
     /// <see cref="FileTypeParamName"/>.
     /// It returns one column,
     /// <see cref="ContentColumnName"/>.
@@ -2108,7 +2108,7 @@ public abstract class SQLDataStore : IDisposable
     /// The name of the SQL parameter for the DIS Code component "kind".
     /// The value must be of type <see cref="DbType.Int32"/>.
     /// </summary>
-    protected abstract string KindParamName
+    protected abstract string DISKindParamName
     {
         get;
     }
@@ -2117,7 +2117,7 @@ public abstract class SQLDataStore : IDisposable
     /// The name of the SQL parameter for the DIS Code component "domain".
     /// The value must be of type <see cref="DbType.Int32"/>.
     /// </summary>
-    protected abstract string DomainParamName
+    protected abstract string DISDomainParamName
     {
         get;
     }
@@ -2126,7 +2126,7 @@ public abstract class SQLDataStore : IDisposable
     /// The name of the SQL parameter for the DIS Code component "country".
     /// The value must be of type <see cref="DbType.Int32"/>.
     /// </summary>
-    protected abstract string CountryParamName
+    protected abstract string DISCountryParamName
     {
         get;
     }
@@ -2135,7 +2135,7 @@ public abstract class SQLDataStore : IDisposable
     /// The name of the SQL parameter for the DIS Code component "category".
     /// The value must be of type <see cref="DbType.Int32"/>.
     /// </summary>
-    protected abstract string CategoryParamName
+    protected abstract string DISCategoryParamName
     {
         get;
     }
@@ -2144,7 +2144,7 @@ public abstract class SQLDataStore : IDisposable
     /// The name of the SQL parameter for the DIS Code component "subcategory".
     /// The value must be of type <see cref="DbType.Int32"/>.
     /// </summary>
-    protected abstract string SubcategoryParamName
+    protected abstract string DISSubcategoryParamName
     {
         get;
     }
@@ -2153,7 +2153,7 @@ public abstract class SQLDataStore : IDisposable
     /// The name of the SQL parameter for the DIS Code component "specific".
     /// The value must be of type <see cref="DbType.Int32"/>.
     /// </summary>
-    protected abstract string SpecificParamName
+    protected abstract string DISSpecificParamName
     {
         get;
     }
@@ -2162,7 +2162,7 @@ public abstract class SQLDataStore : IDisposable
     /// The name of the SQL parameter for the DIS Code component "extra".
     /// The value must be of type <see cref="DbType.Int32"/>.
     /// </summary>
-    protected abstract string ExtraParamName
+    protected abstract string DISExtraParamName
     {
         get;
     }
@@ -2184,13 +2184,13 @@ public abstract class SQLDataStore : IDisposable
     /// <see cref="DatasetParamName"/>,
     /// <see cref="ComponentSelector1ParamName"/>,
     /// <see cref="ComponentSelector2ParamName"/>,
-    /// <see cref="KindParamName"/>,
-    /// <see cref="DomainParamName"/>,
-    /// <see cref="CountryParamName"/>,
-    /// <see cref="CategoryParamName"/>,
-    /// <see cref="SubcategoryParamName"/>,
-    /// <see cref="SpecificParamName"/>,
-    /// <see cref="ExtraParamName"/>,
+    /// <see cref="DISKindParamName"/>,
+    /// <see cref="DISDomainParamName"/>,
+    /// <see cref="DISCountryParamName"/>,
+    /// <see cref="DISCategoryParamName"/>,
+    /// <see cref="DISSubcategoryParamName"/>,
+    /// <see cref="DISSpecificParamName"/>,
+    /// <see cref="DISExtraParamName"/>,
     /// <see cref="FileTypeParamName"/>,
     /// <see cref="ContentParamName"/>.
     /// </summary>
@@ -2215,13 +2215,13 @@ public abstract class SQLDataStore : IDisposable
         CreateAndAttachParameter(dbCommand, DatasetParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, KindParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, DomainParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, CountryParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, CategoryParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, SubcategoryParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, SpecificParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ExtraParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, DISKindParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, DISDomainParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, DISCountryParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, DISCategoryParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, DISSubcategoryParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, DISSpecificParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, DISExtraParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
     }
 
@@ -2230,13 +2230,13 @@ public abstract class SQLDataStore : IDisposable
         dbCommand.Parameters[DatasetParamName].Value = movingModel.Dataset.Value;
         dbCommand.Parameters[ComponentSelector1ParamName].Value = movingModel.ComponentSelector1;
         dbCommand.Parameters[ComponentSelector2ParamName].Value = movingModel.ComponentSelector2;
-        dbCommand.Parameters[KindParamName].Value = movingModel.MMDC.Kind;
-        dbCommand.Parameters[DomainParamName].Value = movingModel.MMDC.Domain;
-        dbCommand.Parameters[CountryParamName].Value = movingModel.MMDC.Country;
-        dbCommand.Parameters[CategoryParamName].Value = movingModel.MMDC.Category;
-        dbCommand.Parameters[SubcategoryParamName].Value = movingModel.MMDC.Subcategory;
-        dbCommand.Parameters[SpecificParamName].Value = movingModel.MMDC.Specific;
-        dbCommand.Parameters[ExtraParamName].Value = movingModel.MMDC.Extra;
+        dbCommand.Parameters[DISKindParamName].Value = movingModel.MMDC.Kind;
+        dbCommand.Parameters[DISDomainParamName].Value = movingModel.MMDC.Domain;
+        dbCommand.Parameters[DISCountryParamName].Value = movingModel.MMDC.Country;
+        dbCommand.Parameters[DISCategoryParamName].Value = movingModel.MMDC.Category;
+        dbCommand.Parameters[DISSubcategoryParamName].Value = movingModel.MMDC.Subcategory;
+        dbCommand.Parameters[DISSpecificParamName].Value = movingModel.MMDC.Specific;
+        dbCommand.Parameters[DISExtraParamName].Value = movingModel.MMDC.Extra;
         dbCommand.Parameters[FileTypeParamName].Value = movingModel.FileType;
     }
 
@@ -2313,13 +2313,13 @@ public abstract class SQLDataStore : IDisposable
     /// <see cref="DatasetParamName"/>,
     /// <see cref="ComponentSelector1ParamName"/>,
     /// <see cref="ComponentSelector2ParamName"/>,
-    /// <see cref="KindParamName"/>,
-    /// <see cref="DomainParamName"/>,
-    /// <see cref="CountryParamName"/>,
-    /// <see cref="CategoryParamName"/>,
-    /// <see cref="SubcategoryParamName"/>,
-    /// <see cref="SpecificParamName"/>,
-    /// <see cref="ExtraParamName"/>,
+    /// <see cref="DISKindParamName"/>,
+    /// <see cref="DISDomainParamName"/>,
+    /// <see cref="DISCountryParamName"/>,
+    /// <see cref="DISCategoryParamName"/>,
+    /// <see cref="DISSubcategoryParamName"/>,
+    /// <see cref="DISSpecificParamName"/>,
+    /// <see cref="DISExtraParamName"/>,
     /// <see cref="FileTypeParamName"/>.
     /// It returns one column,
     /// <see cref="ContentColumnName"/>.
@@ -2454,13 +2454,13 @@ public abstract class SQLDataStore : IDisposable
     /// <see cref="ComponentSelector1ParamName"/>,
     /// <see cref="ComponentSelector2ParamName"/>,
     /// <see cref="LevelOfDetailParamName"/>,
-    /// <see cref="KindParamName"/>,
-    /// <see cref="DomainParamName"/>,
-    /// <see cref="CountryParamName"/>,
-    /// <see cref="CategoryParamName"/>,
-    /// <see cref="SubcategoryParamName"/>,
-    /// <see cref="SpecificParamName"/>,
-    /// <see cref="ExtraParamName"/>,
+    /// <see cref="DISKindParamName"/>,
+    /// <see cref="DISDomainParamName"/>,
+    /// <see cref="DISCountryParamName"/>,
+    /// <see cref="DISCategoryParamName"/>,
+    /// <see cref="DISSubcategoryParamName"/>,
+    /// <see cref="DISSpecificParamName"/>,
+    /// <see cref="DISExtraParamName"/>,
     /// <see cref="FileTypeParamName"/>,
     /// <see cref="ContentParamName"/>.
     /// </summary>
@@ -2486,13 +2486,13 @@ public abstract class SQLDataStore : IDisposable
         CreateAndAttachParameter(dbCommand, ComponentSelector1ParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, ComponentSelector2ParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, LevelOfDetailParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, KindParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, DomainParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, CountryParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, CategoryParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, SubcategoryParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, SpecificParamName, DbType.Int32);
-        CreateAndAttachParameter(dbCommand, ExtraParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, DISKindParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, DISDomainParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, DISCountryParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, DISCategoryParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, DISSubcategoryParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, DISSpecificParamName, DbType.Int32);
+        CreateAndAttachParameter(dbCommand, DISExtraParamName, DbType.Int32);
         CreateAndAttachParameter(dbCommand, FileTypeParamName, DbType.String);
     }
 
@@ -2502,13 +2502,13 @@ public abstract class SQLDataStore : IDisposable
         dbCommand.Parameters[ComponentSelector1ParamName].Value = movingModelLod.ComponentSelector1;
         dbCommand.Parameters[ComponentSelector2ParamName].Value = movingModelLod.ComponentSelector2;
         dbCommand.Parameters[LevelOfDetailParamName].Value = movingModelLod.LevelOfDetail.Value;
-        dbCommand.Parameters[KindParamName].Value = movingModelLod.MMDC.Kind;
-        dbCommand.Parameters[DomainParamName].Value = movingModelLod.MMDC.Domain;
-        dbCommand.Parameters[CountryParamName].Value = movingModelLod.MMDC.Country;
-        dbCommand.Parameters[CategoryParamName].Value = movingModelLod.MMDC.Category;
-        dbCommand.Parameters[SubcategoryParamName].Value = movingModelLod.MMDC.Subcategory;
-        dbCommand.Parameters[SpecificParamName].Value = movingModelLod.MMDC.Specific;
-        dbCommand.Parameters[ExtraParamName].Value = movingModelLod.MMDC.Extra;
+        dbCommand.Parameters[DISKindParamName].Value = movingModelLod.MMDC.Kind;
+        dbCommand.Parameters[DISDomainParamName].Value = movingModelLod.MMDC.Domain;
+        dbCommand.Parameters[DISCountryParamName].Value = movingModelLod.MMDC.Country;
+        dbCommand.Parameters[DISCategoryParamName].Value = movingModelLod.MMDC.Category;
+        dbCommand.Parameters[DISSubcategoryParamName].Value = movingModelLod.MMDC.Subcategory;
+        dbCommand.Parameters[DISSpecificParamName].Value = movingModelLod.MMDC.Specific;
+        dbCommand.Parameters[DISExtraParamName].Value = movingModelLod.MMDC.Extra;
         dbCommand.Parameters[FileTypeParamName].Value = movingModelLod.FileType;
     }
 
@@ -2586,13 +2586,13 @@ public abstract class SQLDataStore : IDisposable
     /// <see cref="ComponentSelector1ParamName"/>,
     /// <see cref="ComponentSelector2ParamName"/>,
     /// <see cref="LevelOfDetailParamName"/>,
-    /// <see cref="KindParamName"/>,
-    /// <see cref="DomainParamName"/>,
-    /// <see cref="CountryParamName"/>,
-    /// <see cref="CategoryParamName"/>,
-    /// <see cref="SubcategoryParamName"/>,
-    /// <see cref="SpecificParamName"/>,
-    /// <see cref="ExtraParamName"/>,
+    /// <see cref="DISKindParamName"/>,
+    /// <see cref="DISDomainParamName"/>,
+    /// <see cref="DISCountryParamName"/>,
+    /// <see cref="DISCategoryParamName"/>,
+    /// <see cref="DISSubcategoryParamName"/>,
+    /// <see cref="DISSpecificParamName"/>,
+    /// <see cref="DISExtraParamName"/>,
     /// <see cref="FileTypeParamName"/>.
     /// It returns one column,
     /// <see cref="ContentColumnName"/>.
