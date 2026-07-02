@@ -165,20 +165,14 @@ public class SQLiteDataStore : SQLDataStore
 
     #endregion
 
-    /// <inheritdoc/>
-    protected override string CDBNameColumnName => cdbColumnName;
-
-    /// <inheritdoc/>
-    protected override string ContentColumnName => contentColumnName;
-
     private const string cdbTableName = "CDB";
     private const string metadataTableName = "Metadata";
     private const string textureTableName = "Texture";
-    private const string textureLodTableName = "TextureLod";
+    private const string textureLodTableName = "TextureLevelOfDetail";
     private const string geotypicalModelTableName = "GeotypicalModel";
-    private const string geotypicalModelLodTableName = "GeotypicalModelLod";
+    private const string geotypicalModelLodTableName = "GeotypicalModelLevelOfDetail";
     private const string movingModelTableName = "MovingModel";
-    private const string movingModelLodTableName = "MovingModelLod";
+    private const string movingModelLodTableName = "MovingModelLevelOfDetail";
     private const string tileTableName = "Tile";
     private const string tileArchivedFeatureTableName = "TileArchivedFeature";
     private const string tileArchivedTextureTableName = "TileArchivedTexture";
@@ -210,6 +204,12 @@ public class SQLiteDataStore : SQLDataStore
     private const string fileTypeColumnName = "file_type";
     private const string contentColumnName = "content";
     private const string rowidColumnName = "rowid";
+
+    /// <inheritdoc/>
+    protected override string CDBNameColumnName => cdbColumnName;
+
+    /// <inheritdoc/>
+    protected override string ContentColumnName => contentColumnName;
 
     #region CDB
 
