@@ -50,6 +50,11 @@ internal class Program
         sqliteConnection.Open();
         using SQLiteDataStore sqliteDataStore = new(sqliteConnection, true);
 
+        using (StreamWriter streamWriter = File.CreateText("schema.txt"))
+        {
+            sqliteDataStore.DumpStatements(streamWriter);
+        }
+
         string cdbName = "CDB";
         DirectoryInfo cdbRoot = new(cdbName);
 

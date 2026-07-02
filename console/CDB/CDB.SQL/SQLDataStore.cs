@@ -3924,6 +3924,93 @@ public abstract class SQLDataStore : IDisposable
         }
     }
 
+    public void DumpStatements(TextWriter textWriter)
+    {
+        textWriter.Write(CreateTableCDBStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(InsertIntoCDBStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(SelectFromCDBStatement);
+        textWriter.WriteLine(';');
+        textWriter.WriteLine();
+        textWriter.Write(CreateTableMetadataStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(InsertIntoMetadataStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(SelectFromMetadataStatement);
+        textWriter.WriteLine(';');
+        textWriter.WriteLine();
+        textWriter.Write(CreateTableTextureStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(InsertIntoTextureStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(SelectFromTextureStatement);
+        textWriter.WriteLine(';');
+        textWriter.WriteLine();
+        textWriter.Write(CreateTableTextureLodStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(InsertIntoTextureLodStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(SelectFromTextureLodStatement);
+        textWriter.WriteLine(';');
+        textWriter.WriteLine();
+        textWriter.Write(CreateTableGeotypicalModelStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(InsertIntoGeotypicalModelStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(SelectFromGeotypicalModelStatement);
+        textWriter.WriteLine(';');
+        textWriter.WriteLine();
+        textWriter.Write(CreateTableGeotypicalModelLodStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(InsertIntoGeotypicalModelLodStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(SelectFromGeotypicalModelLodStatement);
+        textWriter.WriteLine(';');
+        textWriter.WriteLine();
+        textWriter.Write(CreateTableMovingModelStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(InsertIntoMovingModelStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(SelectFromMovingModelStatement);
+        textWriter.WriteLine(';');
+        textWriter.WriteLine();
+        textWriter.Write(CreateTableMovingModelLodStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(InsertIntoMovingModelLodStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(SelectFromMovingModelLodStatement);
+        textWriter.WriteLine(';');
+        textWriter.WriteLine();
+        textWriter.Write(CreateTableTileStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(InsertIntoTileStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(SelectFromTileStatement);
+        textWriter.WriteLine(';');
+        textWriter.WriteLine();
+        textWriter.Write(CreateTableTileArchivedFeatureStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(InsertIntoTileArchivedFeatureStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(SelectFromTileArchivedFeatureStatement);
+        textWriter.WriteLine(';');
+        textWriter.WriteLine();
+        textWriter.Write(CreateTableTileArchivedTextureStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(InsertIntoTileArchivedTextureStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(SelectFromTileArchivedTextureStatement);
+        textWriter.WriteLine(';');
+        textWriter.WriteLine();
+        textWriter.Write(CreateTableNavigationStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(InsertIntoNavigationStatement);
+        textWriter.WriteLine(';');
+        textWriter.Write(SelectFromNavigationStatement);
+        textWriter.WriteLine(';');
+    }
+
     #region Dispose Pattern
 
     private bool disposedValue;
