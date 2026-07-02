@@ -3924,6 +3924,17 @@ public abstract class SQLDataStore : IDisposable
         }
     }
 
+    /// <summary>
+    /// Dumps the raw SQL statements that the data store uses.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// All of them.
+    /// This is a complete list of every statement that the class will ever
+    /// execute against the database.
+    /// </para>
+    /// </remarks>
+    /// <param name="textWriter">The text writer to dump the statements into.</param>
     public void DumpStatements(TextWriter textWriter)
     {
         textWriter.Write(CreateTableCDBStatement);
