@@ -99,40 +99,40 @@ public class PostgreSQLDataStore : SQLDataStore
 
     #region DIS Code Parameters
 
-    private const string kindParamName = "@dis_kind";
+    private const string disKindParamName = "@dis_kind";
 
     /// <inheritdoc/>
-    protected override string DISKindParamName => kindParamName;
+    protected override string DISKindParamName => disKindParamName;
 
-    private const string domainParamName = "@dis_domain";
-
-    /// <inheritdoc/>
-    protected override string DISDomainParamName => domainParamName;
-
-    private const string countryParamName = "@dis_country";
+    private const string disDomainParamName = "@dis_domain";
 
     /// <inheritdoc/>
-    protected override string DISCountryParamName => countryParamName;
+    protected override string DISDomainParamName => disDomainParamName;
 
-    private const string categoryParamName = "@dis_category";
-
-    /// <inheritdoc/>
-    protected override string DISCategoryParamName => categoryParamName;
-
-    private const string subcategoryParamName = "@dis_subcategory";
+    private const string disCountryParamName = "@dis_country";
 
     /// <inheritdoc/>
-    protected override string DISSubcategoryParamName => subcategoryParamName;
+    protected override string DISCountryParamName => disCountryParamName;
 
-    private const string specificParamName = "@dis_specific";
-
-    /// <inheritdoc/>
-    protected override string DISSpecificParamName => specificParamName;
-
-    private const string extraParamName = "@dis_extra";
+    private const string disCategoryParamName = "@is_category";
 
     /// <inheritdoc/>
-    protected override string DISExtraParamName => extraParamName;
+    protected override string DISCategoryParamName => disCategoryParamName;
+
+    private const string disSubcategoryParamName = "@dis_subcategory";
+
+    /// <inheritdoc/>
+    protected override string DISSubcategoryParamName => disSubcategoryParamName;
+
+    private const string disSpecificParamName = "@dis_specific";
+
+    /// <inheritdoc/>
+    protected override string DISSpecificParamName => disSpecificParamName;
+
+    private const string disExtraParamName = "@dis_extra";
+
+    /// <inheritdoc/>
+    protected override string DISExtraParamName => disExtraParamName;
 
     #endregion
 
@@ -162,12 +162,47 @@ public class PostgreSQLDataStore : SQLDataStore
 
     #endregion
 
-    private const string cdbNameColumnName = "cdb";
+    private const string cdbTableName = "CDB";
+    private const string metadataTableName = "Metadata";
+    private const string textureTableName = "Texture";
+    private const string textureLodTableName = "TextureLevelOfDetail";
+    private const string geotypicalModelTableName = "GeotypicalModel";
+    private const string geotypicalModelLodTableName = "GeotypicalModelLevelOfDetail";
+    private const string movingModelTableName = "MovingModel";
+    private const string movingModelLodTableName = "MovingModelLevelOfDetail";
+    private const string tileTableName = "Tile";
+    private const string tileArchivedFeatureTableName = "TileArchivedFeature";
+    private const string tileArchivedTextureTableName = "TileArchivedTexture";
+    private const string navigationTableName = "Navigation";
+
+    private const string cdbColumnName = "cdb";
+    private const string metadataNameColumnName = "metadata_name";
+    private const string datasetColumnName = "dataset";
+    private const string cs1ColumnName = "component_selector_1";
+    private const string cs2ColumnName = "component_selector_2";
+    private const string textureNameColumnName = "texture_name";
+    private const string lodColumnName = "level_of_detail";
+    private const string featureCategoryColumnName = "feature_category";
+    private const string featureSubcategoryColumnName = "feature_subcategory";
+    private const string featureTypeColumnName = "feature_type";
+    private const string featureSubcodeColumnName = "feature_subcode";
+    private const string modelNameColumnName = "model_name";
+    private const string disKindColumnName = "dis_kind";
+    private const string disDomainColumnName = "dis_domain";
+    private const string disCountryColumnName = "dis_country";
+    private const string disCategoryColumnName = "dis_category";
+    private const string disSubcategoryColumnName = "dis_subcategory";
+    private const string disSpecificColumnName = "dis_specific";
+    private const string disExtraColumnName = "dis_extra";
+    private const string latitudeColumnName = "latitude";
+    private const string longitudeColumnName = "longitude";
+    private const string upColumnName = "up";
+    private const string rightColumnName = "right";
+    private const string fileTypeColumnName = "file_type";
+    private const string contentColumnName = "content";
 
     /// <inheritdoc/>
-    protected override string CDBNameColumnName => cdbNameColumnName;
-
-    private const string contentColumnName = "content";
+    protected override string CDBNameColumnName => cdbColumnName;
 
     /// <inheritdoc/>
     protected override string ContentColumnName => contentColumnName;
@@ -175,8 +210,8 @@ public class PostgreSQLDataStore : SQLDataStore
     #region CDB
 
     private const string createTableCDB = $"""
-        create table if not exists CDB (
-            {cdbNameColumnName} {varcharColumnType} primary key
+        create table "{cdbTableName}" (
+            "{cdbColumnName}" {varcharColumnType} primary key
         )
         """;
 
@@ -184,8 +219,8 @@ public class PostgreSQLDataStore : SQLDataStore
     protected override string CreateTableCDBStatement => createTableCDB;
 
     private const string insertIntoCDB = $"""
-        insert into CDB (
-            {cdbNameColumnName}
+        insert into "{cdbTableName}" (
+            "{cdbColumnName}"
         ) values (
             {cdbParamName}
         )
@@ -195,8 +230,8 @@ public class PostgreSQLDataStore : SQLDataStore
     protected override string InsertIntoCDBStatement => insertIntoCDB;
 
     private const string selectFromCDB = $"""
-        select {cdbNameColumnName}
-        from CDB
+        select "{cdbColumnName}"
+        from "{cdbTableName}"
         """;
 
     /// <inheritdoc/>
@@ -207,15 +242,15 @@ public class PostgreSQLDataStore : SQLDataStore
     #region Metadata
 
     private const string createTableMetadata = $"""
-        create table if not exists Metadata (
-            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            name {varcharColumnType} not null,
-            file_type {varcharColumnType} not null,
-            {contentColumnName} {blobColumnType} not null,
+        create table "{metadataTableName}" (
+            "{cdbColumnName}" {varcharColumnType} not null references "{cdbTableName}"("{cdbColumnName}") on delete cascade on update cascade,
+            "{metadataNameColumnName}" {varcharColumnType} not null,
+            "{fileTypeColumnName}" {varcharColumnType} not null,
+            "{contentColumnName}" {blobColumnType} not null,
             primary key(
-                cdb,
-                name,
-                file_type
+                "{cdbColumnName}",
+                "{metadataNameColumnName}",
+                "{fileTypeColumnName}"
             )
         )
         """;
@@ -224,11 +259,11 @@ public class PostgreSQLDataStore : SQLDataStore
     protected override string CreateTableMetadataStatement => createTableMetadata;
 
     private const string insertIntoMetadata = $"""
-        insert into Metadata (
-            cdb,
-            name,
-            file_type,
-            {contentColumnName}
+        insert into "{metadataTableName}" (
+            "{cdbColumnName}",
+            "{metadataNameColumnName}",
+            "{fileTypeColumnName}",
+            "{contentColumnName}"
         ) values (
             {cdbParamName},
             {metadataNameParamName},
@@ -242,11 +277,11 @@ public class PostgreSQLDataStore : SQLDataStore
 
     private const string selectFromMetadata = $"""
         select
-            {contentColumnName}
-        from Metadata
-        where cdb = {cdbParamName}
-            and name = {metadataNameParamName}
-            and file_type = {fileTypeParamName}
+            "{contentColumnName}"
+        from "{metadataTableName}"
+        where "{cdbColumnName}" = {cdbParamName}
+            and "{metadataNameColumnName}" = {metadataNameParamName}
+            and "{fileTypeColumnName}" = {fileTypeParamName}
         """;
 
     /// <inheritdoc/>
@@ -257,21 +292,21 @@ public class PostgreSQLDataStore : SQLDataStore
     #region Texture
 
     private const string createTableTexture = $"""
-        create table if not exists Texture (
-            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset {numeric3ColumnType} not null,
-            component_selector_1 {numeric3ColumnType} not null,
-            component_selector_2 {numeric3ColumnType} not null,
-            texture_name {varchar32ColumnType} not null,
-            file_type {varcharColumnType} not null,
-            {contentColumnName} {blobColumnType} not null,
+        create table "{textureTableName}" (
+            "{cdbColumnName}" {varcharColumnType} not null references "{cdbTableName}"("{cdbColumnName}") on delete cascade on update cascade,
+            "{datasetColumnName}" {numeric3ColumnType} not null,
+            "{cs1ColumnName}" {numeric3ColumnType} not null,
+            "{cs2ColumnName}" {numeric3ColumnType} not null,
+            "{textureNameColumnName}" {varchar32ColumnType} not null,
+            "{fileTypeColumnName}" {varcharColumnType} not null,
+            "{contentColumnName}" {blobColumnType} not null,
             primary key(
-                cdb,
-                dataset,
-                component_selector_1,
-                component_selector_2,
-                texture_name,
-                file_type
+                "{cdbColumnName}",
+                "{datasetColumnName}",
+                "{cs1ColumnName}",
+                "{cs2ColumnName}",
+                "{textureNameColumnName}",
+                "{fileTypeColumnName}"
             )
         )
         """;
@@ -280,14 +315,14 @@ public class PostgreSQLDataStore : SQLDataStore
     protected override string CreateTableTextureStatement => createTableTexture;
 
     private const string insertIntoTexture = $"""
-        insert into Texture (
-            cdb,
-            dataset,
-            component_selector_1,
-            component_selector_2,
-            texture_name,
-            file_type,
-            {contentColumnName}
+        insert into "{textureTableName}" (
+            "{cdbColumnName}",
+            "{datasetColumnName}",
+            "{cs1ColumnName}",
+            "{cs2ColumnName}",
+            "{textureNameColumnName}",
+            "{fileTypeColumnName}",
+            "{contentColumnName}"
         ) values (
             {cdbParamName},
             {datasetParamName},
@@ -304,14 +339,14 @@ public class PostgreSQLDataStore : SQLDataStore
 
     private const string selectFromTexture = $"""
         select
-            {contentColumnName}
-        from Texture
-        where cdb = {cdbParamName}
-            and dataset = {datasetParamName}
-            and component_selector_1 = {cs1ParamName}
-            and component_selector_2 = {cs2ParamName}
-            and texture_name = {textureNameParamName}
-            and file_type = {fileTypeParamName}
+            "{contentColumnName}"
+        from "{textureTableName}"
+        where "{cdbColumnName}" = {cdbParamName}
+            and "{datasetColumnName}" = {datasetParamName}
+            and "{cs1ColumnName}" = {cs1ParamName}
+            and "{cs2ColumnName}" = {cs2ParamName}
+            and "{textureNameColumnName}" = {textureNameParamName}
+            and "{fileTypeColumnName}" = {fileTypeParamName}
         """;
 
     /// <inheritdoc/>
@@ -322,23 +357,23 @@ public class PostgreSQLDataStore : SQLDataStore
     #region Texture LOD
 
     private const string createTableTextureLod = $"""
-        create table if not exists TextureLod (
-            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset {numeric3ColumnType} not null,
-            component_selector_1 {numeric3ColumnType} not null,
-            component_selector_2 {numeric3ColumnType} not null,
-            lod {numeric2ColumnType} not null,
-            texture_name {varchar32ColumnType} not null,
-            file_type {varcharColumnType} not null,
-            {contentColumnName} {blobColumnType} not null,
+        create table "{textureLodTableName}" (
+            "{cdbColumnName}" {varcharColumnType} not null references "{cdbTableName}"("{cdbColumnName}") on delete cascade on update cascade,
+            "{datasetColumnName}" {numeric3ColumnType} not null,
+            "{cs1ColumnName}" {numeric3ColumnType} not null,
+            "{cs2ColumnName}" {numeric3ColumnType} not null,
+            "{lodColumnName}" {numeric2ColumnType} not null,
+            "{textureNameColumnName}" {varchar32ColumnType} not null,
+            "{fileTypeColumnName}" {varcharColumnType} not null,
+            "{contentColumnName}" {blobColumnType} not null,
             primary key(
-                cdb,
-                dataset,
-                component_selector_1,
-                component_selector_2,
-                lod,
-                texture_name,
-                file_type
+                "{cdbColumnName}",
+                "{datasetColumnName}",
+                "{cs1ColumnName}",
+                "{cs2ColumnName}",
+                "{lodColumnName}",
+                "{textureNameColumnName}",
+                "{fileTypeColumnName}"
             )
         )
         """;
@@ -347,15 +382,15 @@ public class PostgreSQLDataStore : SQLDataStore
     protected override string CreateTableTextureLodStatement => createTableTextureLod;
 
     private const string insertIntoTextureLod = $"""
-        insert into TextureLod (
-            cdb,
-            dataset,
-            component_selector_1,
-            component_selector_2,
-            lod,
-            texture_name,
-            file_type,
-            {contentColumnName}
+        insert into "{textureLodTableName}" (
+            "{cdbColumnName}",
+            "{datasetColumnName}",
+            "{cs1ColumnName}",
+            "{cs2ColumnName}",
+            "{lodColumnName}",
+            "{textureNameColumnName}",
+            "{fileTypeColumnName}",
+            "{contentColumnName}"
         ) values (
             {cdbParamName},
             {datasetParamName},
@@ -373,15 +408,15 @@ public class PostgreSQLDataStore : SQLDataStore
 
     private const string selectFromTextureLod = $"""
         select
-            {contentColumnName}
-        from TextureLod
-        where cdb = {cdbParamName}
-            and dataset = {datasetParamName}
-            and component_selector_1 = {cs1ParamName}
-            and component_selector_2 = {cs2ParamName}
-            and lod = {lodParamName}
-            and texture_name = {textureNameParamName}
-            and file_type = {fileTypeParamName}
+            "{contentColumnName}"
+        from "{textureLodTableName}"
+        where "{cdbColumnName}" = {cdbParamName}
+            and "{datasetColumnName}" = {datasetParamName}
+            and "{cs1ColumnName}" = {cs1ParamName}
+            and "{cs2ColumnName}" = {cs2ParamName}
+            and "{lodColumnName}" = {lodParamName}
+            and "{textureNameColumnName}" = {textureNameParamName}
+            and "{fileTypeColumnName}" = {fileTypeParamName}
         """;
 
     /// <inheritdoc/>
@@ -392,29 +427,29 @@ public class PostgreSQLDataStore : SQLDataStore
     #region Geotypical Model
 
     private const string createTableGeotypicalModel = $"""
-        create table if not exists GeotypicalModel (
-            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset {numeric3ColumnType} not null,
-            component_selector_1 {numeric3ColumnType} not null,
-            component_selector_2 {numeric3ColumnType} not null,
-            feature_category {char1ColumnType} not null,
-            feature_subcategory {char1ColumnType} not null,
-            feature_type {numeric3ColumnType} not null,
-            feature_subcode {numeric3ColumnType} not null,
-            model_name {varchar32ColumnType} not null,
-            file_type {varcharColumnType} not null,
-            {contentColumnName} {blobColumnType} not null,
+        create table "{geotypicalModelTableName}" (
+            "{cdbColumnName}" {varcharColumnType} not null references "{cdbTableName}"("{cdbColumnName}") on delete cascade on update cascade,
+            "{datasetColumnName}" {numeric3ColumnType} not null,
+            "{cs1ColumnName}" {numeric3ColumnType} not null,
+            "{cs2ColumnName}" {numeric3ColumnType} not null,
+            "{featureCategoryColumnName}" {char1ColumnType} not null,
+            "{featureSubcategoryColumnName}" {char1ColumnType} not null,
+            "{featureTypeColumnName}" {numeric3ColumnType} not null,
+            "{featureSubcodeColumnName}" {numeric3ColumnType} not null,
+            "{modelNameColumnName}" {varchar32ColumnType} not null,
+            "{fileTypeColumnName}" {varcharColumnType} not null,
+            "{contentColumnName}" {blobColumnType} not null,
             primary key(
-                cdb,
-                dataset,
-                component_selector_1,
-                component_selector_2,
-                feature_category,
-                feature_subcategory,
-                feature_type,
-                feature_subcode,
-                model_name,
-                file_type
+                "{cdbColumnName}",
+                "{datasetColumnName}",
+                "{cs1ColumnName}",
+                "{cs2ColumnName}",
+                "{featureCategoryColumnName}",
+                "{featureSubcategoryColumnName}",
+                "{featureTypeColumnName}",
+                "{featureSubcodeColumnName}",
+                "{modelNameColumnName}",
+                "{fileTypeColumnName}"
             )
         )
         """;
@@ -423,18 +458,18 @@ public class PostgreSQLDataStore : SQLDataStore
     protected override string CreateTableGeotypicalModelStatement => createTableGeotypicalModel;
 
     private const string insertIntoGeotypicalModel = $"""
-        insert into GeotypicalModel (
-            cdb,
-            dataset,
-            component_selector_1,
-            component_selector_2,
-            feature_category,
-            feature_subcategory,
-            feature_type,
-            feature_subcode,
-            model_name,
-            file_type,
-            {contentColumnName}
+        insert into "{geotypicalModelTableName}" (
+            "{cdbColumnName}",
+            "{datasetColumnName}",
+            "{cs1ColumnName}",
+            "{cs2ColumnName}",
+            "{featureCategoryColumnName}",
+            "{featureSubcategoryColumnName}",
+            "{featureTypeColumnName}",
+            "{featureSubcodeColumnName}",
+            "{modelNameColumnName}",
+            "{fileTypeColumnName}",
+            "{contentColumnName}"
         ) values (
             {cdbParamName},
             {datasetParamName},
@@ -455,18 +490,18 @@ public class PostgreSQLDataStore : SQLDataStore
 
     private const string selectFromGeotypicalModel = $"""
         select
-            {contentColumnName}
-        from GeotypicalModel
-        where cdb = {cdbParamName}
-            and dataset = {datasetParamName}
-            and component_selector_1 = {cs1ParamName}
-            and component_selector_2 = {cs2ParamName}
-            and feature_category = {featureCategoryParamName}
-            and feature_subcategory = {featureSubcategoryParamName}
-            and feature_type = {featureTypeParamName}
-            and feature_subcode = {featureSubcodeParamName}
-            and model_name = {modelNameParamName}
-            and file_type = {fileTypeParamName}
+            "{contentColumnName}"
+        from "{geotypicalModelTableName}"
+        where "{cdbColumnName}" = {cdbParamName}
+            and "{datasetColumnName}" = {datasetParamName}
+            and "{cs1ColumnName}" = {cs1ParamName}
+            and "{cs2ColumnName}" = {cs2ParamName}
+            and "{featureCategoryColumnName}" = {featureCategoryParamName}
+            and "{featureSubcategoryColumnName}" = {featureSubcategoryParamName}
+            and "{featureTypeColumnName}" = {featureTypeParamName}
+            and "{featureSubcodeColumnName}" = {featureSubcodeParamName}
+            and "{modelNameColumnName}" = {modelNameParamName}
+            and "{fileTypeColumnName}" = {fileTypeParamName}
         """;
 
     /// <inheritdoc/>
@@ -477,31 +512,31 @@ public class PostgreSQLDataStore : SQLDataStore
     #region Geotypical Model LOD
 
     private const string createTableGeotypicalModelLod = $"""
-        create table if not exists GeotypicalModelLod (
-            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset {numeric3ColumnType} not null,
-            component_selector_1 {numeric3ColumnType} not null,
-            component_selector_2 {numeric3ColumnType} not null,
-            lod {numeric2ColumnType} not null,
-            feature_category {char1ColumnType} not null,
-            feature_subcategory {char1ColumnType} not null,
-            feature_type {numeric3ColumnType} not null,
-            feature_subcode {numeric3ColumnType} not null,
-            model_name {varchar32ColumnType} not null,
-            file_type {varcharColumnType} not null,
-            {contentColumnName} {blobColumnType} not null,
+        create table "{geotypicalModelLodTableName}" (
+            "{cdbColumnName}" {varcharColumnType} not null references "{cdbTableName}"("{cdbColumnName}") on delete cascade on update cascade,
+            "{datasetColumnName}" {numeric3ColumnType} not null,
+            "{cs1ColumnName}" {numeric3ColumnType} not null,
+            "{cs2ColumnName}" {numeric3ColumnType} not null,
+            "{lodColumnName}" {numeric2ColumnType} not null,
+            "{featureCategoryColumnName}" {char1ColumnType} not null,
+            "{featureSubcategoryColumnName}" {char1ColumnType} not null,
+            "{featureTypeColumnName}" {numeric3ColumnType} not null,
+            "{featureSubcodeColumnName}" {numeric3ColumnType} not null,
+            "{modelNameColumnName}" {varchar32ColumnType} not null,
+            "{fileTypeColumnName}" {varcharColumnType} not null,
+            "{contentColumnName}" {blobColumnType} not null,
             primary key(
-                cdb,
-                dataset,
-                component_selector_1,
-                component_selector_2,
-                lod,
-                feature_category,
-                feature_subcategory,
-                feature_type,
-                feature_subcode,
-                model_name,
-                file_type
+                "{cdbColumnName}",
+                "{datasetColumnName}",
+                "{cs1ColumnName}",
+                "{cs2ColumnName}",
+                "{lodColumnName}",
+                "{featureCategoryColumnName}",
+                "{featureSubcategoryColumnName}",
+                "{featureTypeColumnName}",
+                "{featureSubcodeColumnName}",
+                "{modelNameColumnName}",
+                "{fileTypeColumnName}"
             )
         )
         """;
@@ -510,19 +545,19 @@ public class PostgreSQLDataStore : SQLDataStore
     protected override string CreateTableGeotypicalModelLodStatement => createTableGeotypicalModelLod;
 
     private const string insertIntoGeotypicalModelLod = $"""
-        insert into GeotypicalModelLod (
-            cdb,
-            dataset,
-            component_selector_1,
-            component_selector_2,
-            lod,
-            feature_category,
-            feature_subcategory,
-            feature_type,
-            feature_subcode,
-            model_name,
-            file_type,
-            {contentColumnName}
+        insert into "{geotypicalModelLodTableName}" (
+            "{cdbColumnName}",
+            "{datasetColumnName}",
+            "{cs1ColumnName}",
+            "{cs2ColumnName}",
+            "{lodColumnName}",
+            "{featureCategoryColumnName}",
+            "{featureSubcategoryColumnName}",
+            "{featureTypeColumnName}",
+            "{featureSubcodeColumnName}",
+            "{modelNameColumnName}",
+            "{fileTypeColumnName}",
+            "{contentColumnName}"
         ) values (
             {cdbParamName},
             {datasetParamName},
@@ -544,19 +579,19 @@ public class PostgreSQLDataStore : SQLDataStore
 
     private const string selectFromGeotypicalModelLod = $"""
         select
-            {contentColumnName}
-        from GeotypicalModelLod
-        where cdb = {cdbParamName}
-            and dataset = {datasetParamName}
-            and component_selector_1 = {cs1ParamName}
-            and component_selector_2 = {cs2ParamName}
-            and lod = {lodParamName}
-            and feature_category = {featureCategoryParamName}
-            and feature_subcategory = {featureSubcategoryParamName}
-            and feature_type = {featureTypeParamName}
-            and feature_subcode = {featureSubcodeParamName}
-            and model_name = {modelNameParamName}
-            and file_type = {fileTypeParamName}
+            "{contentColumnName}"
+        from "{geotypicalModelLodTableName}"
+        where "{cdbColumnName}" = {cdbParamName}
+            and "{datasetColumnName}" = {datasetParamName}
+            and "{cs1ColumnName}" = {cs1ParamName}
+            and "{cs2ColumnName}" = {cs2ParamName}
+            and "{lodColumnName}" = {lodParamName}
+            and "{featureCategoryColumnName}" = {featureCategoryParamName}
+            and "{featureSubcategoryColumnName}" = {featureSubcategoryParamName}
+            and "{featureTypeColumnName}" = {featureTypeParamName}
+            and "{featureSubcodeColumnName}" = {featureSubcodeParamName}
+            and "{modelNameColumnName}" = {modelNameParamName}
+            and "{fileTypeColumnName}" = {fileTypeParamName}
         """;
 
     /// <inheritdoc/>
@@ -567,33 +602,33 @@ public class PostgreSQLDataStore : SQLDataStore
     #region Moving Model
 
     private const string createTableMovingModel = $"""
-        create table if not exists MovingModel (
-            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset {numeric3ColumnType} not null,
-            component_selector_1 {numeric3ColumnType} not null,
-            component_selector_2 {numeric3ColumnType} not null,
-            kind {numeric3ColumnType} not null,
-            domain {numeric3ColumnType} not null,
-            country {numeric3ColumnType} not null,
-            category {numeric3ColumnType} not null,
-            subcategory {numeric3ColumnType} not null,
-            specific {numeric3ColumnType} not null,
-            extra {numeric3ColumnType} not null,
-            file_type {varcharColumnType} not null,
-            {contentColumnName} {blobColumnType} not null,
+        create table "{movingModelTableName}" (
+            "{cdbColumnName}" {varcharColumnType} not null references "{cdbTableName}"("{cdbColumnName}") on delete cascade on update cascade,
+            "{datasetColumnName}" {numeric3ColumnType} not null,
+            "{cs1ColumnName}" {numeric3ColumnType} not null,
+            "{cs2ColumnName}" {numeric3ColumnType} not null,
+            "{disKindColumnName}" {numeric3ColumnType} not null,
+            "{disDomainColumnName}" {numeric3ColumnType} not null,
+            "{disCountryColumnName}" {numeric3ColumnType} not null,
+            "{disCategoryColumnName}" {numeric3ColumnType} not null,
+            "{disSubcategoryColumnName}" {numeric3ColumnType} not null,
+            "{disSpecificColumnName}" {numeric3ColumnType} not null,
+            "{disExtraColumnName}" {numeric3ColumnType} not null,
+            "{fileTypeColumnName}" {varcharColumnType} not null,
+            "{contentColumnName}" {blobColumnType} not null,
             primary key(
-                cdb,
-                dataset,
-                component_selector_1,
-                component_selector_2,
-                kind,
-                domain,
-                country,
-                category,
-                subcategory,
-                specific,
-                extra,
-                file_type
+                "{cdbColumnName}",
+                "{datasetColumnName}",
+                "{cs1ColumnName}",
+                "{cs2ColumnName}",
+                "{disKindColumnName}",
+                "{disDomainColumnName}",
+                "{disCountryColumnName}",
+                "{disCategoryColumnName}",
+                "{disSubcategoryColumnName}",
+                "{disSpecificColumnName}",
+                "{disExtraColumnName}",
+                "{fileTypeColumnName}"
             )
         )
         """;
@@ -602,32 +637,32 @@ public class PostgreSQLDataStore : SQLDataStore
     protected override string CreateTableMovingModelStatement => createTableMovingModel;
 
     private const string insertIntoMovingModel = $"""
-        insert into MovingModel (
-            cdb,
-            dataset,
-            component_selector_1,
-            component_selector_2,
-            kind,
-            domain,
-            country,
-            category,
-            subcategory,
-            specific,
-            extra,
-            file_type,
-            {contentColumnName}
+        insert into "{movingModelTableName}" (
+            "{cdbColumnName}",
+            "{datasetColumnName}",
+            "{cs1ColumnName}",
+            "{cs2ColumnName}",
+            "{disKindColumnName}",
+            "{disDomainColumnName}",
+            "{disCountryColumnName}",
+            "{disCategoryColumnName}",
+            "{disSubcategoryColumnName}",
+            "{disSpecificColumnName}",
+            "{disExtraColumnName}",
+            "{fileTypeColumnName}",
+            "{contentColumnName}"
         ) values (
             {cdbParamName},
             {datasetParamName},
             {cs1ParamName},
             {cs2ParamName},
-            {kindParamName},
-            {domainParamName},
-            {countryParamName},
-            {categoryParamName},
-            {subcategoryParamName},
-            {specificParamName},
-            {extraParamName},
+            {disKindParamName},
+            {disDomainParamName},
+            {disCountryParamName},
+            {disCategoryParamName},
+            {disSubcategoryParamName},
+            {disSpecificParamName},
+            {disExtraParamName},
             {fileTypeParamName},
             {contentParamName}
         )
@@ -638,20 +673,20 @@ public class PostgreSQLDataStore : SQLDataStore
 
     private const string selectFromMovingModel = $"""
         select
-            {contentColumnName}
-        from MovingModel
-        where cdb = {cdbParamName}
-            and dataset = {datasetParamName}
-            and component_selector_1 = {cs1ParamName}
-            and component_selector_2 = {cs2ParamName}
-            and kind = {kindParamName}
-            and domain = {domainParamName}
-            and country = {countryParamName}
-            and category = {categoryParamName}
-            and subcategory = {subcategoryParamName}
-            and specific = {specificParamName}
-            and extra = {extraParamName}
-            and file_type = {fileTypeParamName}
+            "{contentColumnName}"
+        from "{movingModelTableName}"
+        where "{cdbColumnName}" = {cdbParamName}
+            and "{datasetColumnName}" = {datasetParamName}
+            and "{cs1ColumnName}" = {cs1ParamName}
+            and "{cs2ColumnName}" = {cs2ParamName}
+            and "{disKindColumnName}" = {disKindParamName}
+            and "{disDomainColumnName}" = {disDomainParamName}
+            and "{disCountryColumnName}" = {disCountryParamName}
+            and "{disCategoryColumnName}" = {disCategoryParamName}
+            and "{disSubcategoryColumnName}" = {disSubcategoryParamName}
+            and "{disSpecificColumnName}" = {disSpecificParamName}
+            and "{disExtraColumnName}" = {disExtraParamName}
+            and "{fileTypeColumnName}" = {fileTypeParamName}
         """;
 
     /// <inheritdoc/>
@@ -662,35 +697,35 @@ public class PostgreSQLDataStore : SQLDataStore
     #region Moving Model LOD
 
     private const string createTableMovingModelLod = $"""
-        create table if not exists MovingModelLod (
-            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset {numeric3ColumnType} not null,
-            component_selector_1 {numeric3ColumnType} not null,
-            component_selector_2 {numeric3ColumnType} not null,
-            lod {numeric2ColumnType} not null,
-            kind {numeric3ColumnType} not null,
-            domain {numeric3ColumnType} not null,
-            country {numeric3ColumnType} not null,
-            category {numeric3ColumnType} not null,
-            subcategory {numeric3ColumnType} not null,
-            specific {numeric3ColumnType} not null,
-            extra {numeric3ColumnType} not null,
-            file_type {varcharColumnType} not null,
-            {contentColumnName} {blobColumnType} not null,
+        create table "{movingModelLodTableName}" (
+            "{cdbColumnName}" {varcharColumnType} not null references "{cdbTableName}"("{cdbColumnName}") on delete cascade on update cascade,
+            "{datasetColumnName}" {numeric3ColumnType} not null,
+            "{cs1ColumnName}" {numeric3ColumnType} not null,
+            "{cs2ColumnName}" {numeric3ColumnType} not null,
+            "{lodColumnName}" {numeric2ColumnType} not null,
+            "{disKindColumnName}" {numeric3ColumnType} not null,
+            "{disDomainColumnName}" {numeric3ColumnType} not null,
+            "{disCountryColumnName}" {numeric3ColumnType} not null,
+            "{disCategoryColumnName}" {numeric3ColumnType} not null,
+            "{disSubcategoryColumnName}" {numeric3ColumnType} not null,
+            "{disSpecificColumnName}" {numeric3ColumnType} not null,
+            "{disExtraColumnName}" {numeric3ColumnType} not null,
+            "{fileTypeColumnName}" {varcharColumnType} not null,
+            "{contentColumnName}" {blobColumnType} not null,
             primary key(
-                cdb,
-                dataset,
-                component_selector_1,
-                component_selector_2,
-                lod,
-                kind,
-                domain,
-                country,
-                category,
-                subcategory,
-                specific,
-                extra,
-                file_type
+                "{cdbColumnName}",
+                "{datasetColumnName}",
+                "{cs1ColumnName}",
+                "{cs2ColumnName}",
+                "{lodColumnName}",
+                "{disKindColumnName}",
+                "{disDomainColumnName}",
+                "{disCountryColumnName}",
+                "{disCategoryColumnName}",
+                "{disSubcategoryColumnName}",
+                "{disSpecificColumnName}",
+                "{disExtraColumnName}",
+                "{fileTypeColumnName}"
             )
         )
         """;
@@ -699,34 +734,34 @@ public class PostgreSQLDataStore : SQLDataStore
     protected override string CreateTableMovingModelLodStatement => createTableMovingModelLod;
 
     private const string insertIntoMovingModelLod = $"""
-        insert into MovingModelLod (
-            cdb,
-            dataset,
-            component_selector_1,
-            component_selector_2,
-            lod,
-            kind,
-            domain,
-            country,
-            category,
-            subcategory,
-            specific,
-            extra,
-            file_type,
-            {contentColumnName}
+        insert into "{movingModelLodTableName}" (
+            "{cdbColumnName}",
+            "{datasetColumnName}",
+            "{cs1ColumnName}",
+            "{cs2ColumnName}",
+            "{lodColumnName}",
+            "{disKindColumnName}",
+            "{disDomainColumnName}",
+            "{disCountryColumnName}",
+            "{disCategoryColumnName}",
+            "{disSubcategoryColumnName}",
+            "{disSpecificColumnName}",
+            "{disExtraColumnName}",
+            "{fileTypeColumnName}",
+            "{contentColumnName}"
         ) values (
             {cdbParamName},
             {datasetParamName},
             {cs1ParamName},
             {cs2ParamName},
             {lodParamName},
-            {kindParamName},
-            {domainParamName},
-            {countryParamName},
-            {categoryParamName},
-            {subcategoryParamName},
-            {specificParamName},
-            {extraParamName},
+            {disKindParamName},
+            {disDomainParamName},
+            {disCountryParamName},
+            {disCategoryParamName},
+            {disSubcategoryParamName},
+            {disSpecificParamName},
+            {disExtraParamName},
             {fileTypeParamName},
             {contentParamName}
         )
@@ -737,21 +772,21 @@ public class PostgreSQLDataStore : SQLDataStore
 
     private const string selectFromMovingModelLod = $"""
         select
-            {contentColumnName}
-        from MovingModelLod
-        where cdb = {cdbParamName}
-            and dataset = {datasetParamName}
-            and component_selector_1 = {cs1ParamName}
-            and component_selector_2 = {cs2ParamName}
-            and lod = {lodParamName}
-            and kind = {kindParamName}
-            and domain = {domainParamName}
-            and country = {countryParamName}
-            and category = {categoryParamName}
-            and subcategory = {subcategoryParamName}
-            and specific = {specificParamName}
-            and extra = {extraParamName}
-            and file_type = {fileTypeParamName}
+            "{contentColumnName}"
+        from "{movingModelLodTableName}"
+        where "{cdbColumnName}" = {cdbParamName}
+            and "{datasetColumnName}" = {datasetParamName}
+            and "{cs1ColumnName}" = {cs1ParamName}
+            and "{cs2ColumnName}" = {cs2ParamName}
+            and "{lodColumnName}" = {lodParamName}
+            and "{disKindColumnName}" = {disKindParamName}
+            and "{disDomainColumnName}" = {disDomainParamName}
+            and "{disCountryColumnName}" = {disCountryParamName}
+            and "{disCategoryColumnName}" = {disCategoryParamName}
+            and "{disSubcategoryColumnName}" = {disSubcategoryParamName}
+            and "{disSpecificColumnName}" = {disSpecificParamName}
+            and "{disExtraColumnName}" = {disExtraParamName}
+            and "{fileTypeColumnName}" = {fileTypeParamName}
         """;
 
     /// <inheritdoc/>
@@ -762,29 +797,29 @@ public class PostgreSQLDataStore : SQLDataStore
     #region Tile
 
     private const string createTableTile = $"""
-        create table if not exists Tile (
-            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            latitude {numeric2ColumnType} not null,
-            longitude {numeric3ColumnType} not null,
-            dataset {numeric3ColumnType} not null,
-            component_selector_1 {numeric3ColumnType} not null,
-            component_selector_2 {numeric3ColumnType} not null,
-            lod {numeric2ColumnType} not null,
-            up {numeric7ColumnType} not null,
-            right {numeric7ColumnType} not null,
-            file_type {varcharColumnType} not null,
-            {contentColumnName} {blobColumnType} not null,
+        create table "{tileTableName}" (
+            "{cdbColumnName}" {varcharColumnType} not null references "{cdbTableName}"("{cdbColumnName}") on delete cascade on update cascade,
+            "{latitudeColumnName}" {numeric2ColumnType} not null,
+            "{longitudeColumnName}" {numeric3ColumnType} not null,
+            "{datasetColumnName}" {numeric3ColumnType} not null,
+            "{cs1ColumnName}" {numeric3ColumnType} not null,
+            "{cs2ColumnName}" {numeric3ColumnType} not null,
+            "{lodColumnName}" {numeric2ColumnType} not null,
+            "{upColumnName}" {numeric7ColumnType} not null,
+            "{rightColumnName}" {numeric7ColumnType} not null,
+            "{fileTypeColumnName}" {varcharColumnType} not null,
+            "{contentColumnName}" {blobColumnType} not null,
             primary key(
-                cdb,
-                latitude,
-                longitude,
-                dataset,
-                component_selector_1,
-                component_selector_2,
-                lod,
-                up,
-                right,
-                file_type
+                "{cdbColumnName}",
+                "{latitudeColumnName}",
+                "{longitudeColumnName}",
+                "{datasetColumnName}",
+                "{cs1ColumnName}",
+                "{cs2ColumnName}",
+                "{lodColumnName}",
+                "{upColumnName}",
+                "{rightColumnName}",
+                "{fileTypeColumnName}"
             )
         )
         """;
@@ -793,18 +828,18 @@ public class PostgreSQLDataStore : SQLDataStore
     protected override string CreateTableTileStatement => createTableTile;
 
     private const string insertIntoTile = $"""
-        insert into Tile (
-            cdb,
-            latitude,
-            longitude,
-            dataset,
-            component_selector_1,
-            component_selector_2,
-            lod,
-            up,
-            right,
-            file_type,
-            {contentColumnName}
+        insert into "{tileTableName}" (
+            "{cdbColumnName}",
+            "{latitudeColumnName}",
+            "{longitudeColumnName}",
+            "{datasetColumnName}",
+            "{cs1ColumnName}",
+            "{cs2ColumnName}",
+            "{lodColumnName}",
+            "{upColumnName}",
+            "{rightColumnName}",
+            "{fileTypeColumnName}",
+            "{contentColumnName}"
         ) values (
             {cdbParamName},
             {latitudeParamName},
@@ -825,18 +860,18 @@ public class PostgreSQLDataStore : SQLDataStore
 
     private const string selectFromTile = $"""
         select
-            {contentColumnName}
-        from Tile
-        where cdb = {cdbParamName}
-            and latitude = {latitudeParamName}
-            and longitude = {longitudeParamName}
-            and dataset = {datasetParamName}
-            and component_selector_1 = {cs1ParamName}
-            and component_selector_2 = {cs2ParamName}
-            and lod = {lodParamName}
-            and up = {upParamName}
-            and right = {rightParamName}
-            and file_type = {fileTypeParamName}
+            "{contentColumnName}"
+        from "{tileTableName}"
+        where "{cdbColumnName}" = {cdbParamName}
+            and "{latitudeColumnName}" = {latitudeParamName}
+            and "{longitudeColumnName}" = {longitudeParamName}
+            and "{datasetColumnName}" = {datasetParamName}
+            and "{cs1ColumnName}" = {cs1ParamName}
+            and "{cs2ColumnName}" = {cs2ParamName}
+            and "{lodColumnName}" = {lodParamName}
+            and "{upColumnName}" = {upParamName}
+            and "{rightColumnName}" = {rightParamName}
+            and "{fileTypeColumnName}" = {fileTypeParamName}
         """;
 
     /// <inheritdoc/>
@@ -847,39 +882,39 @@ public class PostgreSQLDataStore : SQLDataStore
     #region Tile Archived Feature
 
     private const string createTableTileArchivedFeature = $"""
-        create table if not exists TileArchivedFeature (
-            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            latitude {numeric2ColumnType} not null,
-            longitude {numeric3ColumnType} not null,
-            dataset {numeric3ColumnType} not null,
-            component_selector_1 {numeric3ColumnType} not null,
-            component_selector_2 {numeric3ColumnType} not null,
-            lod {numeric2ColumnType} not null,
-            up {numeric7ColumnType} not null,
-            right {numeric7ColumnType} not null,
-            feature_category {char1ColumnType} not null,
-            feature_subcategory {char1ColumnType} not null,
-            feature_type {numeric3ColumnType} not null,
-            feature_subcode {numeric3ColumnType} not null,
-            model_name {varchar32ColumnType} not null,
-            file_type {varcharColumnType} not null,
-            {contentColumnName} {blobColumnType} not null,
+        create table "{tileArchivedFeatureTableName}" (
+            "{cdbColumnName}" {varcharColumnType} not null references "{cdbTableName}"("{cdbColumnName}") on delete cascade on update cascade,
+            "{latitudeColumnName}" {numeric2ColumnType} not null,
+            "{longitudeColumnName}" {numeric3ColumnType} not null,
+            "{datasetColumnName}" {numeric3ColumnType} not null,
+            "{cs1ColumnName}" {numeric3ColumnType} not null,
+            "{cs2ColumnName}" {numeric3ColumnType} not null,
+            "{lodColumnName}" {numeric2ColumnType} not null,
+            "{upColumnName}" {numeric7ColumnType} not null,
+            "{rightColumnName}" {numeric7ColumnType} not null,
+            "{featureCategoryColumnName}" {char1ColumnType} not null,
+            "{featureSubcategoryColumnName}" {char1ColumnType} not null,
+            "{featureTypeColumnName}" {numeric3ColumnType} not null,
+            "{featureSubcodeColumnName}" {numeric3ColumnType} not null,
+            "{modelNameColumnName}" {varchar32ColumnType} not null,
+            "{fileTypeColumnName}" {varcharColumnType} not null,
+            "{contentColumnName}" {blobColumnType} not null,
             primary key(
-                cdb,
-                latitude,
-                longitude,
-                dataset,
-                component_selector_1,
-                component_selector_2,
-                lod,
-                up,
-                right,
-                feature_category,
-                feature_subcategory,
-                feature_type,
-                feature_subcode,
-                model_name,
-                file_type
+                "{cdbColumnName}",
+                "{latitudeColumnName}",
+                "{longitudeColumnName}",
+                "{datasetColumnName}",
+                "{cs1ColumnName}",
+                "{cs2ColumnName}",
+                "{lodColumnName}",
+                "{upColumnName}",
+                "{rightColumnName}",
+                "{featureCategoryColumnName}",
+                "{featureSubcategoryColumnName}",
+                "{featureTypeColumnName}",
+                "{featureSubcodeColumnName}",
+                "{modelNameColumnName}",
+                "{fileTypeColumnName}"
             )
         )
         """;
@@ -888,23 +923,23 @@ public class PostgreSQLDataStore : SQLDataStore
     protected override string CreateTableTileArchivedFeatureStatement => createTableTileArchivedFeature;
 
     private const string insertIntoTileArchivedFeature = $"""
-        insert into TileArchivedFeature (
-            cdb,
-            latitude,
-            longitude,
-            dataset,
-            component_selector_1,
-            component_selector_2,
-            lod,
-            up,
-            right,
-            feature_category,
-            feature_subcategory,
-            feature_type,
-            feature_subcode,
-            model_name,
-            file_type,
-            {contentColumnName}
+        insert into "{tileArchivedFeatureTableName}" (
+            "{cdbColumnName}",
+            "{latitudeColumnName}",
+            "{longitudeColumnName}",
+            "{datasetColumnName}",
+            "{cs1ColumnName}",
+            "{cs2ColumnName}",
+            "{lodColumnName}",
+            "{upColumnName}",
+            "{rightColumnName}",
+            "{featureCategoryColumnName}",
+            "{featureSubcategoryColumnName}",
+            "{featureTypeColumnName}",
+            "{featureSubcodeColumnName}",
+            "{modelNameColumnName}",
+            "{fileTypeColumnName}",
+            "{contentColumnName}"
         ) values (
             {cdbParamName},
             {latitudeParamName},
@@ -930,23 +965,23 @@ public class PostgreSQLDataStore : SQLDataStore
 
     private const string selectFromTileArchivedFeature = $"""
         select
-            {contentColumnName}
-        from TileArchivedFeature
-        where cdb = {cdbParamName}
-            and latitude = {latitudeParamName}
-            and longitude = {longitudeParamName}
-            and dataset = {datasetParamName}
-            and component_selector_1 = {cs1ParamName}
-            and component_selector_2 = {cs2ParamName}
-            and lod = {lodParamName}
-            and up = {upParamName}
-            and right = {rightParamName}
-            and feature_category = {featureCategoryParamName}
-            and feature_subcategory = {featureSubcategoryParamName}
-            and feature_type = {featureTypeParamName}
-            and feature_subcode = {featureSubcodeParamName}
-            and model_name = {modelNameParamName}
-            and file_type = {fileTypeParamName}
+            "{contentColumnName}"
+        from "{tileArchivedFeatureTableName}"
+        where "{cdbColumnName}" = {cdbParamName}
+            and "{latitudeColumnName}" = {latitudeParamName}
+            and "{longitudeColumnName}" = {longitudeParamName}
+            and "{datasetColumnName}" = {datasetParamName}
+            and "{cs1ColumnName}" = {cs1ParamName}
+            and "{cs2ColumnName}" = {cs2ParamName}
+            and "{lodColumnName}" = {lodParamName}
+            and "{upColumnName}" = {upParamName}
+            and "{rightColumnName}" = {rightParamName}
+            and "{featureCategoryColumnName}" = {featureCategoryParamName}
+            and "{featureSubcategoryColumnName}" = {featureSubcategoryParamName}
+            and "{featureTypeColumnName}" = {featureTypeParamName}
+            and "{featureSubcodeColumnName}" = {featureSubcodeParamName}
+            and "{modelNameColumnName}" = {modelNameParamName}
+            and "{fileTypeColumnName}" = {fileTypeParamName}
         """;
 
     /// <inheritdoc/>
@@ -957,31 +992,31 @@ public class PostgreSQLDataStore : SQLDataStore
     #region Tile Archived Texture
 
     private const string createTableTileArchivedTexture = $"""
-        create table if not exists TileArchivedTexture (
-            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            latitude {numeric2ColumnType} not null,
-            longitude {numeric3ColumnType} not null,
-            dataset {numeric3ColumnType} not null,
-            component_selector_1 {numeric3ColumnType} not null,
-            component_selector_2 {numeric3ColumnType} not null,
-            lod {numeric2ColumnType} not null,
-            up {numeric7ColumnType} not null,
-            right {numeric7ColumnType} not null,
-            texture_name {varchar32ColumnType} not null,
-            file_type {varcharColumnType} not null,
-            {contentColumnName} {blobColumnType} not null,
+        create table "{tileArchivedTextureTableName}" (
+            "{cdbColumnName}" {varcharColumnType} not null references "{cdbTableName}"("{cdbColumnName}") on delete cascade on update cascade,
+            "{latitudeColumnName}" {numeric2ColumnType} not null,
+            "{longitudeColumnName}" {numeric3ColumnType} not null,
+            "{datasetColumnName}" {numeric3ColumnType} not null,
+            "{cs1ColumnName}" {numeric3ColumnType} not null,
+            "{cs2ColumnName}" {numeric3ColumnType} not null,
+            "{lodColumnName}" {numeric2ColumnType} not null,
+            "{upColumnName}" {numeric7ColumnType} not null,
+            "{rightColumnName}" {numeric7ColumnType} not null,
+            "{textureNameColumnName}" {varchar32ColumnType} not null,
+            "{fileTypeColumnName}" {varcharColumnType} not null,
+            "{contentColumnName}" {blobColumnType} not null,
             primary key(
-                cdb,
-                latitude,
-                longitude,
-                dataset,
-                component_selector_1,
-                component_selector_2,
-                lod,
-                up,
-                right,
-                texture_name,
-                file_type
+                "{cdbColumnName}",
+                "{latitudeColumnName}",
+                "{longitudeColumnName}",
+                "{datasetColumnName}",
+                "{cs1ColumnName}",
+                "{cs2ColumnName}",
+                "{lodColumnName}",
+                "{upColumnName}",
+                "{rightColumnName}",
+                "{textureNameColumnName}",
+                "{fileTypeColumnName}"
             )
         )
         """;
@@ -990,19 +1025,19 @@ public class PostgreSQLDataStore : SQLDataStore
     protected override string CreateTableTileArchivedTextureStatement => createTableTileArchivedTexture;
 
     private const string insertIntoTileArchivedTexture = $"""
-        insert into TileArchivedTexture (
-            cdb,
-            latitude,
-            longitude,
-            dataset,
-            component_selector_1,
-            component_selector_2,
-            lod,
-            up,
-            right,
-            texture_name,
-            file_type,
-            {contentColumnName}
+        insert into "{tileArchivedTextureTableName}" (
+            "{cdbColumnName}",
+            "{latitudeColumnName}",
+            "{longitudeColumnName}",
+            "{datasetColumnName}",
+            "{cs1ColumnName}",
+            "{cs2ColumnName}",
+            "{lodColumnName}",
+            "{upColumnName}",
+            "{rightColumnName}",
+            "{textureNameColumnName}",
+            "{fileTypeColumnName}",
+            "{contentColumnName}"
         ) values (
             {cdbParamName},
             {latitudeParamName},
@@ -1024,19 +1059,19 @@ public class PostgreSQLDataStore : SQLDataStore
 
     private const string selectFromTileArchivedTexture = $"""
         select
-            {contentColumnName}
-        from TileArchivedTexture
-        where cdb = {cdbParamName}
-            and latitude = {latitudeParamName}
-            and longitude = {longitudeParamName}
-            and dataset = {datasetParamName}
-            and component_selector_1 = {cs1ParamName}
-            and component_selector_2 = {cs2ParamName}
-            and lod = {lodParamName}
-            and up = {upParamName}
-            and right = {rightParamName}
-            and texture_name = {textureNameParamName}
-            and file_type = {fileTypeParamName}
+            "{contentColumnName}"
+        from "{tileArchivedTextureTableName}"
+        where "{cdbColumnName}" = {cdbParamName}
+            and "{latitudeColumnName}" = {latitudeParamName}
+            and "{longitudeColumnName}" = {longitudeParamName}
+            and "{datasetColumnName}" = {datasetParamName}
+            and "{cs1ColumnName}" = {cs1ParamName}
+            and "{cs2ColumnName}" = {cs2ParamName}
+            and "{lodColumnName}" = {lodParamName}
+            and "{upColumnName}" = {upParamName}
+            and "{rightColumnName}" = {rightParamName}
+            and "{textureNameColumnName}" = {textureNameParamName}
+            and "{fileTypeColumnName}" = {fileTypeParamName}
         """;
 
     /// <inheritdoc/>
@@ -1047,19 +1082,19 @@ public class PostgreSQLDataStore : SQLDataStore
     #region Navigation
 
     private const string createTableNavigation = $"""
-        create table if not exists Navigation (
-            cdb {varcharColumnType} not null references CDB({cdbNameColumnName}) on delete cascade on update cascade,
-            dataset {numeric3ColumnType} not null,
-            component_selector_1 {numeric3ColumnType} not null,
-            component_selector_2 {numeric3ColumnType} not null,
-            file_type {varcharColumnType} not null,
-            {contentColumnName} {blobColumnType} not null,
+        create table "{navigationTableName}" (
+            "{cdbColumnName}" {varcharColumnType} not null references "{cdbTableName}"("{cdbColumnName}") on delete cascade on update cascade,
+            "{datasetColumnName}" {numeric3ColumnType} not null,
+            "{cs1ColumnName}" {numeric3ColumnType} not null,
+            "{cs2ColumnName}" {numeric3ColumnType} not null,
+            "{fileTypeColumnName}" {varcharColumnType} not null,
+            "{contentColumnName}" {blobColumnType} not null,
             primary key(
-                cdb,
-                dataset,
-                component_selector_1,
-                component_selector_2,
-                file_type
+                "{cdbColumnName}",
+                "{datasetColumnName}",
+                "{cs1ColumnName}",
+                "{cs2ColumnName}",
+                "{fileTypeColumnName}"
             )
         )
         """;
@@ -1068,13 +1103,13 @@ public class PostgreSQLDataStore : SQLDataStore
     protected override string CreateTableNavigationStatement => createTableNavigation;
 
     private const string insertIntoNavigation = $"""
-        insert into Navigation (
-            cdb,
-            dataset,
-            component_selector_1,
-            component_selector_2,
-            file_type,
-            {contentColumnName}
+        insert into "{navigationTableName}" (
+            "{cdbColumnName}",
+            "{datasetColumnName}",
+            "{cs1ColumnName}",
+            "{cs2ColumnName}",
+            "{fileTypeColumnName}",
+            "{contentColumnName}"
         ) values (
             {cdbParamName},
             {datasetParamName},
@@ -1090,13 +1125,13 @@ public class PostgreSQLDataStore : SQLDataStore
 
     private const string selectFromNavigation = $"""
         select
-            {contentColumnName}
-        from Navigation
-        where cdb = {cdbParamName}
-            and dataset = {datasetParamName}
-            and component_selector_1 = {cs1ParamName}
-            and component_selector_2 = {cs2ParamName}
-            and file_type = {fileTypeParamName}
+            "{contentColumnName}"
+        from "{navigationTableName}"
+        where "{cdbColumnName}" = {cdbParamName}
+            and "{datasetColumnName}" = {datasetParamName}
+            and "{cs1ColumnName}" = {cs1ParamName}
+            and "{cs2ColumnName}" = {cs2ParamName}
+            and "{fileTypeColumnName}" = {fileTypeParamName}
         """;
 
     /// <inheritdoc/>
